@@ -12,16 +12,24 @@ export const PROFILE_STORAGE_EVENT = "grad-profile-updated";
 export const THEME_STORAGE_KEY = "grad_dashboard_theme";
 export const THEME_STORAGE_EVENT = "grad-theme-updated";
 
-export const currentStageOptions = [
+export const undergraduateStageOptions = [
   "高一",
   "高二",
   "高三",
+] as const;
+
+export const graduateStageOptions = [
   "大一",
   "大二",
   "大三",
   "大四",
   "研究生在读",
   "已毕业",
+] as const;
+
+export const currentStageOptions = [
+  ...undergraduateStageOptions,
+  ...graduateStageOptions,
 ] as const;
 
 export const majorOptions = [
@@ -67,14 +75,34 @@ export const majorOptions = [
   "酒店与旅游管理",
 ] as const;
 
-export const regionOptions = ["美国", "英国", "加拿大", "欧洲", "新加坡/香港"] as const;
+export const regionOptions = [
+  "美国",
+  "英国",
+  "加拿大",
+  "澳大利亚",
+  "新西兰",
+  "新加坡",
+  "中国香港",
+  "中国澳门",
+  "日本",
+  "韩国",
+  "德国",
+  "法国",
+  "荷兰",
+  "瑞士",
+  "意大利",
+  "西班牙",
+  "瑞典",
+  "丹麦",
+  "爱尔兰",
+] as const;
 
 export const testOptions: Record<
   StandardizedTestType,
   { helper: string; max: number; min: number; placeholder: string }
 > = {
-  TOEFL: { min: 0, max: 120, placeholder: "0–120", helper: "满分 120" },
-  IELTS: { min: 0, max: 9, placeholder: "0–9", helper: "满分 9" },
+  TOEFL: { min: 1, max: 120, placeholder: "1–120", helper: "满分 120" },
+  IELTS: { min: 0.5, max: 9, placeholder: "0.5–9", helper: "满分 9" },
   "Duolingo English Test": {
     min: 10,
     max: 160,
@@ -218,6 +246,15 @@ export function clampNumericValue(value: string, maximum: number, maxLength = 5)
     : sanitized;
 }
 
+/** Keeps a score editable while disallowing a completed zero value. */
+export function sanitizePositiveScore(value: string, maximum: number, maxLength = 5) {
+  const clampedValue = clampNumericValue(value, maximum, maxLength);
+
+  return clampedValue && Number(clampedValue) === 0 && !clampedValue.endsWith(".")
+    ? ""
+    : clampedValue;
+}
+
 export function sanitizePlainText(value: string, maxLength = 100) {
   return value.replace(/[<>\u0000-\u001F\u007F]/g, "").slice(0, maxLength);
 }
@@ -266,6 +303,7 @@ function summarizeTests(tests: StandardizedTestScore[], selectedTests: Standardi
 
 export function normalizeProfile(profile: StudentProfile): StudentProfile {
   const degreeTarget = isDegreeTarget(profile.degreeTarget) ? profile.degreeTarget : "graduate";
+  const stageOptions = degreeTarget === "undergraduate" ? undergraduateStageOptions : graduateStageOptions;
   const availableTestTypes = new Set([
     ...languageTests,
     ...(degreeTarget === "undergraduate" ? undergraduateTests : graduateTests),
@@ -290,12 +328,12 @@ export function normalizeProfile(profile: StudentProfile): StudentProfile {
 
   return {
     degreeTarget,
-    currentStage: (currentStageOptions as readonly string[]).includes(profile.currentStage)
+    currentStage: (stageOptions as readonly string[]).includes(profile.currentStage)
       ? profile.currentStage
       : "",
     currentSchool: sanitizePlainText(profile.currentSchool, 120),
     gpaMax: normalizedGpaMax,
-    gpa: clampNumericValue(profile.gpa, Number(normalizedGpaMax)),
+    gpa: normalizeScore(profile.gpa, 0.01, Number(normalizedGpaMax)),
     languageScore: summarizeTests(standardizedTests, languageTests),
     greGmat: summarizeTests(standardizedTests, ["GRE", "GMAT"]),
     standardizedTests,
@@ -314,9 +352,13 @@ export function normalizeProfile(profile: StudentProfile): StudentProfile {
       researchProjectCount: normalizeScore(academicRecord.researchProjectCount, 0, 999),
       academicAwardCount: normalizeScore(academicRecord.academicAwardCount, 0, 999),
     },
-    targetRegions: profile.targetRegions.filter((region) =>
-      (regionOptions as readonly string[]).includes(region),
-    ),
+    targetRegions: [
+      ...new Set(
+        profile.targetRegions
+          .flatMap((region) => (region === "新加坡/香港" ? ["新加坡", "中国香港"] : [region]))
+          .filter((region) => (regionOptions as readonly string[]).includes(region)),
+      ),
+    ],
     targetMajor: (majorOptions as readonly string[]).includes(profile.targetMajor)
       ? profile.targetMajor
       : "",

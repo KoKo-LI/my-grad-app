@@ -11,9 +11,9 @@ import type {
 import {
   apSubjectOptions,
   clearLocalProfileData,
-  currentStageOptions,
   emptyProfile,
   graduateTests,
+  graduateStageOptions,
   ibSubjectOptions,
   languageTests,
   majorOptions,
@@ -21,9 +21,11 @@ import {
   regionOptions,
   sanitizeNumericValue,
   sanitizePlainText,
+  sanitizePositiveScore,
   saveProfile,
   testOptions,
   undergraduateTests,
+  undergraduateStageOptions,
 } from "@/utils/profileStorage";
 
 type DrawerTab = "profile" | "settings";
@@ -59,11 +61,13 @@ function ProfileField({
   label,
   maxLength = 5,
   maxValue,
+  disallowZero = false,
   placeholder,
   value,
   onChange,
 }: {
   helper?: string;
+  disallowZero?: boolean;
   label: string;
   maxLength?: number;
   maxValue?: number;
@@ -86,7 +90,9 @@ function ProfileField({
           onChange(
             maxValue === undefined
               ? sanitizeNumericValue(event.target.value, maxLength)
-              : clampNumericValue(event.target.value, maxValue, maxLength),
+              : disallowZero
+                ? sanitizePositiveScore(event.target.value, maxValue, maxLength)
+                : clampNumericValue(event.target.value, maxValue, maxLength),
           )
         }
         placeholder={placeholder}
@@ -187,7 +193,7 @@ function AcademicRecordFields({
           subjects={academicRecord.apSubjects}
         />
         <div className="border-t border-slate-200 pt-5 dark:border-slate-700">
-          <ProfileField helper="24–45 分" label="IB 总分" maxValue={45} onChange={onIbTotalChange} placeholder="例如：42" value={academicRecord.ibTotalScore} />
+          <ProfileField disallowZero helper="24–45 分" label="IB 总分" maxValue={45} onChange={onIbTotalChange} placeholder="例如：42" value={academicRecord.ibTotalScore} />
           <div className="mt-5">
             <SubjectScoreBranch
               label="IB 科目成绩"
@@ -325,7 +331,7 @@ function SubjectScoreBranch({
             <select aria-label={`${label} ${index + 1}`} className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" onChange={(event) => onChange(index, { ...subjectScore, subject: event.target.value })} value={subjectScore.subject}>
               {subjectOptions.map((subject) => <option disabled={subject !== subjectScore.subject && selectedSubjects.has(subject)} key={subject} value={subject}>{subject}</option>)}
             </select>
-            <input aria-label={`${label} 分数 ${index + 1}`} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" inputMode="numeric" max={maximumScore} maxLength={1} onChange={(event) => onChange(index, { ...subjectScore, score: clampNumericValue(event.target.value, maximumScore, 1) })} placeholder={scoreHelper} value={subjectScore.score} />
+            <input aria-label={`${label} 分数 ${index + 1}`} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" inputMode="numeric" max={maximumScore} maxLength={1} onChange={(event) => onChange(index, { ...subjectScore, score: sanitizePositiveScore(event.target.value, maximumScore, 1) })} placeholder={scoreHelper} value={subjectScore.score} />
             <button aria-label={`删除${label} ${subjectScore.subject}`} className="rounded-xl px-2 text-sm font-bold text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" onClick={() => onRemove(index)} type="button">×</button>
           </div>
         ))}
@@ -336,7 +342,9 @@ function SubjectScoreBranch({
 
 function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfile; onSaved: (profile: StudentProfile) => void }) {
   const [draft, setDraft] = useState<StudentProfile>(initialProfile);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const targetTests = draft.degreeTarget === "undergraduate" ? undergraduateTests : graduateTests;
+  const stageOptions = draft.degreeTarget === "undergraduate" ? undergraduateStageOptions : graduateStageOptions;
   const standardizedTestHint =
     draft.degreeTarget === "undergraduate" ? "SAT / ACT / AP / IB 成绩" : "GRE / GMAT 成绩";
   const selectedTests = new Map(draft.standardizedTests.map((test) => [test.test, test.score]));
@@ -451,6 +459,12 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
     updateDraft((currentProfile) => ({
       ...currentProfile,
       degreeTarget,
+      currentStage: (degreeTarget === "undergraduate"
+        ? (undergraduateStageOptions as readonly string[])
+        : (graduateStageOptions as readonly string[])
+      ).includes(currentProfile.currentStage)
+        ? currentProfile.currentStage
+        : "",
       standardizedTests: currentProfile.standardizedTests.filter(
         (test) =>
           languageTests.includes(test.test) ||
@@ -463,6 +477,20 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const hasCompletedApScore = draft.academicRecord.apSubjects.some((subjectScore) => {
+      const score = Number(subjectScore.score);
+      return Number.isFinite(score) && score >= 1 && score <= 5;
+    });
+    const ibTotalScore = Number(draft.academicRecord.ibTotalScore);
+    const hasCompletedIbScore = Number.isFinite(ibTotalScore) && ibTotalScore >= 24 && ibTotalScore <= 45;
+
+    if (draft.degreeTarget === "undergraduate" && !hasCompletedApScore && !hasCompletedIbScore) {
+      setValidationError("申请本科时，请完成 AP 至少一门科目成绩或填写 IB 总分；两者任选其一即可。");
+      return;
+    }
+
+    setValidationError(null);
     onSaved(saveProfile(draft));
   };
 
@@ -502,15 +530,15 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
             value={draft.currentStage}
           >
             <option value="">请选择当前阶段</option>
-            {currentStageOptions.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+            {stageOptions.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
           </select>
         </label>
         <OptionalTextField label="当前就读院校" onChange={(value) => updateDraft((profile) => ({ ...profile, currentSchool: value }))} placeholder="例如：北京大学（选填）" value={draft.currentSchool} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <ProfileField helper="成绩" label="GPA" maxValue={Number(draft.gpaMax) || 4} onChange={(value) => updateDraft((profile) => ({ ...profile, gpa: value }))} placeholder="例如：3.8" value={draft.gpa} />
-        <ProfileField helper="可修改" label="GPA 满分" maxLength={5} maxValue={100} onChange={(value) => updateDraft((profile) => ({ ...profile, gpaMax: value, gpa: value ? clampNumericValue(profile.gpa, Number(value)) : profile.gpa }))} placeholder="例如：4.0" value={draft.gpaMax} />
+        <ProfileField disallowZero helper="成绩" label="GPA" maxValue={Number(draft.gpaMax) || 4} onChange={(value) => updateDraft((profile) => ({ ...profile, gpa: value }))} placeholder="例如：3.8" value={draft.gpa} />
+        <ProfileField disallowZero helper="可修改" label="GPA 满分" maxLength={5} maxValue={100} onChange={(value) => updateDraft((profile) => ({ ...profile, gpaMax: value, gpa: value ? clampNumericValue(profile.gpa, Number(value)) : profile.gpa }))} placeholder="例如：4.0" value={draft.gpaMax} />
       </div>
 
       <label className="block">
@@ -547,7 +575,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
           <div className="mt-4 grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-2 dark:border-slate-700">
             {draft.standardizedTests.map((test) => {
               const config = testOptions[test.test];
-              return <ProfileField helper={config.helper} key={test.test} label={`${test.test} 分数`} maxLength={test.test === "IELTS" ? 3 : 5} maxValue={config.max} onChange={(value) => updateTestScore(test.test, value)} placeholder={config.placeholder} value={test.score} />;
+              return <ProfileField disallowZero helper={config.helper} key={test.test} label={`${test.test} 分数`} maxLength={test.test === "IELTS" ? 3 : 5} maxValue={config.max} onChange={(value) => updateTestScore(test.test, value)} placeholder={config.placeholder} value={test.score} />;
             })}
           </div>
         )}
@@ -555,7 +583,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
 
       <fieldset className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/60">
         <legend className="px-1 text-sm font-semibold text-slate-800 dark:text-slate-100">学术成绩</legend>
-        <p className="mt-1 text-xs leading-5 text-slate-500">{draft.degreeTarget === "undergraduate" ? "补充 AP、IB 等课程成绩。" : "可随时补充论文、科研和学术奖项。"}</p>
+        <p className="mt-1 text-xs leading-5 text-slate-500">{draft.degreeTarget === "undergraduate" ? "完成 AP 至少一门科目成绩或填写 IB 总分，两者任选其一即可。" : "可随时补充论文、科研和学术奖项。"}</p>
         <div className="mt-4"><AcademicRecordFields academicRecord={draft.academicRecord} degreeTarget={draft.degreeTarget} onCompetitionAdd={addCompetitionAward} onCompetitionRemove={removeCompetitionAward} onIbTotalChange={(value) => updateAcademicRecord("ibTotalScore", value)} onScalarChange={updateAcademicRecord} onSubjectAdd={addAcademicSubject} onSubjectChange={updateAcademicSubject} onSubjectRemove={removeAcademicSubject} /></div>
       </fieldset>
 
@@ -567,6 +595,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
       </fieldset>
 
       <div className="border-t border-slate-200 pt-5 dark:border-slate-700">
+        {validationError && <p aria-live="polite" className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium leading-5 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200">{validationError}</p>}
         <p className="mb-3 text-xs leading-5 text-slate-500">输入只会按受限数值和白名单选项保存，React 会安全转义界面内容。</p>
         <button className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20" type="submit">保存并更新选校梯度</button>
       </div>
