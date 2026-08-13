@@ -86,7 +86,8 @@ function getLanguageSnapshot(profile: StudentProfile) {
 }
 
 function getProfileSnapshotText(profile: StudentProfile) {
-  return `${profile.currentStage || "阶段待补充"} | GPA ${profile.gpa || "—"} | ${getLanguageSnapshot(profile)}`;
+  const gpaSnapshot = profile.gpa ? `${profile.gpa} / ${profile.gpaMax || "4.0"}` : "—";
+  return `${profile.currentStage || "阶段待补充"} | GPA ${gpaSnapshot} | ${getLanguageSnapshot(profile)}`;
 }
 
 function getDaysUntil(dateString: string) {
@@ -267,6 +268,7 @@ export default function DashboardShell() {
   const profile = useMemo(() => parseStoredProfile(storedProfile), [storedProfile]);
   const theme: ThemeMode = storedTheme === "dark" ? "dark" : "light";
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [drawerRequested, setDrawerRequested] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -322,11 +324,20 @@ export default function DashboardShell() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
-      <Sidebar collapsed={sidebarCollapsed} onOpenProfile={() => setDrawerRequested(true)} onToggle={() => setSidebarCollapsed((currentValue) => !currentValue)} />
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
+        onOpenProfile={() => {
+          setMobileSidebarOpen(false);
+          setDrawerRequested(true);
+        }}
+        onToggle={() => setSidebarCollapsed((currentValue) => !currentValue)}
+      />
       <main className={`min-h-screen transition-[padding] duration-300 ${sidebarCollapsed ? "xl:pl-[84px]" : "xl:pl-[264px]"}`}>
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/85 px-4 py-3 backdrop-blur xl:px-8 dark:border-slate-800 dark:bg-slate-950/85">
           <div className="mx-auto flex max-w-[1600px] items-center gap-3">
-            <button aria-label="切换侧边栏" className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-300 xl:hidden" onClick={() => setSidebarCollapsed((currentValue) => !currentValue)} type="button">☰</button>
+            <button aria-label="打开侧边栏" aria-expanded={mobileSidebarOpen} className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-300 xl:hidden" onClick={() => setMobileSidebarOpen(true)} type="button">☰</button>
             <div className="relative min-w-0 flex-1"><span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">⌕</span><input aria-label="全局搜索" className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" onChange={(event) => setSearchQuery(event.target.value.slice(0, 80))} placeholder="搜索院校、项目或地区…" value={searchQuery} /></div>
             {profile && <p className="hidden whitespace-nowrap text-xs font-semibold text-slate-500 2xl:block">{getProfileSnapshotText(profile)}</p>}
             <button className="hidden h-10 shrink-0 items-center rounded-xl border border-slate-200 px-3 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 lg:inline-flex dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => setDrawerRequested(true)} type="button">✏️ 修改背景</button>

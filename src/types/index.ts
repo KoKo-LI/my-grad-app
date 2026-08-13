@@ -23,6 +23,7 @@ export interface AcademicRecord {
   apSubjects: AcademicSubjectScore[];
   ibTotalScore: string;
   ibSubjects: AcademicSubjectScore[];
+  competitionAwards: string[];
   paperCount: string;
   researchProjectCount: string;
   academicAwardCount: string;
@@ -34,7 +35,9 @@ export interface AcademicRecord {
 export interface StudentProfile {
   degreeTarget: DegreeTarget;
   currentStage: string;
+  currentSchool: string;
   gpa: string;
+  gpaMax: string;
   /** Derived legacy fields retained for future matching integrations. */
   languageScore: string;
   greGmat: string;

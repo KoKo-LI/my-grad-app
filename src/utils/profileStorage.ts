@@ -27,12 +27,44 @@ export const currentStageOptions = [
 export const majorOptions = [
   "计算机科学",
   "数据科学 / 人工智能",
+  "软件工程",
+  "网络安全",
+  "信息系统 / 信息管理",
+  "机器人学",
+  "生物信息学",
   "电子与计算机工程",
+  "机械工程",
+  "土木与环境工程",
+  "化学工程",
+  "材料科学与工程",
+  "生物医学工程",
+  "数学 / 应用数学",
+  "统计学",
+  "物理学",
+  "化学",
+  "生物学 / 生命科学",
   "商业分析",
+  "工商管理",
+  "市场营销",
+  "会计学",
+  "供应链管理",
+  "创业与创新",
   "金融 / 经济学",
+  "国际关系",
+  "公共政策 / 公共管理",
+  "社会学",
+  "心理学",
+  "传媒 / 新闻学",
+  "法律 / 法学",
   "教育学",
   "公共卫生",
+  "护理学",
+  "临床研究",
   "人机交互 / 设计",
+  "建筑学 / 城市规划",
+  "艺术与设计",
+  "音乐 / 表演艺术",
+  "酒店与旅游管理",
 ] as const;
 
 export const regionOptions = ["美国", "英国", "加拿大", "欧洲", "新加坡/香港"] as const;
@@ -64,41 +96,83 @@ export const undergraduateTests: StandardizedTestType[] = ["SAT", "ACT"];
 export const graduateTests: StandardizedTestType[] = ["GRE", "GMAT"];
 
 export const apSubjectOptions = [
+  "African American Studies",
+  "Art and Design",
+  "Art History",
   "Calculus AB",
   "Calculus BC",
   "Computer Science A",
+  "Computer Science Principles",
   "Statistics",
   "Physics 1",
+  "Physics 2",
   "Physics C: Mechanics",
+  "Physics C: Electricity and Magnetism",
   "Chemistry",
   "Biology",
+  "Environmental Science",
   "Psychology",
+  "Human Geography",
   "Macroeconomics",
   "Microeconomics",
+  "Comparative Government and Politics",
+  "United States Government and Politics",
   "English Language",
   "English Literature",
+  "Chinese Language and Culture",
+  "French Language and Culture",
+  "German Language and Culture",
+  "Italian Language and Culture",
+  "Japanese Language and Culture",
+  "Spanish Language and Culture",
+  "Spanish Literature and Culture",
+  "Latin",
+  "Music Theory",
+  "Precalculus",
+  "Research",
+  "Seminar",
+  "European History",
   "US History",
+  "World History: Modern",
 ] as const;
 
 export const ibSubjectOptions = [
   "Chinese A: Language and Literature",
   "English A: Language and Literature",
+  "French A: Language and Literature",
+  "Spanish A: Language and Literature",
+  "English B",
+  "French B",
+  "Mandarin B",
+  "Spanish B",
   "Mathematics: Analysis and Approaches",
   "Mathematics: Applications and Interpretation",
   "Physics",
   "Chemistry",
   "Biology",
   "Computer Science",
+  "Design Technology",
+  "Environmental Systems and Societies",
+  "Sports, Exercise and Health Science",
   "Economics",
   "Business Management",
+  "Geography",
+  "Global Politics",
+  "History",
+  "Philosophy",
   "Psychology",
   "Visual Arts",
+  "Film",
+  "Music",
+  "Theatre",
+  "Dance",
 ] as const;
 
 const emptyAcademicRecord: AcademicRecord = {
   apSubjects: [],
   ibTotalScore: "",
   ibSubjects: [],
+  competitionAwards: [],
   paperCount: "",
   researchProjectCount: "",
   academicAwardCount: "",
@@ -107,7 +181,9 @@ const emptyAcademicRecord: AcademicRecord = {
 export const emptyProfile: StudentProfile = {
   degreeTarget: "graduate",
   currentStage: "",
+  currentSchool: "",
   gpa: "",
+  gpaMax: "4.0",
   languageScore: "",
   greGmat: "",
   standardizedTests: [],
@@ -130,6 +206,20 @@ export function sanitizeNumericValue(value: string, maxLength = 5) {
   const decimal = decimalParts.join("");
 
   return `${whole}${decimalParts.length > 0 ? `.${decimal}` : ""}`.slice(0, maxLength);
+}
+
+/** Restricts visible numeric input immediately so values cannot exceed a known maximum. */
+export function clampNumericValue(value: string, maximum: number, maxLength = 5) {
+  const sanitized = sanitizeNumericValue(value, maxLength);
+  const numericValue = Number(sanitized);
+
+  return sanitized && Number.isFinite(numericValue) && numericValue > maximum
+    ? String(maximum)
+    : sanitized;
+}
+
+export function sanitizePlainText(value: string, maxLength = 100) {
+  return value.replace(/[<>\u0000-\u001F\u007F]/g, "").slice(0, maxLength);
 }
 
 function normalizeScore(value: string, min: number, max: number) {
@@ -196,12 +286,16 @@ export function normalizeProfile(profile: StudentProfile): StudentProfile {
   );
   const academicRecord = profile.academicRecord;
 
+  const normalizedGpaMax = normalizeScore(profile.gpaMax, 0.1, 100) || "4.0";
+
   return {
     degreeTarget,
     currentStage: (currentStageOptions as readonly string[]).includes(profile.currentStage)
       ? profile.currentStage
       : "",
-    gpa: sanitizeNumericValue(profile.gpa),
+    currentSchool: sanitizePlainText(profile.currentSchool, 120),
+    gpaMax: normalizedGpaMax,
+    gpa: clampNumericValue(profile.gpa, Number(normalizedGpaMax)),
     languageScore: summarizeTests(standardizedTests, languageTests),
     greGmat: summarizeTests(standardizedTests, ["GRE", "GMAT"]),
     standardizedTests,
@@ -209,6 +303,13 @@ export function normalizeProfile(profile: StudentProfile): StudentProfile {
       apSubjects: normalizeSubjectScores(academicRecord.apSubjects, apSubjectOptions, 5),
       ibTotalScore: normalizeScore(academicRecord.ibTotalScore, 24, 45),
       ibSubjects: normalizeSubjectScores(academicRecord.ibSubjects, ibSubjectOptions, 7),
+      competitionAwards: [
+        ...new Set(
+          academicRecord.competitionAwards
+            .map((award) => sanitizePlainText(award, 80).trim())
+            .filter(Boolean),
+        ),
+      ].slice(0, 12),
       paperCount: normalizeScore(academicRecord.paperCount, 0, 999),
       researchProjectCount: normalizeScore(academicRecord.researchProjectCount, 0, 999),
       academicAwardCount: normalizeScore(academicRecord.academicAwardCount, 0, 999),
@@ -266,6 +367,24 @@ function isAcademicRecord(value: unknown): value is AcademicRecord {
     isSubjectScoreList(academicRecord.apSubjects) &&
     typeof academicRecord.ibTotalScore === "string" &&
     isSubjectScoreList(academicRecord.ibSubjects) &&
+    Array.isArray(academicRecord.competitionAwards) &&
+    academicRecord.competitionAwards.every((award) => typeof award === "string") &&
+    typeof academicRecord.paperCount === "string" &&
+    typeof academicRecord.researchProjectCount === "string" &&
+    typeof academicRecord.academicAwardCount === "string"
+  );
+}
+
+function isPreCompetitionAcademicRecord(value: unknown) {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const academicRecord = value as Record<string, unknown>;
+  return (
+    isSubjectScoreList(academicRecord.apSubjects) &&
+    typeof academicRecord.ibTotalScore === "string" &&
+    isSubjectScoreList(academicRecord.ibSubjects) &&
     typeof academicRecord.paperCount === "string" &&
     typeof academicRecord.researchProjectCount === "string" &&
     typeof academicRecord.academicAwardCount === "string"
@@ -278,7 +397,12 @@ export function isStudentProfile(value: unknown): value is StudentProfile {
   }
 
   const profile = value as Record<string, unknown>;
-  return hasValidProfileCore(profile) && isAcademicRecord(profile.academicRecord);
+  return (
+    hasValidProfileCore(profile) &&
+    typeof profile.currentSchool === "string" &&
+    typeof profile.gpaMax === "string" &&
+    isAcademicRecord(profile.academicRecord)
+  );
 }
 
 function isLegacyAcademicRecord(value: unknown) {
@@ -297,26 +421,45 @@ function isLegacyAcademicRecord(value: unknown) {
 }
 
 function migrateLegacyProfile(value: Record<string, unknown>): StudentProfile | null {
-  if (!hasValidProfileCore(value) || !isLegacyAcademicRecord(value.academicRecord)) {
+  if (!hasValidProfileCore(value)) {
     return null;
   }
 
-  const legacyAcademicRecord = value.academicRecord as Record<string, string>;
-  return {
-    degreeTarget: value.degreeTarget as DegreeTarget,
-    currentStage: value.currentStage as string,
-    gpa: value.gpa as string,
-    languageScore: value.languageScore as string,
-    greGmat: value.greGmat as string,
-    standardizedTests: value.standardizedTests as StandardizedTestScore[],
-    academicRecord: {
+  let academicRecord: AcademicRecord;
+
+  if (isAcademicRecord(value.academicRecord)) {
+    academicRecord = {
+      ...value.academicRecord,
+      competitionAwards: value.academicRecord.competitionAwards,
+    };
+  } else if (isPreCompetitionAcademicRecord(value.academicRecord)) {
+    const previousAcademicRecord = value.academicRecord as Omit<AcademicRecord, "competitionAwards">;
+    academicRecord = { ...previousAcademicRecord, competitionAwards: [] };
+  } else if (isLegacyAcademicRecord(value.academicRecord)) {
+    const legacyAcademicRecord = value.academicRecord as Record<string, string>;
+    academicRecord = {
       apSubjects: [],
       ibTotalScore: legacyAcademicRecord.ibScore,
       ibSubjects: [],
+      competitionAwards: [],
       paperCount: legacyAcademicRecord.paperCount,
       researchProjectCount: legacyAcademicRecord.researchProjectCount,
       academicAwardCount: legacyAcademicRecord.academicAwardCount,
-    },
+    };
+  } else {
+    return null;
+  }
+
+  return {
+    degreeTarget: value.degreeTarget as DegreeTarget,
+    currentStage: value.currentStage as string,
+    currentSchool: typeof value.currentSchool === "string" ? value.currentSchool : "",
+    gpa: value.gpa as string,
+    gpaMax: typeof value.gpaMax === "string" ? value.gpaMax : "4.0",
+    languageScore: value.languageScore as string,
+    greGmat: value.greGmat as string,
+    standardizedTests: value.standardizedTests as StandardizedTestScore[],
+    academicRecord,
     targetRegions: value.targetRegions as string[],
     targetMajor: value.targetMajor as string,
   };

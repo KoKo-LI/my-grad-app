@@ -30,6 +30,22 @@ function getLanguageGap(profile: StudentProfile, school: SchoolMatchInput) {
   return null;
 }
 
+/** Converts any declared GPA scale to the 4.0 scale used by the school catalog. */
+function getNormalizedGpa(profile: StudentProfile) {
+  const score = Number(profile.gpa);
+  const maximum = Number(profile.gpaMax);
+
+  if (!Number.isFinite(score) || score < 0) {
+    return 0;
+  }
+
+  if (!Number.isFinite(maximum) || maximum <= 0) {
+    return score;
+  }
+
+  return (score / maximum) * 4;
+}
+
 function calculateStatus(gpaGap: number, languageGap: number | null): SchoolItem["status"] {
   // A language score below the published minimum is a hard constraint.
   if (languageGap !== null && languageGap < 0) {
@@ -77,8 +93,7 @@ export function matchSchools(
   profile: StudentProfile,
   schools: SchoolMatchInput[],
 ): Record<SchoolItem["status"], SchoolMatchResult[]> {
-  const parsedGpa = Number(profile.gpa);
-  const userGpa = Number.isFinite(parsedGpa) ? parsedGpa : 0;
+  const userGpa = getNormalizedGpa(profile);
   const tiers: Record<SchoolItem["status"], SchoolMatchResult[]> = {
     Reach: [],
     Target: [],

@@ -17,8 +17,10 @@ import {
   ibSubjectOptions,
   languageTests,
   majorOptions,
+  clampNumericValue,
   regionOptions,
   sanitizeNumericValue,
+  sanitizePlainText,
   saveProfile,
   testOptions,
   undergraduateTests,
@@ -56,6 +58,7 @@ function ProfileField({
   helper,
   label,
   maxLength = 5,
+  maxValue,
   placeholder,
   value,
   onChange,
@@ -63,6 +66,7 @@ function ProfileField({
   helper?: string;
   label: string;
   maxLength?: number;
+  maxValue?: number;
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
@@ -76,8 +80,43 @@ function ProfileField({
       <input
         className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
         inputMode="decimal"
+        max={maxValue}
         maxLength={maxLength}
-        onChange={(event) => onChange(sanitizeNumericValue(event.target.value, maxLength))}
+        onChange={(event) =>
+          onChange(
+            maxValue === undefined
+              ? sanitizeNumericValue(event.target.value, maxLength)
+              : clampNumericValue(event.target.value, maxValue, maxLength),
+          )
+        }
+        placeholder={placeholder}
+        value={value}
+      />
+    </label>
+  );
+}
+
+function OptionalTextField({
+  label,
+  onChange,
+  placeholder,
+  value,
+}: {
+  label: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  value: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 flex items-center justify-between gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+        {label}
+        <span className="text-xs font-normal text-slate-400">选填</span>
+      </span>
+      <input
+        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+        maxLength={120}
+        onChange={(event) => onChange(sanitizePlainText(event.target.value, 120))}
         placeholder={placeholder}
         value={value}
       />
@@ -116,6 +155,8 @@ function SelectionChip({
 function AcademicRecordFields({
   academicRecord,
   degreeTarget,
+  onCompetitionAdd,
+  onCompetitionRemove,
   onScalarChange,
   onIbTotalChange,
   onSubjectAdd,
@@ -124,6 +165,8 @@ function AcademicRecordFields({
 }: {
   academicRecord: AcademicRecord;
   degreeTarget: DegreeTarget;
+  onCompetitionAdd: (award: string) => void;
+  onCompetitionRemove: (index: number) => void;
   onScalarChange: (field: "paperCount" | "researchProjectCount" | "academicAwardCount", value: string) => void;
   onIbTotalChange: (value: string) => void;
   onSubjectAdd: (field: "apSubjects" | "ibSubjects", subject: string) => void;
@@ -138,39 +181,111 @@ function AcademicRecordFields({
           onAdd={(subject) => onSubjectAdd("apSubjects", subject)}
           onChange={(index, value) => onSubjectChange("apSubjects", index, value)}
           onRemove={(index) => onSubjectRemove("apSubjects", index)}
+          maximumScore={5}
           scoreHelper="1–5 分"
           subjectOptions={apSubjectOptions}
           subjects={academicRecord.apSubjects}
         />
         <div className="border-t border-slate-200 pt-5 dark:border-slate-700">
-          <ProfileField helper="24–45 分" label="IB 总分" onChange={onIbTotalChange} placeholder="例如：42" value={academicRecord.ibTotalScore} />
+          <ProfileField helper="24–45 分" label="IB 总分" maxValue={45} onChange={onIbTotalChange} placeholder="例如：42" value={academicRecord.ibTotalScore} />
           <div className="mt-5">
             <SubjectScoreBranch
               label="IB 科目成绩"
               onAdd={(subject) => onSubjectAdd("ibSubjects", subject)}
               onChange={(index, value) => onSubjectChange("ibSubjects", index, value)}
               onRemove={(index) => onSubjectRemove("ibSubjects", index)}
+              maximumScore={7}
               scoreHelper="1–7 分"
               subjectOptions={ibSubjectOptions}
               subjects={academicRecord.ibSubjects}
             />
           </div>
         </div>
+        <CompetitionAwards
+          awards={academicRecord.competitionAwards}
+          onAdd={onCompetitionAdd}
+          onRemove={onCompetitionRemove}
+        />
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <ProfileField label="论文数量" onChange={(value) => onScalarChange("paperCount", value)} placeholder="例如：2" value={academicRecord.paperCount} />
-      <ProfileField label="科研项目" onChange={(value) => onScalarChange("researchProjectCount", value)} placeholder="例如：3" value={academicRecord.researchProjectCount} />
-      <ProfileField label="学术奖项" onChange={(value) => onScalarChange("academicAwardCount", value)} placeholder="例如：1" value={academicRecord.academicAwardCount} />
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <ProfileField label="论文数量" onChange={(value) => onScalarChange("paperCount", value)} placeholder="例如：2" value={academicRecord.paperCount} />
+        <ProfileField label="科研项目" onChange={(value) => onScalarChange("researchProjectCount", value)} placeholder="例如：3" value={academicRecord.researchProjectCount} />
+        <ProfileField label="学术奖项" onChange={(value) => onScalarChange("academicAwardCount", value)} placeholder="例如：1" value={academicRecord.academicAwardCount} />
+      </div>
+      <CompetitionAwards
+        awards={academicRecord.competitionAwards}
+        onAdd={onCompetitionAdd}
+        onRemove={onCompetitionRemove}
+      />
     </div>
+  );
+}
+
+function CompetitionAwards({
+  awards,
+  onAdd,
+  onRemove,
+}: {
+  awards: string[];
+  onAdd: (award: string) => void;
+  onRemove: (index: number) => void;
+}) {
+  const [draftAward, setDraftAward] = useState("");
+  const canAdd = Boolean(draftAward.trim()) && awards.length < 12;
+
+  return (
+    <section className="border-t border-slate-200 pt-5 dark:border-slate-700">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">竞赛与获奖</h4>
+          <p className="mt-1 text-xs text-slate-500">选填，例如：AMC 12 AIME 晋级、科研竞赛一等奖。</p>
+        </div>
+        <span className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">{awards.length}/12</span>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <input
+          aria-label="竞赛与获奖"
+          className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          maxLength={80}
+          onChange={(event) => setDraftAward(sanitizePlainText(event.target.value, 80))}
+          placeholder="输入竞赛或奖项名称"
+          value={draftAward}
+        />
+        <button
+          className="h-10 shrink-0 rounded-xl border border-blue-200 bg-white px-3 text-xs font-bold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-300"
+          disabled={!canAdd}
+          onClick={() => {
+            if (!canAdd) return;
+            onAdd(draftAward.trim());
+            setDraftAward("");
+          }}
+          type="button"
+        >
+          + 添加
+        </button>
+      </div>
+      {awards.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {awards.map((award, index) => (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white py-1 pl-2.5 pr-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" key={award}>
+              {award}
+              <button aria-label={`删除竞赛奖项 ${award}`} className="flex size-5 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" onClick={() => onRemove(index)} type="button">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
 function SubjectScoreBranch({
   label,
+  maximumScore,
   onAdd,
   onChange,
   onRemove,
@@ -179,6 +294,7 @@ function SubjectScoreBranch({
   subjects,
 }: {
   label: string;
+  maximumScore: number;
   onAdd: (subject: string) => void;
   onChange: (index: number, value: AcademicSubjectScore) => void;
   onRemove: (index: number) => void;
@@ -209,7 +325,7 @@ function SubjectScoreBranch({
             <select aria-label={`${label} ${index + 1}`} className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" onChange={(event) => onChange(index, { ...subjectScore, subject: event.target.value })} value={subjectScore.subject}>
               {subjectOptions.map((subject) => <option disabled={subject !== subjectScore.subject && selectedSubjects.has(subject)} key={subject} value={subject}>{subject}</option>)}
             </select>
-            <input aria-label={`${label} 分数 ${index + 1}`} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" inputMode="numeric" maxLength={1} onChange={(event) => onChange(index, { ...subjectScore, score: sanitizeNumericValue(event.target.value, 1) })} placeholder={scoreHelper} value={subjectScore.score} />
+            <input aria-label={`${label} 分数 ${index + 1}`} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" inputMode="numeric" max={maximumScore} maxLength={1} onChange={(event) => onChange(index, { ...subjectScore, score: clampNumericValue(event.target.value, maximumScore, 1) })} placeholder={scoreHelper} value={subjectScore.score} />
             <button aria-label={`删除${label} ${subjectScore.subject}`} className="rounded-xl px-2 text-sm font-bold text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" onClick={() => onRemove(index)} type="button">×</button>
           </div>
         ))}
@@ -275,6 +391,28 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
     }));
   };
 
+  const addCompetitionAward = (award: string) => {
+    updateDraft((currentProfile) => ({
+      ...currentProfile,
+      academicRecord: {
+        ...currentProfile.academicRecord,
+        competitionAwards: [...currentProfile.academicRecord.competitionAwards, award],
+      },
+    }));
+  };
+
+  const removeCompetitionAward = (index: number) => {
+    updateDraft((currentProfile) => ({
+      ...currentProfile,
+      academicRecord: {
+        ...currentProfile.academicRecord,
+        competitionAwards: currentProfile.academicRecord.competitionAwards.filter(
+          (_, awardIndex) => awardIndex !== index,
+        ),
+      },
+    }));
+  };
+
   const toggleTest = (testType: StandardizedTestType) => {
     updateDraft((currentProfile) => {
       const hasTest = currentProfile.standardizedTests.some((test) => test.test === testType);
@@ -293,7 +431,9 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
     updateDraft((currentProfile) => ({
       ...currentProfile,
       standardizedTests: currentProfile.standardizedTests.map((test) =>
-        test.test === testType ? { ...test, score: sanitizeNumericValue(value, maxLength) } : test,
+        test.test === testType
+          ? { ...test, score: clampNumericValue(value, testOptions[testType].max, maxLength) }
+          : test,
       ),
     }));
   };
@@ -365,7 +505,12 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
             {currentStageOptions.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
           </select>
         </label>
-        <ProfileField helper="仅数字" label="GPA" onChange={(value) => updateDraft((profile) => ({ ...profile, gpa: value }))} placeholder="例如：3.8" value={draft.gpa} />
+        <OptionalTextField label="当前就读院校" onChange={(value) => updateDraft((profile) => ({ ...profile, currentSchool: value }))} placeholder="例如：北京大学（选填）" value={draft.currentSchool} />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ProfileField helper="成绩" label="GPA" maxValue={Number(draft.gpaMax) || 4} onChange={(value) => updateDraft((profile) => ({ ...profile, gpa: value }))} placeholder="例如：3.8" value={draft.gpa} />
+        <ProfileField helper="可修改" label="GPA 满分" maxLength={5} maxValue={100} onChange={(value) => updateDraft((profile) => ({ ...profile, gpaMax: value, gpa: value ? clampNumericValue(profile.gpa, Number(value)) : profile.gpa }))} placeholder="例如：4.0" value={draft.gpaMax} />
       </div>
 
       <label className="block">
@@ -402,7 +547,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
           <div className="mt-4 grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-2 dark:border-slate-700">
             {draft.standardizedTests.map((test) => {
               const config = testOptions[test.test];
-              return <ProfileField helper={config.helper} key={test.test} label={`${test.test} 分数`} maxLength={test.test === "IELTS" ? 3 : 5} onChange={(value) => updateTestScore(test.test, value)} placeholder={config.placeholder} value={test.score} />;
+              return <ProfileField helper={config.helper} key={test.test} label={`${test.test} 分数`} maxLength={test.test === "IELTS" ? 3 : 5} maxValue={config.max} onChange={(value) => updateTestScore(test.test, value)} placeholder={config.placeholder} value={test.score} />;
             })}
           </div>
         )}
@@ -411,7 +556,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
       <fieldset className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/60">
         <legend className="px-1 text-sm font-semibold text-slate-800 dark:text-slate-100">学术成绩</legend>
         <p className="mt-1 text-xs leading-5 text-slate-500">{draft.degreeTarget === "undergraduate" ? "补充 AP、IB 等课程成绩。" : "可随时补充论文、科研和学术奖项。"}</p>
-        <div className="mt-4"><AcademicRecordFields academicRecord={draft.academicRecord} degreeTarget={draft.degreeTarget} onIbTotalChange={(value) => updateAcademicRecord("ibTotalScore", value)} onScalarChange={updateAcademicRecord} onSubjectAdd={addAcademicSubject} onSubjectChange={updateAcademicSubject} onSubjectRemove={removeAcademicSubject} /></div>
+        <div className="mt-4"><AcademicRecordFields academicRecord={draft.academicRecord} degreeTarget={draft.degreeTarget} onCompetitionAdd={addCompetitionAward} onCompetitionRemove={removeCompetitionAward} onIbTotalChange={(value) => updateAcademicRecord("ibTotalScore", value)} onScalarChange={updateAcademicRecord} onSubjectAdd={addAcademicSubject} onSubjectChange={updateAcademicSubject} onSubjectRemove={removeAcademicSubject} /></div>
       </fieldset>
 
       <fieldset>
