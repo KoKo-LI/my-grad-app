@@ -3,15 +3,18 @@
 import { FormEvent, useState } from "react";
 import type {
   AcademicRecord,
+  AcademicSubjectScore,
   DegreeTarget,
   StandardizedTestType,
   StudentProfile,
 } from "@/types";
 import {
+  apSubjectOptions,
   clearLocalProfileData,
   currentStageOptions,
   emptyProfile,
   graduateTests,
+  ibSubjectOptions,
   languageTests,
   majorOptions,
   regionOptions,
@@ -113,27 +116,105 @@ function SelectionChip({
 function AcademicRecordFields({
   academicRecord,
   degreeTarget,
-  onChange,
+  onScalarChange,
+  onIbTotalChange,
+  onSubjectAdd,
+  onSubjectChange,
+  onSubjectRemove,
 }: {
   academicRecord: AcademicRecord;
   degreeTarget: DegreeTarget;
-  onChange: (field: keyof AcademicRecord, value: string) => void;
+  onScalarChange: (field: "paperCount" | "researchProjectCount" | "academicAwardCount", value: string) => void;
+  onIbTotalChange: (value: string) => void;
+  onSubjectAdd: (field: "apSubjects" | "ibSubjects", subject: string) => void;
+  onSubjectChange: (field: "apSubjects" | "ibSubjects", index: number, value: AcademicSubjectScore) => void;
+  onSubjectRemove: (field: "apSubjects" | "ibSubjects", index: number) => void;
 }) {
   if (degreeTarget === "undergraduate") {
     return (
-      <div className="grid gap-4 sm:grid-cols-2">
-        <ProfileField helper="1–5 分" label="AP 成绩" onChange={(value) => onChange("apScore", value)} placeholder="例如：5" value={academicRecord.apScore} />
-        <ProfileField helper="24–45 分" label="IB 总分" onChange={(value) => onChange("ibScore", value)} placeholder="例如：42" value={academicRecord.ibScore} />
+      <div className="space-y-5">
+        <SubjectScoreBranch
+          label="AP 科目成绩"
+          onAdd={(subject) => onSubjectAdd("apSubjects", subject)}
+          onChange={(index, value) => onSubjectChange("apSubjects", index, value)}
+          onRemove={(index) => onSubjectRemove("apSubjects", index)}
+          scoreHelper="1–5 分"
+          subjectOptions={apSubjectOptions}
+          subjects={academicRecord.apSubjects}
+        />
+        <div className="border-t border-slate-200 pt-5 dark:border-slate-700">
+          <ProfileField helper="24–45 分" label="IB 总分" onChange={onIbTotalChange} placeholder="例如：42" value={academicRecord.ibTotalScore} />
+          <div className="mt-5">
+            <SubjectScoreBranch
+              label="IB 科目成绩"
+              onAdd={(subject) => onSubjectAdd("ibSubjects", subject)}
+              onChange={(index, value) => onSubjectChange("ibSubjects", index, value)}
+              onRemove={(index) => onSubjectRemove("ibSubjects", index)}
+              scoreHelper="1–7 分"
+              subjectOptions={ibSubjectOptions}
+              subjects={academicRecord.ibSubjects}
+            />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="grid gap-4 sm:grid-cols-3">
-      <ProfileField label="论文数量" onChange={(value) => onChange("paperCount", value)} placeholder="例如：2" value={academicRecord.paperCount} />
-      <ProfileField label="科研项目" onChange={(value) => onChange("researchProjectCount", value)} placeholder="例如：3" value={academicRecord.researchProjectCount} />
-      <ProfileField label="学术奖项" onChange={(value) => onChange("academicAwardCount", value)} placeholder="例如：1" value={academicRecord.academicAwardCount} />
+      <ProfileField label="论文数量" onChange={(value) => onScalarChange("paperCount", value)} placeholder="例如：2" value={academicRecord.paperCount} />
+      <ProfileField label="科研项目" onChange={(value) => onScalarChange("researchProjectCount", value)} placeholder="例如：3" value={academicRecord.researchProjectCount} />
+      <ProfileField label="学术奖项" onChange={(value) => onScalarChange("academicAwardCount", value)} placeholder="例如：1" value={academicRecord.academicAwardCount} />
     </div>
+  );
+}
+
+function SubjectScoreBranch({
+  label,
+  onAdd,
+  onChange,
+  onRemove,
+  scoreHelper,
+  subjectOptions,
+  subjects,
+}: {
+  label: string;
+  onAdd: (subject: string) => void;
+  onChange: (index: number, value: AcademicSubjectScore) => void;
+  onRemove: (index: number) => void;
+  scoreHelper: string;
+  subjectOptions: readonly string[];
+  subjects: AcademicSubjectScore[];
+}) {
+  const [newSubject, setNewSubject] = useState("");
+  const selectedSubjects = new Set(subjects.map((item) => item.subject));
+  const availableSubjects = subjectOptions.filter((subject) => !selectedSubjects.has(subject));
+
+  return (
+    <section>
+      <div className="flex items-center justify-between gap-3">
+        <div><h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{label}</h4><p className="mt-1 text-xs text-slate-500">按科目录入，每门课程可单独修改。</p></div>
+        <span className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">{subjects.length} 门</span>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <select aria-label={`选择${label}`} className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" disabled={availableSubjects.length === 0} onChange={(event) => setNewSubject(event.target.value)} value={newSubject}>
+          <option value="">选择科目</option>
+          {availableSubjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}
+        </select>
+        <button className="h-10 shrink-0 rounded-xl border border-blue-200 bg-white px-3 text-xs font-bold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-300" disabled={!newSubject} onClick={() => { onAdd(newSubject); setNewSubject(""); }} type="button">+ 添加</button>
+      </div>
+      {subjects.length > 0 && <div className="mt-3 space-y-3">
+        {subjects.map((subjectScore, index) => (
+          <div className="grid grid-cols-[minmax(0,1fr)_100px_auto] gap-2" key={subjectScore.subject}>
+            <select aria-label={`${label} ${index + 1}`} className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" onChange={(event) => onChange(index, { ...subjectScore, subject: event.target.value })} value={subjectScore.subject}>
+              {subjectOptions.map((subject) => <option disabled={subject !== subjectScore.subject && selectedSubjects.has(subject)} key={subject} value={subject}>{subject}</option>)}
+            </select>
+            <input aria-label={`${label} 分数 ${index + 1}`} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" inputMode="numeric" maxLength={1} onChange={(event) => onChange(index, { ...subjectScore, score: sanitizeNumericValue(event.target.value, 1) })} placeholder={scoreHelper} value={subjectScore.score} />
+            <button aria-label={`删除${label} ${subjectScore.subject}`} className="rounded-xl px-2 text-sm font-bold text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" onClick={() => onRemove(index)} type="button">×</button>
+          </div>
+        ))}
+      </div>}
+    </section>
   );
 }
 
@@ -148,10 +229,49 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
     setDraft((currentProfile) => updater(currentProfile));
   };
 
-  const updateAcademicRecord = (field: keyof AcademicRecord, value: string) => {
+  const updateAcademicRecord = (
+    field: "paperCount" | "researchProjectCount" | "academicAwardCount" | "ibTotalScore",
+    value: string,
+  ) => {
     updateDraft((currentProfile) => ({
       ...currentProfile,
       academicRecord: { ...currentProfile.academicRecord, [field]: value },
+    }));
+  };
+
+  const addAcademicSubject = (field: "apSubjects" | "ibSubjects", subject: string) => {
+    updateDraft((currentProfile) => ({
+      ...currentProfile,
+      academicRecord: {
+        ...currentProfile.academicRecord,
+        [field]: [...currentProfile.academicRecord[field], { subject, score: "" }],
+      },
+    }));
+  };
+
+  const updateAcademicSubject = (
+    field: "apSubjects" | "ibSubjects",
+    index: number,
+    value: AcademicSubjectScore,
+  ) => {
+    updateDraft((currentProfile) => ({
+      ...currentProfile,
+      academicRecord: {
+        ...currentProfile.academicRecord,
+        [field]: currentProfile.academicRecord[field].map((subjectScore, subjectIndex) =>
+          subjectIndex === index ? value : subjectScore,
+        ),
+      },
+    }));
+  };
+
+  const removeAcademicSubject = (field: "apSubjects" | "ibSubjects", index: number) => {
+    updateDraft((currentProfile) => ({
+      ...currentProfile,
+      academicRecord: {
+        ...currentProfile.academicRecord,
+        [field]: currentProfile.academicRecord[field].filter((_, subjectIndex) => subjectIndex !== index),
+      },
     }));
   };
 
@@ -291,7 +411,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
       <fieldset className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/60">
         <legend className="px-1 text-sm font-semibold text-slate-800 dark:text-slate-100">学术成绩</legend>
         <p className="mt-1 text-xs leading-5 text-slate-500">{draft.degreeTarget === "undergraduate" ? "补充 AP、IB 等课程成绩。" : "可随时补充论文、科研和学术奖项。"}</p>
-        <div className="mt-4"><AcademicRecordFields academicRecord={draft.academicRecord} degreeTarget={draft.degreeTarget} onChange={updateAcademicRecord} /></div>
+        <div className="mt-4"><AcademicRecordFields academicRecord={draft.academicRecord} degreeTarget={draft.degreeTarget} onIbTotalChange={(value) => updateAcademicRecord("ibTotalScore", value)} onScalarChange={updateAcademicRecord} onSubjectAdd={addAcademicSubject} onSubjectChange={updateAcademicSubject} onSubjectRemove={removeAcademicSubject} /></div>
       </fieldset>
 
       <fieldset>

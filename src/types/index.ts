@@ -14,9 +14,15 @@ export interface StandardizedTestScore {
   score: string;
 }
 
+export interface AcademicSubjectScore {
+  subject: string;
+  score: string;
+}
+
 export interface AcademicRecord {
-  apScore: string;
-  ibScore: string;
+  apSubjects: AcademicSubjectScore[];
+  ibTotalScore: string;
+  ibSubjects: AcademicSubjectScore[];
   paperCount: string;
   researchProjectCount: string;
   academicAwardCount: string;

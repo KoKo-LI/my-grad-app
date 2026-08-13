@@ -1,5 +1,6 @@
 import type {
   AcademicRecord,
+  AcademicSubjectScore,
   DegreeTarget,
   StandardizedTestScore,
   StandardizedTestType,
@@ -62,9 +63,42 @@ export const languageTests: StandardizedTestType[] = [
 export const undergraduateTests: StandardizedTestType[] = ["SAT", "ACT"];
 export const graduateTests: StandardizedTestType[] = ["GRE", "GMAT"];
 
+export const apSubjectOptions = [
+  "Calculus AB",
+  "Calculus BC",
+  "Computer Science A",
+  "Statistics",
+  "Physics 1",
+  "Physics C: Mechanics",
+  "Chemistry",
+  "Biology",
+  "Psychology",
+  "Macroeconomics",
+  "Microeconomics",
+  "English Language",
+  "English Literature",
+  "US History",
+] as const;
+
+export const ibSubjectOptions = [
+  "Chinese A: Language and Literature",
+  "English A: Language and Literature",
+  "Mathematics: Analysis and Approaches",
+  "Mathematics: Applications and Interpretation",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Computer Science",
+  "Economics",
+  "Business Management",
+  "Psychology",
+  "Visual Arts",
+] as const;
+
 const emptyAcademicRecord: AcademicRecord = {
-  apScore: "",
-  ibScore: "",
+  apSubjects: [],
+  ibTotalScore: "",
+  ibSubjects: [],
   paperCount: "",
   researchProjectCount: "",
   academicAwardCount: "",
@@ -112,6 +146,27 @@ function normalizeScore(value: string, min: number, max: number) {
     : "";
 }
 
+function normalizeSubjectScores(
+  scores: AcademicSubjectScore[],
+  allowedSubjects: readonly string[],
+  maxScore: number,
+) {
+  const usedSubjects = new Set<string>();
+
+  return scores.reduce<AcademicSubjectScore[]>((normalizedScores, subjectScore) => {
+    if (!allowedSubjects.includes(subjectScore.subject) || usedSubjects.has(subjectScore.subject)) {
+      return normalizedScores;
+    }
+
+    usedSubjects.add(subjectScore.subject);
+    normalizedScores.push({
+      subject: subjectScore.subject,
+      score: normalizeScore(subjectScore.score, 1, maxScore),
+    });
+    return normalizedScores;
+  }, []);
+}
+
 function summarizeTests(tests: StandardizedTestScore[], selectedTests: StandardizedTestType[]) {
   return tests
     .filter((test) => selectedTests.includes(test.test) && test.score)
@@ -151,8 +206,9 @@ export function normalizeProfile(profile: StudentProfile): StudentProfile {
     greGmat: summarizeTests(standardizedTests, ["GRE", "GMAT"]),
     standardizedTests,
     academicRecord: {
-      apScore: normalizeScore(academicRecord.apScore, 1, 5),
-      ibScore: normalizeScore(academicRecord.ibScore, 24, 45),
+      apSubjects: normalizeSubjectScores(academicRecord.apSubjects, apSubjectOptions, 5),
+      ibTotalScore: normalizeScore(academicRecord.ibTotalScore, 24, 45),
+      ibSubjects: normalizeSubjectScores(academicRecord.ibSubjects, ibSubjectOptions, 7),
       paperCount: normalizeScore(academicRecord.paperCount, 0, 999),
       researchProjectCount: normalizeScore(academicRecord.researchProjectCount, 0, 999),
       academicAwardCount: normalizeScore(academicRecord.academicAwardCount, 0, 999),
@@ -166,14 +222,7 @@ export function normalizeProfile(profile: StudentProfile): StudentProfile {
   };
 }
 
-export function isStudentProfile(value: unknown): value is StudentProfile {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const profile = value as Record<string, unknown>;
-  const academicRecord = profile.academicRecord as Record<string, unknown> | undefined;
-
+function hasValidProfileCore(profile: Record<string, unknown>) {
   return (
     isDegreeTarget(profile.degreeTarget) &&
     typeof profile.currentStage === "string" &&
@@ -188,12 +237,89 @@ export function isStudentProfile(value: unknown): value is StudentProfile {
         isTestType((test as Record<string, unknown>).test) &&
         typeof (test as Record<string, unknown>).score === "string",
     ) &&
-    academicRecord !== undefined &&
-    Object.values(academicRecord).every((item) => typeof item === "string") &&
     Array.isArray(profile.targetRegions) &&
     profile.targetRegions.every((region) => typeof region === "string") &&
     typeof profile.targetMajor === "string"
   );
+}
+
+function isSubjectScoreList(value: unknown) {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        item &&
+        typeof item === "object" &&
+        typeof (item as Record<string, unknown>).subject === "string" &&
+        typeof (item as Record<string, unknown>).score === "string",
+    )
+  );
+}
+
+function isAcademicRecord(value: unknown): value is AcademicRecord {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const academicRecord = value as Record<string, unknown>;
+  return (
+    isSubjectScoreList(academicRecord.apSubjects) &&
+    typeof academicRecord.ibTotalScore === "string" &&
+    isSubjectScoreList(academicRecord.ibSubjects) &&
+    typeof academicRecord.paperCount === "string" &&
+    typeof academicRecord.researchProjectCount === "string" &&
+    typeof academicRecord.academicAwardCount === "string"
+  );
+}
+
+export function isStudentProfile(value: unknown): value is StudentProfile {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const profile = value as Record<string, unknown>;
+  return hasValidProfileCore(profile) && isAcademicRecord(profile.academicRecord);
+}
+
+function isLegacyAcademicRecord(value: unknown) {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const academicRecord = value as Record<string, unknown>;
+  return (
+    typeof academicRecord.apScore === "string" &&
+    typeof academicRecord.ibScore === "string" &&
+    typeof academicRecord.paperCount === "string" &&
+    typeof academicRecord.researchProjectCount === "string" &&
+    typeof academicRecord.academicAwardCount === "string"
+  );
+}
+
+function migrateLegacyProfile(value: Record<string, unknown>): StudentProfile | null {
+  if (!hasValidProfileCore(value) || !isLegacyAcademicRecord(value.academicRecord)) {
+    return null;
+  }
+
+  const legacyAcademicRecord = value.academicRecord as Record<string, string>;
+  return {
+    degreeTarget: value.degreeTarget as DegreeTarget,
+    currentStage: value.currentStage as string,
+    gpa: value.gpa as string,
+    languageScore: value.languageScore as string,
+    greGmat: value.greGmat as string,
+    standardizedTests: value.standardizedTests as StandardizedTestScore[],
+    academicRecord: {
+      apSubjects: [],
+      ibTotalScore: legacyAcademicRecord.ibScore,
+      ibSubjects: [],
+      paperCount: legacyAcademicRecord.paperCount,
+      researchProjectCount: legacyAcademicRecord.researchProjectCount,
+      academicAwardCount: legacyAcademicRecord.academicAwardCount,
+    },
+    targetRegions: value.targetRegions as string[],
+    targetMajor: value.targetMajor as string,
+  };
 }
 
 export function parseStoredProfile(value: string | null): StudentProfile | null {
@@ -203,7 +329,16 @@ export function parseStoredProfile(value: string | null): StudentProfile | null 
 
   try {
     const parsed: unknown = JSON.parse(value);
-    return isStudentProfile(parsed) ? normalizeProfile(parsed) : null;
+    if (isStudentProfile(parsed)) {
+      return normalizeProfile(parsed);
+    }
+
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+
+    const migratedProfile = migrateLegacyProfile(parsed as Record<string, unknown>);
+    return migratedProfile ? normalizeProfile(migratedProfile) : null;
   } catch {
     return null;
   }
