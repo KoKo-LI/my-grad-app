@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import process from "node:process";
 import { createClient } from "@supabase/supabase-js";
@@ -493,38 +494,17 @@ function parseSingleRow<T extends object>(value: unknown, label: string, parse: 
   return rows[0];
 }
 
-function keyPart(value: string | null): string {
-  const normalized = (value ?? "general")
-    .toLocaleLowerCase("en-US")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return normalized.slice(0, 24) || "general";
+function recordKey(kind: "requirement" | "statistic", identity: object): string {
+  const digest = createHash("sha256").update(JSON.stringify(identity)).digest("hex").slice(0, 48);
+  return `${kind}:${digest}`;
 }
 
 function sourceRecordKey(requirement: RequirementInput, cycleName: string | null): string {
-  return [
-    keyPart(cycleName),
-    requirement.metric,
-    requirement.requirementKind,
-    requirement.applicantScope,
-    requirement.applicationPath,
-    keyPart(requirement.satisfactionGroup),
-    keyPart(requirement.testVersion),
-    keyPart(requirement.subjectArea),
-  ].join(":");
+  return recordKey("requirement", { cycleName, ...requirement });
 }
 
 function statisticSourceRecordKey(statistic: StatisticInput, cycleName: string | null): string {
-  return [
-    keyPart(cycleName),
-    statistic.metric,
-    statistic.cohort,
-    statistic.statistic,
-    statistic.applicantScope,
-    statistic.applicationPath,
-    keyPart(statistic.testVersion),
-    keyPart(statistic.subjectArea),
-  ].join(":");
+  return recordKey("statistic", { cycleName, ...statistic });
 }
 
 async function main(): Promise<void> {
