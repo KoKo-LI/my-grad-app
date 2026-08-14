@@ -273,13 +273,17 @@ function UnlockCard({ onUnlock, onUseDefault, tier }: { onUnlock: () => void; on
 
 function SchoolTierBoard({
   isInitialized,
+  onOpenDirectory,
   onUnlock,
   onUseDefault,
+  schoolDirectoryCount,
   tiers,
 }: {
   isInitialized: boolean;
+  onOpenDirectory: () => void;
   onUnlock: () => void;
   onUseDefault: () => void;
+  schoolDirectoryCount: number;
   tiers: MatchTiers | null;
 }) {
   return (
@@ -307,7 +311,7 @@ function SchoolTierBoard({
                 <UnlockCard onUnlock={onUnlock} onUseDefault={onUseDefault} tier={tier} />
               ) : tiers ? (
                 schools.length > 0 ? (
-                  schools.slice(0, 2).map((school) => <SchoolCard key={school.id} school={school} />)
+                  schools.map((school) => <SchoolCard key={school.id} school={school} />)
                 ) : (
                   <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/80 p-4 text-sm leading-6 text-zinc-700 shadow-sm dark:border-white/15 dark:bg-zinc-900/70 dark:text-zinc-200">
                     当前筛选条件下暂无院校，可调整目标地区或补充背景资料。
@@ -319,8 +323,12 @@ function SchoolTierBoard({
                 </p>
               )}
             </div>
-            <button className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:text-violet-700 dark:text-blue-300 dark:hover:text-violet-200" type="button">
-              查看全部 <ArrowRight aria-hidden="true" size={13} weight="bold" />
+            <button
+              className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-blue-700 transition-transform hover:text-violet-700 active:scale-95 dark:text-blue-300 dark:hover:text-violet-200"
+              onClick={onOpenDirectory}
+              type="button"
+            >
+              {schoolDirectoryCount > 0 ? `浏览全部 ${schoolDirectoryCount} 所` : "查看全部"} <ArrowRight aria-hidden="true" size={13} weight="bold" />
             </button>
           </section>
         );
@@ -778,7 +786,14 @@ export default function DashboardShell() {
             </button>
           </section>
 
-          <SchoolTierBoard isInitialized={isInitialized} onUnlock={() => setDrawerRequested(true)} onUseDefault={handleUseDefaultProfile} tiers={searchedTiers} />
+          <SchoolTierBoard
+            isInitialized={isInitialized}
+            onOpenDirectory={() => setSchoolDirectoryOpen(true)}
+            onUnlock={() => setDrawerRequested(true)}
+            onUseDefault={handleUseDefaultProfile}
+            schoolDirectoryCount={schoolDirectory.length}
+            tiers={searchedTiers}
+          />
           <div className="mt-7">
             <RecommendationCarousel
               directoryBatch={activeDirectoryBatch}
