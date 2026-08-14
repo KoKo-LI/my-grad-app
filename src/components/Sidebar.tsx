@@ -20,7 +20,7 @@ interface SidebarProps {
 }
 
 const navigationItems = [
-  { Icon: ChartBar, label: "申请仪表盘", active: true },
+  { Icon: ChartBar, label: "申请总览", active: true },
   { Icon: GlobeHemisphereWest, label: "全球院校库", active: false },
   { Icon: FolderSimple, label: "申请材料网盘", active: false },
 ];

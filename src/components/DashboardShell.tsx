@@ -397,31 +397,6 @@ function DeadlineBanner({ schools }: { schools: SchoolMatchResult[] }) {
   );
 }
 
-function MaterialChecklist() {
-  const checklist = [
-    ["准备成绩单与在读证明", true],
-    ["完成个人陈述初稿", false],
-    ["确认推荐信提交状态", false],
-  ] as const;
-
-  return (
-    <section className="rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-sm dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
-        <p className="text-xs font-bold tracking-[0.16em] text-blue-600 dark:text-blue-300">MATERIAL CHECKLIST</p>
-        <h2 className="mt-1 text-xl font-extrabold text-zinc-950 dark:text-white">材料准备清单</h2>
-        <ul className="mt-4 space-y-3">
-          {checklist.map(([item, complete]) => (
-            <li className="flex items-center gap-3 text-sm font-medium text-zinc-600 dark:text-zinc-300" key={item}>
-              <span className={`flex size-5 items-center justify-center rounded-full ${complete ? "bg-emerald-500 text-white" : "border border-zinc-300 text-transparent dark:border-zinc-600"}`}>
-                <Check aria-hidden="true" size={12} weight="bold" />
-              </span>
-              {item}
-            </li>
-          ))}
-        </ul>
-    </section>
-  );
-}
-
 export default function DashboardShell() {
   const storedProfile = useSyncExternalStore(subscribeToProfile, getProfileSnapshot, getServerSnapshot);
   const storedTheme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerSnapshot);
@@ -568,7 +543,7 @@ export default function DashboardShell() {
           <section className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-xs font-bold tracking-[0.19em] text-blue-600 dark:text-blue-300">APPLICATION INTELLIGENCE</p>
-              <h1 className="mt-2 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-3xl font-black tracking-[-0.04em] text-transparent sm:text-4xl dark:from-white dark:via-zinc-200 dark:to-zinc-400">申请仪表盘</h1>
+              <h1 className="mt-2 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-3xl font-black tracking-[-0.04em] text-transparent sm:text-4xl dark:from-white dark:via-zinc-200 dark:to-zinc-400">申请总览</h1>
               <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">由你的学术背景驱动的选校策略、申请节奏与材料进度。</p>
             </div>
             <button
@@ -587,7 +562,6 @@ export default function DashboardShell() {
           <div className="mt-7 space-y-4">
             <DeadlineBanner schools={allSchools} />
             <ApplicationTimeline schools={selectedSchools} />
-            <MaterialChecklist />
           </div>
           <footer className="mt-9 flex items-center justify-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
             <CalendarBlank aria-hidden="true" size={14} /> 你的资料仅保存在当前浏览器，可随时修改。
