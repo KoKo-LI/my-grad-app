@@ -34,6 +34,10 @@ function readNullableNumber(value: unknown): number | null {
   return value === null || value === undefined ? null : readNumber(value);
 }
 
+function readNullableText(value: unknown): string | null {
+  return value === null || value === undefined ? null : readText(value);
+}
+
 function readStringList(value: unknown): string[] | null {
   if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
     return null;
@@ -284,16 +288,185 @@ export function buildSchoolDetail(value: unknown): SchoolDetail | null {
 
 export function parseSchoolDirectoryResponse(value: unknown): SchoolDirectoryItem[] {
   if (!isRecord(value) || !Array.isArray(value.data)) return [];
-  return value.data.map((item) => parseSchoolDirectoryItem(item)).filter((item): item is SchoolDirectoryItem => item !== null);
+  return value.data.map(parsePublicDirectoryItem).filter((item): item is SchoolDirectoryItem => item !== null);
 }
 
-function parseSchoolDirectoryItem(value: unknown): SchoolDirectoryItem | null {
+/** Parses the camelCase public API contract, separately from Supabase's raw row shape. */
+function parsePublicMetric(value: unknown): InstitutionMetric | null {
   if (!isRecord(value)) return null;
 
-  const directory = buildSchoolDirectory([value], value.metrics);
-  return directory[0] ?? null;
+  const category = readText(value.category);
+  const metric = readText(value.metric);
+  const sourcePeriod = readText(value.sourcePeriod);
+  const sourceTitle = readText(value.sourceTitle);
+  const sourceUrl = readHttpUrl(value.sourceUrl);
+  const unit = readText(value.unit);
+  const numericValue = readNumber(value.value);
+
+  if (
+    !isOneOf(category, metricCategories) ||
+    !metric ||
+    !sourcePeriod ||
+    !sourceTitle ||
+    !sourceUrl ||
+    !isOneOf(unit, metricUnits) ||
+    numericValue === null
+  ) {
+    return null;
+  }
+
+  return { category, metric, sourcePeriod, sourceTitle, sourceUrl, unit, value: numericValue };
+}
+
+function parsePublicDirectoryItem(value: unknown): SchoolDirectoryItem | null {
+  if (!isRecord(value)) return null;
+
+  const country = readText(value.country);
+  const ipedsUnitId = readText(value.ipedsUnitId);
+  const name = readText(value.name);
+  const officialWebsite = readHttpUrl(value.officialWebsite);
+  const region = readText(value.region);
+  const shortName = readText(value.shortName);
+
+  if (!country || !ipedsUnitId || !name || !officialWebsite || !region || !shortName || !Array.isArray(value.metrics)) {
+    return null;
+  }
+
+  return {
+    country,
+    ipedsUnitId,
+    metrics: value.metrics.map(parsePublicMetric).filter((metric): metric is InstitutionMetric => metric !== null),
+    name,
+    officialWebsite,
+    region,
+    shortName,
+  };
+}
+
+function parsePublicProgram(value: unknown): UndergraduateProgramSummary | null {
+  if (!isRecord(value)) return null;
+
+  const degreeName = readText(value.degreeName);
+  const fieldOfStudy = readText(value.fieldOfStudy);
+  const id = readText(value.id);
+  const majorCategories = readStringList(value.majorCategories);
+  const officialUrl = readHttpUrl(value.officialUrl);
+  const programName = readText(value.programName);
+
+  if (!degreeName || !fieldOfStudy || !id || !majorCategories || !officialUrl || !programName) return null;
+  return { degreeName, fieldOfStudy, id, majorCategories, officialUrl, programName };
+}
+
+function parsePublicRequirement(value: unknown): SchoolAdmissionRequirement | null {
+  if (!isRecord(value)) return null;
+
+  const applicantScope = readText(value.applicantScope);
+  const applicationPath = readText(value.applicationPath);
+  const id = readText(value.id);
+  const metric = readText(value.metric);
+  const programId = readText(value.programId);
+  const requirementKind = readText(value.requirementKind);
+  const sourceTitle = readText(value.sourceTitle);
+  const sourceUrl = readHttpUrl(value.sourceUrl);
+  const rawSatisfactionRule = readText(value.satisfactionRule);
+
+  if (
+    !isOneOf(applicantScope, applicantScopes) ||
+    !isOneOf(applicationPath, applicationPaths) ||
+    !id ||
+    !metric ||
+    !programId ||
+    !isOneOf(requirementKind, requirementKinds) ||
+    !sourceTitle ||
+    !sourceUrl
+  ) {
+    return null;
+  }
+
+  return {
+    applicantScope,
+    applicationPath,
+    id,
+    maximumScore: readNullableNumber(value.maximumScore),
+    metric,
+    minimumScore: readNullableNumber(value.minimumScore),
+    programId,
+    requirementKind,
+    satisfactionGroup: readNullableText(value.satisfactionGroup),
+    satisfactionRule: rawSatisfactionRule === "any_of" || rawSatisfactionRule === "all_of" ? rawSatisfactionRule : null,
+    scoreScale: readNullableNumber(value.scoreScale),
+    sourceTitle,
+    sourceUrl,
+    subjectArea: readNullableText(value.subjectArea),
+    testVersion: readNullableText(value.testVersion),
+    valueText: readNullableText(value.valueText),
+  };
+}
+
+function parsePublicStatistic(value: unknown): SchoolAdmissionStatistic | null {
+  if (!isRecord(value)) return null;
+
+  const applicantScope = readText(value.applicantScope);
+  const applicationPath = readText(value.applicationPath);
+  const cohort = readText(value.cohort);
+  const id = readText(value.id);
+  const metric = readText(value.metric);
+  const programId = readText(value.programId);
+  const sourceTitle = readText(value.sourceTitle);
+  const sourceUrl = readHttpUrl(value.sourceUrl);
+  const statistic = readText(value.statistic);
+  const numericValue = readNumber(value.value);
+
+  if (
+    !isOneOf(applicantScope, applicantScopes) ||
+    !isOneOf(applicationPath, applicationPaths) ||
+    !isOneOf(cohort, admissionCohorts) ||
+    !id ||
+    !metric ||
+    !programId ||
+    !sourceTitle ||
+    !sourceUrl ||
+    !isOneOf(statistic, statisticKinds) ||
+    numericValue === null
+  ) {
+    return null;
+  }
+
+  return {
+    applicantScope,
+    applicationPath,
+    cohort,
+    id,
+    metric,
+    programId,
+    scoreScale: readNullableNumber(value.scoreScale),
+    sourceTitle,
+    sourceUrl,
+    statistic,
+    subjectArea: readNullableText(value.subjectArea),
+    testVersion: readNullableText(value.testVersion),
+    value: numericValue,
+  };
 }
 
 export function parseSchoolDetailResponse(value: unknown): SchoolDetail | null {
-  return isRecord(value) && "data" in value ? buildSchoolDetail(value.data) : null;
+  if (!isRecord(value) || !isRecord(value.data)) return null;
+
+  const school = parsePublicDirectoryItem(value.data);
+  if (!school || !Array.isArray(value.data.programs) || !Array.isArray(value.data.requirements) || !Array.isArray(value.data.statistics)) {
+    return null;
+  }
+
+  const programs = value.data.programs
+    .map(parsePublicProgram)
+    .filter((program): program is UndergraduateProgramSummary => program !== null);
+  const programIds = new Set(programs.map((program) => program.id));
+  const requirements = value.data.requirements
+    .map(parsePublicRequirement)
+    .filter((requirement): requirement is SchoolAdmissionRequirement => requirement !== null && programIds.has(requirement.programId));
+  const statistics = value.data.statistics
+    .map(parsePublicStatistic)
+    .filter((statistic): statistic is SchoolAdmissionStatistic => statistic !== null && programIds.has(statistic.programId));
+
+  return { ...school, programs, requirements, statistics };
 }

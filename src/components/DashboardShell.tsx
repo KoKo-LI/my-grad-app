@@ -2,6 +2,7 @@
 
 import {
   ArrowRight,
+  ArrowsClockwise,
   CalendarBlank,
   Check,
   ClipboardText,
@@ -143,6 +144,13 @@ function getDaysUntil(dateString: string) {
   const deadline = new Date(`${dateString}T23:59:59`);
   const difference = Math.ceil((deadline.getTime() - Date.now()) / 86_400_000);
   return Math.max(0, difference);
+}
+
+function rotateItems<T>(items: readonly T[], offset: number): T[] {
+  if (items.length === 0) return [];
+
+  const normalizedOffset = ((offset % items.length) + items.length) % items.length;
+  return [...items.slice(normalizedOffset), ...items.slice(0, normalizedOffset)];
 }
 
 function useActionLock(cooldownMs = 3000) {
@@ -321,26 +329,43 @@ function SchoolTierBoard({
 }
 
 function RecommendationCarousel({
+  directorySuggestions,
   recommendations,
   onAdd,
+  onOpenSchool,
+  onRefresh,
   isLoading,
   refreshVersion,
   savedSchoolIds,
 }: {
+  directorySuggestions: SchoolDirectoryItem[];
   recommendations: SchoolMatchResult[];
   onAdd: (school: SchoolMatchResult) => void;
+  onOpenSchool: (school: SchoolDirectoryItem) => void;
+  onRefresh: () => void;
   isLoading: boolean;
   refreshVersion: number;
   savedSchoolIds: Set<string>;
 }) {
   return (
     <section className="rounded-3xl border border-slate-200/80 bg-white/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-sm dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold tracking-[0.16em] text-blue-600 dark:text-blue-300">SMART RECOMMENDATIONS</p>
           <h2 className="mt-1 text-xl font-extrabold tracking-tight text-zinc-950 dark:text-white">热门 / AI 智能推荐</h2>
         </div>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">依据你的匹配梯度优先排序</p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">{recommendations.length > 0 ? `${recommendations.length} 所匹配推荐` : "匹配数据补充中"}</p>
+          <button
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200/80 bg-white/80 px-3 text-xs font-bold text-zinc-700 transition-all hover:border-violet-400/50 hover:text-violet-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-200 dark:hover:border-violet-400/45 dark:hover:text-violet-100"
+            disabled={isLoading}
+            onClick={onRefresh}
+            type="button"
+          >
+            <ArrowsClockwise aria-hidden="true" className={isLoading ? "animate-spin" : ""} size={15} weight="bold" />
+            {isLoading ? "刷新中…" : "换一批"}
+          </button>
+        </div>
       </div>
       <motion.div
         animate={{ opacity: 1, y: 0 }}
@@ -349,8 +374,9 @@ function RecommendationCarousel({
         key={refreshVersion}
         transition={{ duration: 0.24, ease: "easeOut" }}
       >
-        {recommendations.length > 0 ? (
-          recommendations.map((school) => {
+        {recommendations.length > 0 || directorySuggestions.length > 0 ? (
+          <>
+            {recommendations.map((school) => {
             const isAdded = savedSchoolIds.has(school.id);
             return (
               <article
@@ -366,7 +392,7 @@ function RecommendationCarousel({
                 </div>
                 <p className="mt-4 h-9 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{school.program}</p>
                 <button
-                  className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-white text-xs font-bold text-blue-700 hover:border-blue-400 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-400/20 dark:bg-zinc-900/70 dark:text-blue-200 dark:hover:border-violet-400/45 dark:hover:bg-violet-500/10"
+                  className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-white text-xs font-bold text-blue-700 transition-transform hover:border-blue-400 hover:bg-blue-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-400/20 dark:bg-zinc-900/70 dark:text-blue-200 dark:hover:border-violet-400/45 dark:hover:bg-violet-500/10"
                   disabled={isLoading || isAdded}
                   onClick={() => onAdd(school)}
                   type="button"
@@ -376,7 +402,31 @@ function RecommendationCarousel({
                 </button>
               </article>
             );
-          })
+            })}
+            {directorySuggestions.map((school) => (
+              <article
+                className="w-[248px] shrink-0 snap-start rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-950/40 dark:shadow-none dark:backdrop-blur-none dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]"
+                key={`directory-${school.ipedsUnitId}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-xs font-bold text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">{school.shortName.slice(0, 4)}</span>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-bold text-zinc-900 dark:text-white">{school.name}</h3>
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{school.region}</p>
+                  </div>
+                </div>
+                <p className="mt-4 h-9 text-xs leading-5 text-zinc-500 dark:text-zinc-400">已接入官方 / 政府公开数据，可查看学费、录取率与成绩区间。</p>
+                <button
+                  className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 text-xs font-bold text-violet-700 transition-transform hover:border-violet-400 hover:bg-violet-100 active:scale-95 dark:border-violet-400/25 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:border-violet-400/50 dark:hover:bg-violet-500/15"
+                  onClick={() => onOpenSchool(school)}
+                  type="button"
+                >
+                  查看学校数据
+                  <ArrowRight aria-hidden="true" size={14} weight="bold" />
+                </button>
+              </article>
+            ))}
+          </>
         ) : (
           <p className="dashboard-shimmer rounded-2xl border border-dashed border-slate-200/80 bg-slate-200/80 p-4 text-sm text-zinc-600 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl dark:border-white/15 dark:bg-zinc-950/30 dark:text-zinc-300 dark:shadow-none dark:backdrop-blur-none">完善背景后，即可获得按匹配度排序的推荐院校。</p>
         )}
@@ -449,6 +499,7 @@ export default function DashboardShell() {
   const [drawerRequested, setDrawerRequested] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [recommendationOffset, setRecommendationOffset] = useState(0);
   const [recommendationVersion, setRecommendationVersion] = useState(0);
   const [undergraduateCatalog, setUndergraduateCatalog] = useState<SchoolMatchInput[]>([]);
   const [schoolDirectory, setSchoolDirectory] = useState<SchoolDirectoryItem[]>([]);
@@ -527,13 +578,30 @@ export default function DashboardShell() {
       ]),
     ) as MatchTiers;
   }, [searchQuery, tiers]);
-  const recommendations = useMemo(
+  const rankedRecommendations = useMemo(
     () =>
       searchedTiers
-        ? Object.values(searchedTiers).flat().sort((first, second) => second.matchScore - first.matchScore).slice(0, 6)
+        ? [...Object.values(searchedTiers).flat()].sort((first, second) => second.matchScore - first.matchScore)
         : [],
     [searchedTiers],
   );
+  const recommendations = useMemo(
+    () => rotateItems(rankedRecommendations, recommendationOffset).slice(0, 12),
+    [rankedRecommendations, recommendationOffset],
+  );
+  const directorySuggestions = useMemo(() => {
+    if (!isInitialized || schoolDirectory.length === 0) return [];
+
+    const matchNames = new Set(recommendations.map((school) => school.name));
+    const regions = profile?.targetRegions ?? [];
+    const regionalSchools = schoolDirectory.filter((school) => {
+      if (regions.length === 0) return true;
+      return regions.some((region) => school.region.includes(region) || (region === "美国" && school.country === "United States"));
+    });
+    const candidates = (regionalSchools.length > 0 ? regionalSchools : schoolDirectory).filter((school) => !matchNames.has(school.name));
+
+    return rotateItems(candidates, recommendationOffset).slice(0, Math.max(0, 12 - recommendations.length));
+  }, [isInitialized, profile?.targetRegions, recommendationOffset, recommendations, schoolDirectory]);
   const allSchools = useMemo(() => (tiers ? Object.values(tiers).flat() : []), [tiers]);
   const selectedSchools = useMemo(
     () => allSchools.filter((school) => savedSchoolIds.has(school.id)),
@@ -564,8 +632,15 @@ export default function DashboardShell() {
   };
 
   const handleRefreshRecommendations = () => {
+    if (!isInitialized) {
+      setDrawerRequested(true);
+      setToast("先录入学术背景，即可生成个性化推荐");
+      return;
+    }
+
     run(() => {
       setRecommendationVersion((currentVersion) => currentVersion + 1);
+      setRecommendationOffset((currentOffset) => currentOffset + 1);
       setToast("已按当前背景重新计算并排序推荐院校");
     });
   };
@@ -659,8 +734,8 @@ export default function DashboardShell() {
               <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">由你的学术背景驱动的选校策略、申请节奏与材料进度。</p>
             </div>
             <button
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-zinc-950 px-4 text-sm font-bold text-white shadow-lg shadow-zinc-950/15 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-white/10 dark:bg-zinc-900 dark:hover:bg-zinc-800"
-              disabled={!isInitialized || isLoading}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-zinc-950 px-4 text-sm font-bold text-white shadow-lg shadow-zinc-950/15 transition-transform hover:bg-zinc-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-white/10 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+              disabled={isLoading}
               onClick={handleRefreshRecommendations}
               type="button"
             >
@@ -670,7 +745,18 @@ export default function DashboardShell() {
           </section>
 
           <SchoolTierBoard isInitialized={isInitialized} onUnlock={() => setDrawerRequested(true)} onUseDefault={handleUseDefaultProfile} tiers={searchedTiers} />
-          <div className="mt-7"><RecommendationCarousel isLoading={isLoading} onAdd={handleAddSchool} recommendations={recommendations} refreshVersion={recommendationVersion} savedSchoolIds={savedSchoolIds} /></div>
+          <div className="mt-7">
+            <RecommendationCarousel
+              directorySuggestions={directorySuggestions}
+              isLoading={isLoading}
+              onAdd={handleAddSchool}
+              onOpenSchool={(school) => setSelectedSchoolIpedsUnitId(school.ipedsUnitId)}
+              onRefresh={handleRefreshRecommendations}
+              recommendations={recommendations}
+              refreshVersion={recommendationVersion}
+              savedSchoolIds={savedSchoolIds}
+            />
+          </div>
           <div className="mt-7 space-y-4">
             <DeadlineBanner schools={allSchools} />
             <ApplicationTimeline schools={selectedSchools} />
