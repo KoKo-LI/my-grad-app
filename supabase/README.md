@@ -36,3 +36,19 @@ RLS, is only used by the local Node process, and must never be exposed to the
 browser or committed. The queue is intentionally private: resolving an entry
 to an IPEDS institution and verifying its official admissions sources is
 required before adding it to the public catalog.
+
+### Resolve IPEDS institution identities
+
+Download and unzip the current College Scorecard institution-level CSV into a
+local temporary or ignored directory, then run:
+
+```bash
+npm run catalog:resolve-ipeds -- --scorecard=/absolute/path/to/scorecard.csv
+```
+
+Add `--dry-run` to inspect automatic matches without writing to Supabase.
+
+The resolver only accepts an exact normalized name or a unique high-confidence
+match to a currently operating College Scorecard institution. It creates
+unpublished `institutions` records and marks the corresponding private queue
+rows as `resolved`; all ambiguous rows remain pending for manual review.

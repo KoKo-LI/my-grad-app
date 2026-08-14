@@ -36,6 +36,7 @@ yarn-error.log*
 # Private source intake files. They may contain third-party coverage lists and
 # must stay local until each institution is independently verified.
 /data/intake/
+/data/cache/
 
 # vercel
 .vercel
