@@ -52,3 +52,18 @@ The resolver only accepts an exact normalized name or a unique high-confidence
 match to a currently operating College Scorecard institution. It creates
 unpublished `institutions` records and marks the corresponding private queue
 rows as `resolved`; all ambiguous rows remain pending for manual review.
+
+### Import official institution metrics
+
+Run `migrations/20260814_create_institution_metrics.sql`, then use the same
+local College Scorecard CSV to prepare or import decision-useful metrics:
+
+```bash
+npm run catalog:import-scorecard-metrics -- --scorecard=/absolute/path/to/scorecard.csv --dry-run
+npm run catalog:import-scorecard-metrics -- --scorecard=/absolute/path/to/scorecard.csv
+```
+
+The initial import includes tuition, admissions rate, SAT/ACT percentiles,
+undergraduate enrollment and the 150%-of-normal-time graduation rate. Missing
+or privacy-suppressed values are skipped, not stored as zero. All imported
+metrics remain unpublished until they are reviewed for display.
