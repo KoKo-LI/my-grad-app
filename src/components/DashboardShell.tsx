@@ -24,10 +24,14 @@ import type { SchoolItem, SchoolMatchResult, StudentProfile } from "@/types";
 import { matchSchools } from "@/utils/matchEngine";
 import {
   createProfileFromPreset,
+  parseSavedSchoolIds,
   parseStoredProfile,
   PROFILE_STORAGE_EVENT,
   PROFILE_STORAGE_KEY,
+  SAVED_SCHOOL_IDS_STORAGE_EVENT,
+  SAVED_SCHOOL_IDS_STORAGE_KEY,
   saveProfile,
+  saveSavedSchoolIds,
   THEME_STORAGE_EVENT,
   THEME_STORAGE_KEY,
 } from "@/utils/profileStorage";
@@ -77,6 +81,23 @@ function subscribeToProfile(onStoreChange: () => void) {
 
 function getProfileSnapshot() {
   return window.localStorage.getItem(PROFILE_STORAGE_KEY);
+}
+
+function subscribeToSavedSchoolIds(onStoreChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === SAVED_SCHOOL_IDS_STORAGE_KEY) onStoreChange();
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(SAVED_SCHOOL_IDS_STORAGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(SAVED_SCHOOL_IDS_STORAGE_EVENT, onStoreChange);
+  };
+}
+
+function getSavedSchoolIdsSnapshot() {
+  return window.localStorage.getItem(SAVED_SCHOOL_IDS_STORAGE_KEY);
 }
 
 function subscribeToTheme(onStoreChange: () => void) {
@@ -298,11 +319,13 @@ function RecommendationCarousel({
   recommendations,
   onAdd,
   isLoading,
+  refreshVersion,
   savedSchoolIds,
 }: {
   recommendations: SchoolMatchResult[];
   onAdd: (school: SchoolMatchResult) => void;
   isLoading: boolean;
+  refreshVersion: number;
   savedSchoolIds: Set<string>;
 }) {
   return (
@@ -314,7 +337,13 @@ function RecommendationCarousel({
         </div>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">依据你的匹配梯度优先排序</p>
       </div>
-      <div className="mt-5 flex snap-x gap-4 overflow-x-auto pb-2">
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="mt-5 flex snap-x gap-4 overflow-x-auto pb-2"
+        initial={{ opacity: 0.55, y: 4 }}
+        key={refreshVersion}
+        transition={{ duration: 0.24, ease: "easeOut" }}
+      >
         {recommendations.length > 0 ? (
           recommendations.map((school) => {
             const isAdded = savedSchoolIds.has(school.id);
@@ -346,7 +375,7 @@ function RecommendationCarousel({
         ) : (
           <p className="dashboard-shimmer rounded-2xl border border-dashed border-slate-200/80 bg-slate-200/80 p-4 text-sm text-zinc-600 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl dark:border-white/15 dark:bg-zinc-950/30 dark:text-zinc-300 dark:shadow-none dark:backdrop-blur-none">完善背景后，即可获得按匹配度排序的推荐院校。</p>
         )}
-      </div>
+      </motion.div>
     </section>
   );
 }
@@ -399,8 +428,14 @@ function DeadlineBanner({ schools }: { schools: SchoolMatchResult[] }) {
 
 export default function DashboardShell() {
   const storedProfile = useSyncExternalStore(subscribeToProfile, getProfileSnapshot, getServerSnapshot);
+  const storedSavedSchoolIds = useSyncExternalStore(
+    subscribeToSavedSchoolIds,
+    getSavedSchoolIdsSnapshot,
+    getServerSnapshot,
+  );
   const storedTheme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerSnapshot);
   const profile = useMemo(() => parseStoredProfile(storedProfile), [storedProfile]);
+  const savedSchoolIds = useMemo(() => new Set(parseSavedSchoolIds(storedSavedSchoolIds)), [storedSavedSchoolIds]);
   const isInitialized = profile?.isInitialized === true;
   const initializedProfile = isInitialized ? profile : null;
   const theme: ThemeMode = storedTheme === "dark" ? "dark" : "light";
@@ -409,7 +444,7 @@ export default function DashboardShell() {
   const [drawerRequested, setDrawerRequested] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [savedSchoolIds, setSavedSchoolIds] = useState<Set<string>>(new Set());
+  const [recommendationVersion, setRecommendationVersion] = useState(0);
   const { isLoading, run } = useActionLock();
 
   useEffect(() => {
@@ -466,13 +501,16 @@ export default function DashboardShell() {
 
   const handleAddSchool = (school: SchoolMatchResult) => {
     run(() => {
-      setSavedSchoolIds((currentIds) => new Set(currentIds).add(school.id));
+      saveSavedSchoolIds(new Set(savedSchoolIds).add(school.id));
       setToast(`${school.name} 已加入你的选校清单`);
     });
   };
 
   const handleRefreshRecommendations = () => {
-    run(() => setToast("推荐已按当前背景重新排序"));
+    run(() => {
+      setRecommendationVersion((currentVersion) => currentVersion + 1);
+      setToast("已按当前背景重新计算并排序推荐院校");
+    });
   };
 
   return (
@@ -562,7 +600,7 @@ export default function DashboardShell() {
           </section>
 
           <SchoolTierBoard isInitialized={isInitialized} onUnlock={() => setDrawerRequested(true)} onUseDefault={handleUseDefaultProfile} tiers={searchedTiers} />
-          <div className="mt-7"><RecommendationCarousel isLoading={isLoading} onAdd={handleAddSchool} recommendations={recommendations} savedSchoolIds={savedSchoolIds} /></div>
+          <div className="mt-7"><RecommendationCarousel isLoading={isLoading} onAdd={handleAddSchool} recommendations={recommendations} refreshVersion={recommendationVersion} savedSchoolIds={savedSchoolIds} /></div>
           <div className="mt-7 space-y-4">
             <DeadlineBanner schools={allSchools} />
             <ApplicationTimeline schools={selectedSchools} />

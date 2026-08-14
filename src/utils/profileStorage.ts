@@ -11,6 +11,8 @@ import type {
 
 export const PROFILE_STORAGE_KEY = "grad_user_profile";
 export const PROFILE_STORAGE_EVENT = "grad-profile-updated";
+export const SAVED_SCHOOL_IDS_STORAGE_KEY = "grad_saved_school_ids";
+export const SAVED_SCHOOL_IDS_STORAGE_EVENT = "grad-saved-school-ids-updated";
 export const THEME_STORAGE_KEY = "grad_dashboard_theme";
 export const THEME_STORAGE_EVENT = "grad-theme-updated";
 
@@ -660,9 +662,41 @@ export function saveProfile(profile: StudentProfile) {
   return safeProfile;
 }
 
+function normalizeSavedSchoolIds(schoolIds: Iterable<string>) {
+  return [...new Set(
+    Array.from(schoolIds)
+      .filter((schoolId) => /^[a-z0-9-]{1,80}$/i.test(schoolId))
+      .slice(0, 50),
+  )];
+}
+
+export function parseSavedSchoolIds(value: string | null) {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.every((schoolId) => typeof schoolId === "string")
+      ? normalizeSavedSchoolIds(parsed)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveSavedSchoolIds(schoolIds: Iterable<string>) {
+  const safeSchoolIds = normalizeSavedSchoolIds(schoolIds);
+  window.localStorage.setItem(SAVED_SCHOOL_IDS_STORAGE_KEY, JSON.stringify(safeSchoolIds));
+  window.dispatchEvent(new Event(SAVED_SCHOOL_IDS_STORAGE_EVENT));
+  return safeSchoolIds;
+}
+
 export function clearLocalProfileData() {
   window.localStorage.removeItem(PROFILE_STORAGE_KEY);
+  window.localStorage.removeItem(SAVED_SCHOOL_IDS_STORAGE_KEY);
   window.localStorage.removeItem(THEME_STORAGE_KEY);
   window.dispatchEvent(new Event(PROFILE_STORAGE_EVENT));
+  window.dispatchEvent(new Event(SAVED_SCHOOL_IDS_STORAGE_EVENT));
   window.dispatchEvent(new Event(THEME_STORAGE_EVENT));
 }
