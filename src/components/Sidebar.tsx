@@ -43,7 +43,7 @@ export default function Sidebar({
         tabIndex={mobileOpen ? 0 : -1}
         type="button"
       />
-      <aside className={`fixed inset-y-0 left-0 z-40 flex w-[264px] -translate-x-full flex-col border-r border-zinc-200/80 bg-white/85 px-3 py-4 shadow-[8px_0_32px_-24px_rgba(24,24,27,0.28)] backdrop-blur-xl transition-[width,transform] duration-300 dark:border-white/10 dark:bg-zinc-950/90 ${mobileOpen ? "translate-x-0" : ""} ${collapsed ? "xl:w-[84px]" : "xl:w-[264px]"} xl:translate-x-0`}>
+      <aside className={`fixed inset-y-0 left-0 z-40 flex w-[264px] -translate-x-full flex-col border-r border-slate-200/80 bg-white/80 px-3 py-4 shadow-[8px_0_32px_-24px_rgba(24,24,27,0.28)] backdrop-blur-xl transition-[width,transform] duration-300 dark:border-white/10 dark:bg-zinc-950/90 ${mobileOpen ? "translate-x-0" : ""} ${collapsed ? "xl:w-[84px]" : "xl:w-[264px]"} xl:translate-x-0`}>
         <div className={`flex items-center ${showExpanded ? "justify-between" : "justify-center"}`}>
           {showExpanded && (
             <div className="flex items-center gap-3 px-2">
@@ -86,7 +86,7 @@ export default function Sidebar({
         </nav>
 
         {showExpanded && (
-          <section className="mt-7 rounded-2xl border border-zinc-200/80 bg-zinc-50/80 p-3 dark:border-white/10 dark:bg-zinc-900/45">
+          <section className="mt-7 rounded-2xl border border-slate-200/80 bg-white/80 p-3 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/45 dark:shadow-none dark:backdrop-blur-none">
             <div className="flex items-center gap-2 text-xs font-bold text-zinc-700 dark:text-zinc-200">
               <Sparkle aria-hidden="true" className="text-violet-600 dark:text-violet-300" size={15} weight="fill" />
               选校引擎已准备就绪

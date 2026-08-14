@@ -62,7 +62,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
   const visibleSchools = schools.slice(0, 4);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/60 p-5 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] dark:border-white/10 dark:bg-zinc-900/50 sm:p-6">
+    <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-sm dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-violet-600 dark:text-violet-300">
@@ -71,7 +71,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
           <h2 className="mt-1 text-xl font-extrabold tracking-tight text-zinc-950 dark:text-white">全景动态时间轴</h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">悬浮节点查看各校的关键申请节奏。</p>
         </div>
-        <span className="w-fit rounded-full border border-zinc-200/80 bg-white/70 px-3 py-1.5 text-xs font-bold text-zinc-600 dark:border-white/10 dark:bg-zinc-950/40 dark:text-zinc-300">
+        <span className="w-fit rounded-full border border-violet-200/60 bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700 dark:border-white/10 dark:bg-zinc-950/40 dark:text-zinc-300">
           已加入 {schools.length} 所
         </span>
       </div>
@@ -83,7 +83,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
               const milestones = getMilestones(school.deadline);
 
               return (
-                <article className="grid grid-cols-[142px_minmax(0,1fr)] items-center gap-5 rounded-2xl border border-zinc-200/70 bg-white/55 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] dark:border-white/10 dark:bg-zinc-950/35" key={school.id}>
+                <article className="grid grid-cols-[142px_minmax(0,1fr)] items-center gap-5 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-950/35 dark:shadow-none dark:backdrop-blur-none dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]" key={school.id}>
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold text-white dark:bg-zinc-800">{school.shortName}</span>
                     <div className="min-w-0">
@@ -107,7 +107,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
                           whileHover={{ scale: 1.04, y: -3 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <span className={`flex size-8 items-center justify-center rounded-full border shadow-sm transition-colors ${complete ? "border-emerald-400/60 bg-emerald-500 text-white shadow-emerald-500/25" : "border-violet-300 bg-white text-violet-700 shadow-violet-500/20 dark:border-violet-400/55 dark:bg-zinc-900 dark:text-violet-200"}`}>
+                          <span className={`flex size-8 items-center justify-center rounded-full border shadow-sm transition-colors ${complete ? "border-emerald-400/60 bg-emerald-500 text-white shadow-emerald-500/25" : "border-violet-200/60 bg-violet-50 text-violet-700 shadow-violet-500/20 dark:border-violet-400/55 dark:bg-zinc-900 dark:text-violet-200"}`}>
                             <Icon aria-hidden="true" size={15} weight={complete ? "fill" : "bold"} />
                           </span>
                           <span className="mt-2 truncate text-[11px] font-bold text-zinc-700 dark:text-zinc-200">{milestone.label}</span>
@@ -125,7 +125,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
           </div>
         </div>
       ) : (
-        <div className="dashboard-shimmer mt-6 flex min-h-36 items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white/45 px-5 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950/30 dark:text-zinc-300">
+        <div className="dashboard-shimmer mt-6 flex min-h-36 items-center gap-4 rounded-2xl border border-dashed border-slate-200/80 bg-slate-200/80 px-5 text-sm text-zinc-600 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl dark:border-white/15 dark:bg-zinc-950/30 dark:text-zinc-300 dark:shadow-none dark:backdrop-blur-none">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-200"><CalendarCheck aria-hidden="true" size={22} weight="duotone" /></span>
           <p>先从智能推荐中加入院校；系统会在这里汇总网申开放、截止与结果发放节点。</p>
         </div>
