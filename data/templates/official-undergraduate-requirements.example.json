@@ -32,7 +32,8 @@
           "satisfactionRule": "any_of",
           "valueText": null
         }
-      ]
+      ],
+      "statistics": []
     }
   ]
 }

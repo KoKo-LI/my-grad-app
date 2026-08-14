@@ -94,3 +94,9 @@ do not enter copied page prose, community reports or unverified score claims.
 When a school accepts several equivalent exams, give each alternative the same
 `satisfactionGroup` and set `satisfactionRule` to `any_of`; this prevents a
 future matcher from treating all language tests as simultaneously required.
+
+Run `migrations/20260814_expand_admission_statistics.sql` before importing
+official admitted-student score ranges. An input record may include a
+`statistics` array alongside `requirements`; use it for P25, median, P75 or
+average figures published by the school. Do not enter those distributions as
+minimums or recommendations.

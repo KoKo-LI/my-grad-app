@@ -34,18 +34,44 @@ const metricValues = [
   "financial_certification",
 ] as const;
 
+const statisticMetricValues = [
+  "gpa",
+  "toefl_ibt_total",
+  "toefl_ibt_section",
+  "ielts_academic_overall",
+  "ielts_academic_section",
+  "duolingo_english_test",
+  "pte_academic",
+  "cambridge_english",
+  "met",
+  "sat_total",
+  "sat_ebrw",
+  "sat_math",
+  "act_composite",
+  "act_english",
+  "act_ela",
+  "ap_subject",
+  "ib_total",
+  "ib_subject",
+] as const;
+
 const requirementKindValues = ["minimum", "recommended", "required", "optional", "not_required", "considered"] as const;
 const applicantScopeValues = ["all", "international", "domestic"] as const;
 const applicationPathValues = ["all", "first_year", "transfer"] as const;
 const sourceKindValues = ["official_program", "official_institution"] as const;
 const satisfactionRuleValues = ["any_of", "all_of"] as const;
+const statisticValues = ["p25", "median", "p75", "average", "acceptance_rate"] as const;
+const cohortValues = ["applicant", "admitted", "enrolled"] as const;
 
 type Metric = (typeof metricValues)[number];
+type StatisticMetric = (typeof statisticMetricValues)[number];
 type RequirementKind = (typeof requirementKindValues)[number];
 type ApplicantScope = (typeof applicantScopeValues)[number];
 type ApplicationPath = (typeof applicationPathValues)[number];
 type SourceKind = (typeof sourceKindValues)[number];
 type SatisfactionRule = (typeof satisfactionRuleValues)[number];
+type Statistic = (typeof statisticValues)[number];
+type Cohort = (typeof cohortValues)[number];
 
 type SourceInput = {
   sourceKind: SourceKind;
@@ -88,12 +114,26 @@ type RequirementInput = {
   valueText: string | null;
 };
 
+type StatisticInput = {
+  metric: StatisticMetric;
+  cohort: Cohort;
+  statistic: Statistic;
+  statisticValue: number;
+  sampleSize: number | null;
+  applicantScope: ApplicantScope;
+  applicationPath: ApplicationPath;
+  scoreScale: number | null;
+  testVersion: string | null;
+  subjectArea: string | null;
+};
+
 type RequirementRecord = {
   institutionIpedsUnitId: string;
   program: ProgramInput;
   cycle: CycleInput | null;
   source: SourceInput;
   requirements: RequirementInput[];
+  statistics: StatisticInput[];
 };
 
 type InputDocument = {
@@ -133,6 +173,24 @@ type RequirementUpsert = {
   satisfaction_group: string | null;
   satisfaction_rule: SatisfactionRule | null;
   value_text: string | null;
+  source_record_key: string;
+  is_published: boolean;
+};
+
+type StatisticUpsert = {
+  program_id: string;
+  cycle_id: string | null;
+  source_id: string;
+  metric: StatisticMetric;
+  cohort: Cohort;
+  statistic: Statistic;
+  statistic_value: number;
+  sample_size: number | null;
+  applicant_scope: ApplicantScope;
+  application_path: ApplicationPath;
+  score_scale: number | null;
+  test_version: string | null;
+  subject_area: string | null;
   source_record_key: string;
   is_published: boolean;
 };
@@ -329,6 +387,45 @@ function parseRequirement(value: unknown, label: string): RequirementInput {
   };
 }
 
+function parseStatistic(value: unknown, label: string): StatisticInput {
+  if (!isRecord(value)) {
+    throw new Error(`${label} must be an object.`);
+  }
+  if (!isOneOf(value.metric, statisticMetricValues)) {
+    throw new Error(`${label}.metric is not supported for an admission statistic.`);
+  }
+  if (!isOneOf(value.cohort, cohortValues) || !isOneOf(value.statistic, statisticValues)) {
+    throw new Error(`${label} must declare a supported cohort and statistic.`);
+  }
+  if (!isOneOf(value.applicantScope, applicantScopeValues) || !isOneOf(value.applicationPath, applicationPathValues)) {
+    throw new Error(`${label} must declare a supported applicant scope and application path.`);
+  }
+  const statisticValue = parseOptionalNumber(value.statisticValue, `${label}.statisticValue`);
+  if (statisticValue === null) {
+    throw new Error(`${label}.statisticValue is required.`);
+  }
+  const scoreScale = parseOptionalNumber(value.scoreScale, `${label}.scoreScale`);
+  if (scoreScale !== null && statisticValue > scoreScale && value.statistic !== "acceptance_rate") {
+    throw new Error(`${label}.statisticValue cannot exceed scoreScale.`);
+  }
+  const sampleSize = parseOptionalNumber(value.sampleSize, `${label}.sampleSize`, 10000000);
+  if (sampleSize !== null && (!Number.isInteger(sampleSize) || sampleSize === 0)) {
+    throw new Error(`${label}.sampleSize must be a positive integer when present.`);
+  }
+  return {
+    metric: value.metric,
+    cohort: value.cohort,
+    statistic: value.statistic,
+    statisticValue,
+    sampleSize,
+    applicantScope: value.applicantScope,
+    applicationPath: value.applicationPath,
+    scoreScale,
+    testVersion: parseOptionalText(value.testVersion, `${label}.testVersion`, 120),
+    subjectArea: parseOptionalText(value.subjectArea, `${label}.subjectArea`, 120),
+  };
+}
+
 function parseInputDocument(value: unknown): InputDocument {
   if (!isRecord(value) || !Array.isArray(value.records) || value.records.length === 0) {
     throw new Error("Input must be an object with a non-empty records array.");
@@ -340,8 +437,13 @@ function parseInputDocument(value: unknown): InputDocument {
   return {
     records: value.records.map((item, index) => {
       const label = `records[${index}]`;
-      if (!isRecord(item) || !Array.isArray(item.requirements) || item.requirements.length === 0) {
-        throw new Error(`${label} must include one or more requirements.`);
+      if (!isRecord(item)) {
+        throw new Error(`${label} must be an object.`);
+      }
+      const requirements = item.requirements === undefined ? [] : item.requirements;
+      const statistics = item.statistics === undefined ? [] : item.statistics;
+      if (!Array.isArray(requirements) || !Array.isArray(statistics) || (requirements.length === 0 && statistics.length === 0)) {
+        throw new Error(`${label} must include one or more requirements or statistics.`);
       }
       const institutionIpedsUnitId = parseText(item.institutionIpedsUnitId, `${label}.institutionIpedsUnitId`, 6, 6);
       if (!/^\d{6}$/.test(institutionIpedsUnitId)) {
@@ -352,8 +454,11 @@ function parseInputDocument(value: unknown): InputDocument {
         program: parseProgram(item.program, `${label}.program`),
         cycle: parseCycle(item.cycle, `${label}.cycle`),
         source: parseSource(item.source, `${label}.source`),
-        requirements: item.requirements.map((requirement, requirementIndex) =>
+        requirements: requirements.map((requirement, requirementIndex) =>
           parseRequirement(requirement, `${label}.requirements[${requirementIndex}]`),
+        ),
+        statistics: statistics.map((statistic, statisticIndex) =>
+          parseStatistic(statistic, `${label}.statistics[${statisticIndex}]`),
         ),
       };
     }),
@@ -393,7 +498,7 @@ function keyPart(value: string | null): string {
     .toLocaleLowerCase("en-US")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  return normalized.slice(0, 48) || "general";
+  return normalized.slice(0, 24) || "general";
 }
 
 function sourceRecordKey(requirement: RequirementInput, cycleName: string | null): string {
@@ -409,13 +514,27 @@ function sourceRecordKey(requirement: RequirementInput, cycleName: string | null
   ].join(":");
 }
 
+function statisticSourceRecordKey(statistic: StatisticInput, cycleName: string | null): string {
+  return [
+    keyPart(cycleName),
+    statistic.metric,
+    statistic.cohort,
+    statistic.statistic,
+    statistic.applicantScope,
+    statistic.applicationPath,
+    keyPart(statistic.testVersion),
+    keyPart(statistic.subjectArea),
+  ].join(":");
+}
+
 async function main(): Promise<void> {
   const inputPath = getInputPath();
   const input = parseInputDocument(JSON.parse(await readFile(path.resolve(process.cwd(), inputPath), "utf8")) as unknown);
   const totalRequirements = input.records.reduce((total, record) => total + record.requirements.length, 0);
+  const totalStatistics = input.records.reduce((total, record) => total + record.statistics.length, 0);
 
   if (isDryRun()) {
-    console.log(`Validated ${totalRequirements} requirements across ${input.records.length} official source records.`);
+    console.log(`Validated ${totalRequirements} requirements and ${totalStatistics} statistics across ${input.records.length} official source records.`);
     return;
   }
 
@@ -445,6 +564,7 @@ async function main(): Promise<void> {
   }
 
   let importedRequirements = 0;
+  let importedStatistics = 0;
   for (const record of input.records) {
     const institutionId = institutionIdByUnitId.get(record.institutionIpedsUnitId);
     if (!institutionId) {
@@ -568,9 +688,36 @@ async function main(): Promise<void> {
       throw new Error(`Could not import requirements for ${record.program.programName}: ${requirementError.message}`);
     }
     importedRequirements += rows.length;
+
+    const statisticRows: StatisticUpsert[] = record.statistics.map((statistic) => ({
+      program_id: programId,
+      cycle_id: cycleId,
+      source_id: sourceId,
+      metric: statistic.metric,
+      cohort: statistic.cohort,
+      statistic: statistic.statistic,
+      statistic_value: statistic.statisticValue,
+      sample_size: statistic.sampleSize,
+      applicant_scope: statistic.applicantScope,
+      application_path: statistic.applicationPath,
+      score_scale: statistic.scoreScale,
+      test_version: statistic.testVersion,
+      subject_area: statistic.subjectArea,
+      source_record_key: statisticSourceRecordKey(statistic, record.cycle?.cycleName ?? null),
+      is_published: false,
+    }));
+    if (statisticRows.length > 0) {
+      const { error: statisticError } = await client
+        .from("admission_statistics")
+        .upsert(statisticRows, { onConflict: "program_id,source_id,source_record_key" });
+      if (statisticError) {
+        throw new Error(`Could not import admission statistics for ${record.program.programName}: ${statisticError.message}`);
+      }
+      importedStatistics += statisticRows.length;
+    }
   }
 
-  console.log(`Imported ${importedRequirements} unpublished official requirements from ${input.records.length} source records.`);
+  console.log(`Imported ${importedRequirements} unpublished official requirements and ${importedStatistics} statistics from ${input.records.length} source records.`);
 }
 
 main().catch((error: unknown) => {
