@@ -179,9 +179,9 @@ function SchoolTierBoard({ tiers }: { tiers: MatchTiers | null }) {
             </div>
             <div className="mt-4 space-y-3">
               {tiers ? (
-                schools.length > 0 ? schools.slice(0, 2).map((school) => <SchoolCard key={school.id} school={school} />) : <p className="rounded-2xl border border-dashed border-slate-300 bg-white/40 p-4 text-sm leading-6 text-slate-500 dark:border-slate-700">当前筛选条件下暂无院校，可调整目标地区或补充背景资料。</p>
+                schools.length > 0 ? schools.slice(0, 2).map((school) => <SchoolCard key={school.id} school={school} />) : <p className="rounded-2xl border border-dashed border-slate-300 bg-white/85 p-4 text-sm leading-6 text-slate-600 shadow-sm dark:border-slate-600 dark:bg-slate-950/85 dark:text-slate-200">当前筛选条件下暂无院校，可调整目标地区或补充背景资料。</p>
               ) : (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/40 p-5 text-sm leading-6 text-slate-500 dark:border-slate-700">保存个人背景后，这里会基于 GPA 与语言门槛自动计算院校梯度。</div>
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/85 p-5 text-sm leading-6 text-slate-600 shadow-sm dark:border-slate-600 dark:bg-slate-950/85 dark:text-slate-200">保存个人背景后，这里会基于 GPA 与语言门槛自动计算院校梯度。</div>
               )}
             </div>
             <button className="mt-4 inline-flex text-xs font-bold text-blue-700 transition hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-200" type="button">查看全部 &gt;</button>
