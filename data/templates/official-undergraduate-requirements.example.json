@@ -28,6 +28,8 @@
           "scoreScale": 120,
           "testVersion": "legacy 0-120 scale",
           "subjectArea": null,
+          "satisfactionGroup": "english-proficiency",
+          "satisfactionRule": "any_of",
           "valueText": null
         }
       ]

@@ -7,6 +7,7 @@ const defaultInputPath = "data/intake/official-undergraduate-requirements.json";
 
 const metricValues = [
   "gpa",
+  "english_proficiency",
   "toefl_ibt_total",
   "toefl_ibt_section",
   "ielts_academic_overall",
@@ -37,12 +38,14 @@ const requirementKindValues = ["minimum", "recommended", "required", "optional",
 const applicantScopeValues = ["all", "international", "domestic"] as const;
 const applicationPathValues = ["all", "first_year", "transfer"] as const;
 const sourceKindValues = ["official_program", "official_institution"] as const;
+const satisfactionRuleValues = ["any_of", "all_of"] as const;
 
 type Metric = (typeof metricValues)[number];
 type RequirementKind = (typeof requirementKindValues)[number];
 type ApplicantScope = (typeof applicantScopeValues)[number];
 type ApplicationPath = (typeof applicationPathValues)[number];
 type SourceKind = (typeof sourceKindValues)[number];
+type SatisfactionRule = (typeof satisfactionRuleValues)[number];
 
 type SourceInput = {
   sourceKind: SourceKind;
@@ -80,6 +83,8 @@ type RequirementInput = {
   scoreScale: number | null;
   testVersion: string | null;
   subjectArea: string | null;
+  satisfactionGroup: string | null;
+  satisfactionRule: SatisfactionRule | null;
   valueText: string | null;
 };
 
@@ -125,6 +130,8 @@ type RequirementUpsert = {
   score_scale: number | null;
   test_version: string | null;
   subject_area: string | null;
+  satisfaction_group: string | null;
+  satisfaction_rule: SatisfactionRule | null;
   value_text: string | null;
   source_record_key: string;
   is_published: boolean;
@@ -265,6 +272,22 @@ function parseRequirement(value: unknown, label: string): RequirementInput {
     throw new Error(`${label}.applicationPath is not supported.`);
   }
 
+  const satisfactionGroup = parseOptionalText(value.satisfactionGroup, `${label}.satisfactionGroup`, 80);
+  const satisfactionRuleValue = value.satisfactionRule;
+  let satisfactionRule: SatisfactionRule | null = null;
+  if (satisfactionGroup === null) {
+    if (satisfactionRuleValue !== null && satisfactionRuleValue !== undefined) {
+      throw new Error(`${label} must provide satisfactionGroup and satisfactionRule together.`);
+    }
+  } else if (isOneOf(satisfactionRuleValue, satisfactionRuleValues)) {
+    satisfactionRule = satisfactionRuleValue;
+  } else {
+    throw new Error(`${label} must provide satisfactionGroup and satisfactionRule together.`);
+  }
+  if (satisfactionGroup !== null && !/^[a-z0-9][a-z0-9:_-]{2,79}$/.test(satisfactionGroup)) {
+    throw new Error(`${label}.satisfactionGroup must use lowercase letters, numbers, colons, underscores or hyphens.`);
+  }
+
   const minimumScore = parseOptionalNumber(value.minimumScore, `${label}.minimumScore`);
   const maximumScore = parseOptionalNumber(value.maximumScore, `${label}.maximumScore`);
   const scoreScale = parseOptionalNumber(value.scoreScale, `${label}.scoreScale`);
@@ -300,6 +323,8 @@ function parseRequirement(value: unknown, label: string): RequirementInput {
     scoreScale,
     testVersion: parseOptionalText(value.testVersion, `${label}.testVersion`, 120),
     subjectArea: parseOptionalText(value.subjectArea, `${label}.subjectArea`, 120),
+    satisfactionGroup,
+    satisfactionRule,
     valueText,
   };
 }
@@ -378,6 +403,7 @@ function sourceRecordKey(requirement: RequirementInput, cycleName: string | null
     requirement.requirementKind,
     requirement.applicantScope,
     requirement.applicationPath,
+    keyPart(requirement.satisfactionGroup),
     keyPart(requirement.testVersion),
     keyPart(requirement.subjectArea),
   ].join(":");
@@ -529,6 +555,8 @@ async function main(): Promise<void> {
       score_scale: requirement.scoreScale,
       test_version: requirement.testVersion,
       subject_area: requirement.subjectArea,
+      satisfaction_group: requirement.satisfactionGroup,
+      satisfaction_rule: requirement.satisfactionRule,
       value_text: requirement.valueText,
       source_record_key: sourceRecordKey(requirement, record.cycle?.cycleName ?? null),
       is_published: false,

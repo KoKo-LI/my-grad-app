@@ -6,6 +6,8 @@ alter table public.admission_requirements
   add column if not exists score_scale numeric(8, 2),
   add column if not exists test_version text,
   add column if not exists subject_area text,
+  add column if not exists satisfaction_group text,
+  add column if not exists satisfaction_rule text,
   add column if not exists source_record_key text;
 
 update public.admission_requirements
@@ -21,7 +23,7 @@ alter table public.admission_requirements
 alter table public.admission_requirements
   add constraint admission_requirements_metric_check
   check (metric in (
-    'gpa',
+    'gpa', 'english_proficiency',
     'toefl_ibt_total', 'toefl_ibt_section',
     'ielts_academic_overall', 'ielts_academic_section',
     'duolingo_english_test', 'pte_academic', 'cambridge_english', 'met',
@@ -42,6 +44,16 @@ alter table public.admission_requirements
 alter table public.admission_requirements
   add constraint admission_requirements_source_record_key_check
   check (source_record_key ~ '^[a-z0-9][a-z0-9:_-]{2,159}$');
+
+alter table public.admission_requirements
+  add constraint admission_requirements_satisfaction_group_check
+  check (
+    (satisfaction_group is null and satisfaction_rule is null)
+    or (
+      satisfaction_group ~ '^[a-z0-9][a-z0-9:_-]{2,79}$'
+      and satisfaction_rule in ('any_of', 'all_of')
+    )
+  );
 
 create unique index if not exists admission_requirements_source_record_idx
   on public.admission_requirements (program_id, source_id, source_record_key);

@@ -91,3 +91,6 @@ MET, SAT/ACT, AP/IB, transcripts, coursework, portfolios, interviews and other
 admission obligations. Each input record must provide the official source URL,
 effective year and a resolved IPEDS UNITID. Imported rows remain unpublished;
 do not enter copied page prose, community reports or unverified score claims.
+When a school accepts several equivalent exams, give each alternative the same
+`satisfactionGroup` and set `satisfactionRule` to `any_of`; this prevents a
+future matcher from treating all language tests as simultaneously required.
