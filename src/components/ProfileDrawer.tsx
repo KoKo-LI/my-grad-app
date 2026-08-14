@@ -1,6 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { ArrowLeft, Check, GearSix, GraduationCap, Moon, Sun, Trash } from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "framer-motion";
+import { FormEvent, useEffect, useState } from "react";
 import type {
   AcademicRecord,
   AcademicSubjectScore,
@@ -40,14 +42,6 @@ interface ProfileDrawerProps {
   open: boolean;
   profile: StudentProfile | null;
   theme: ThemeMode;
-}
-
-function CheckIcon() {
-  return (
-    <svg aria-hidden="true" className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.6">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m5 12 4.2 4.2L19 6.5" />
-    </svg>
-  );
 }
 
 function ProfileField({
@@ -145,7 +139,7 @@ function SelectionChip({
       type="button"
     >
       <span className={`flex size-4 items-center justify-center rounded-full ${isSelected ? "bg-white/20" : "bg-slate-100 text-slate-400 dark:bg-slate-800"}`}>
-        {isSelected ? <CheckIcon /> : <span className="size-1.5 rounded-full bg-current" />}
+        {isSelected ? <Check aria-hidden="true" size={12} weight="bold" /> : <span className="size-1.5 rounded-full bg-current" />}
       </span>
       {label}
     </button>
@@ -630,65 +624,99 @@ export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, p
   const [activeTab, setActiveTab] = useState<DrawerTab>("profile");
   const formKey = profile ? JSON.stringify(profile) : "new-profile";
 
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   const handleClear = () => {
     clearLocalProfileData();
     window.location.reload();
   };
 
   return (
-    <div aria-hidden={!open} className={`fixed inset-0 z-50 transition ${open ? "pointer-events-auto" : "pointer-events-none"}`}>
-      <div className={`absolute inset-0 bg-slate-950/55 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`} />
-      <aside aria-label="个人资料与系统设置" aria-modal="true" className={`absolute inset-0 flex min-h-[100dvh] flex-col overflow-hidden bg-slate-50 shadow-2xl transition-[opacity,transform] duration-300 ease-out dark:bg-slate-950 ${open ? "translate-y-0 scale-100 opacity-100" : "translate-y-3 scale-[0.985] opacity-0"}`} role="dialog">
-        <div className="border-b border-slate-200 bg-white/85 px-5 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85 sm:px-8">
-          <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold tracking-[0.16em] text-blue-600">MY GRAD PATH</p>
-              <h2 className="mt-1 text-xl font-extrabold text-slate-900 dark:text-white">完善个人背景</h2>
-              <p className="mt-1 hidden text-sm text-slate-500 sm:block">完成后将即时更新你的选校梯度与申请建议。</p>
-            </div>
-            <button aria-label="返回 Dashboard" className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onClick={onClose} type="button">← 返回 Dashboard</button>
-          </div>
-        </div>
-
-        <div className="border-b border-slate-200 bg-white/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-950/70 sm:px-8">
-          <div className="mx-auto grid w-full max-w-5xl grid-cols-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-            {([
-              ["profile", "🎓 个人背景"],
-              ["settings", "⚙️ 系统设置"],
-            ] as const).map(([tab, label]) => (
-              <button className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${activeTab === tab ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300" : "text-slate-500 dark:text-slate-400"}`} key={tab} onClick={() => setActiveTab(tab)} type="button">{label}</button>
-            ))}
-          </div>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8">
-          <div className="mx-auto w-full max-w-5xl pb-8">
-            {activeTab === "profile" ? (
-              <ProfileForm initialProfile={profile ?? emptyProfile} key={formKey} onSaved={onSaved} />
-            ) : (
-              <section className="space-y-6">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">外观主题</h3>
-                <p className="mt-1 text-sm leading-6 text-slate-500">选择更适合当前环境的 Dashboard 主题。</p>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  {([
-                    ["light", "☀️ 浅色"],
-                    ["dark", "🌙 深色"],
-                  ] as const).map(([option, label]) => (
-                    <button aria-pressed={theme === option} className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${theme === option ? "border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" : "border-slate-200 text-slate-600 hover:border-blue-300 dark:border-slate-700 dark:text-slate-300"}`} key={option} onClick={() => onThemeChange(option)} type="button">{label}</button>
-                  ))}
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50"
+          exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <motion.button
+            aria-label="关闭个人资料中心"
+            className="absolute inset-0 cursor-default bg-zinc-950/55 backdrop-blur-sm"
+            onClick={onClose}
+            type="button"
+          />
+          <motion.aside
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            aria-label="个人资料与系统设置"
+            aria-modal="true"
+            className="absolute inset-0 flex min-h-[100dvh] flex-col overflow-hidden bg-zinc-50 shadow-2xl shadow-zinc-950/30 dark:bg-zinc-950"
+            exit={{ opacity: 0, scale: 0.985, y: 18 }}
+            initial={{ opacity: 0, scale: 0.985, y: 18 }}
+            role="dialog"
+            transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="border-b border-zinc-200/80 bg-white/80 px-5 py-4 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80 sm:px-8">
+              <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold tracking-[0.18em] text-blue-600 dark:text-blue-300">MY GRAD PATH</p>
+                  <h2 className="mt-1 text-xl font-extrabold tracking-tight text-zinc-900 dark:text-white">完善个人背景</h2>
+                  <p className="mt-1 hidden text-sm text-zinc-500 dark:text-zinc-400 sm:block">完成后将即时更新你的选校梯度与申请建议。</p>
                 </div>
+                <button aria-label="返回 Dashboard" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-bold text-zinc-700 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:border-violet-400/40 dark:hover:bg-violet-500/10 dark:hover:text-violet-100" onClick={onClose} type="button"><ArrowLeft aria-hidden="true" size={16} weight="bold" />返回 Dashboard</button>
               </div>
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/70 dark:bg-rose-950/30">
-                <h3 className="font-bold text-rose-800 dark:text-rose-200">重新开始</h3>
-                <p className="mt-1 text-sm leading-6 text-rose-700 dark:text-rose-300">将删除本应用的背景资料与主题偏好，并返回未初始化的 Dashboard。</p>
-                <button className="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-500/20" onClick={handleClear} type="button">🗑️ 清空本地数据并重新引导</button>
+            </div>
+
+            <div className="border-b border-zinc-200/80 bg-white/65 px-5 py-4 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/65 sm:px-8">
+              <div className="mx-auto grid w-full max-w-5xl grid-cols-2 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900">
+                {([
+                  ["profile", "个人背景", GraduationCap],
+                  ["settings", "系统设置", GearSix],
+                ] as const).map(([tab, label, Icon]) => (
+                  <button aria-pressed={activeTab === tab} className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${activeTab === tab ? "bg-white text-blue-700 shadow-sm dark:bg-zinc-800 dark:text-blue-300" : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"}`} key={tab} onClick={() => setActiveTab(tab)} type="button"><Icon aria-hidden="true" size={17} weight={activeTab === tab ? "fill" : "bold"} />{label}</button>
+                ))}
               </div>
-              </section>
-            )}
-          </div>
-        </div>
-      </aside>
-    </div>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8">
+              <div className="mx-auto w-full max-w-5xl pb-8">
+                {activeTab === "profile" ? (
+                  <ProfileForm initialProfile={profile ?? emptyProfile} key={formKey} onSaved={onSaved} />
+                ) : (
+                  <section className="space-y-6">
+                    <div>
+                      <h3 className="text-base font-bold text-zinc-900 dark:text-white">外观主题</h3>
+                      <p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">选择更适合当前环境的 Dashboard 主题。</p>
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                        {([
+                          ["light", "浅色", Sun],
+                          ["dark", "深色", Moon],
+                        ] as const).map(([option, label, Icon]) => (
+                          <button aria-pressed={theme === option} className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold ${theme === option ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-400/55 dark:bg-blue-500/10 dark:text-blue-200" : "border-zinc-200 text-zinc-600 hover:border-violet-300 hover:text-violet-700 dark:border-white/10 dark:text-zinc-300 dark:hover:border-violet-400/40 dark:hover:text-violet-200"}`} key={option} onClick={() => onThemeChange(option)} type="button"><Icon aria-hidden="true" size={18} weight="duotone" />{label}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-400/20 dark:bg-rose-500/10">
+                      <h3 className="font-bold text-rose-800 dark:text-rose-200">重新开始</h3>
+                      <p className="mt-1 text-sm leading-6 text-rose-700 dark:text-rose-200/80">将删除本应用的背景资料与主题偏好，并返回未初始化的 Dashboard。</p>
+                      <button className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white shadow-md shadow-rose-600/20 hover:bg-rose-500 focus:outline-none focus:ring-4 focus:ring-rose-500/20" onClick={handleClear} type="button"><Trash aria-hidden="true" size={16} weight="bold" />清空本地数据并重新引导</button>
+                    </div>
+                  </section>
+                )}
+              </div>
+            </div>
+          </motion.aside>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
