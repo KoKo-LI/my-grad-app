@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "catalog:import-roster": "node --env-file=.env.local --experimental-strip-types scripts/import-undergraduate-roster.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
