@@ -606,7 +606,6 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
 export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, profile, theme }: ProfileDrawerProps) {
   const [activeTab, setActiveTab] = useState<DrawerTab>("profile");
   const formKey = profile ? JSON.stringify(profile) : "onboarding";
-  const isOnboarding = open && profile === null;
 
   const handleClear = () => {
     clearLocalProfileData();
@@ -615,20 +614,17 @@ export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, p
 
   return (
     <div aria-hidden={!open} className={`fixed inset-0 z-50 transition ${open ? "pointer-events-auto" : "pointer-events-none"}`}>
-      {!isOnboarding && <button aria-label="关闭个人资料抽屉" className={`absolute inset-0 bg-slate-950/45 backdrop-blur-[2px] transition-opacity ${open ? "opacity-100" : "opacity-0"}`} onClick={onClose} tabIndex={open ? 0 : -1} type="button" />}
-      <aside aria-label="个人资料与系统设置" aria-modal="true" className={`absolute flex w-full flex-col bg-white transition-transform duration-300 dark:bg-slate-950 ${isOnboarding ? "inset-0 h-[100dvh] max-w-none" : "inset-y-0 right-0 max-w-xl border-l border-slate-200 shadow-2xl dark:border-slate-700"} ${open ? "translate-x-0" : "translate-x-full"}`} role="dialog">
-        <div className={`flex items-center justify-between border-b border-slate-200 py-4 dark:border-slate-700 ${isOnboarding ? "px-5 sm:px-8" : "px-5"}`}>
-          <div className={isOnboarding ? "mx-auto flex w-full max-w-3xl items-center justify-between" : undefined}>
-            <div>
+      <button aria-label="关闭个人资料抽屉" className={`absolute inset-0 bg-slate-950/45 backdrop-blur-[2px] transition-opacity ${open ? "opacity-100" : "opacity-0"}`} onClick={onClose} tabIndex={open ? 0 : -1} type="button" />
+      <aside aria-label="个人资料与系统设置" aria-modal="true" className={`absolute inset-y-0 right-0 flex w-full max-w-xl flex-col border-l border-slate-200 bg-white shadow-2xl transition-transform duration-300 dark:border-slate-700 dark:bg-slate-950 ${open ? "translate-x-0" : "translate-x-full"}`} role="dialog">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+          <div>
             <p className="text-xs font-bold tracking-[0.16em] text-blue-600">MY GRAD PATH</p>
-            <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">{isOnboarding ? "建立你的申请档案" : "个人资料中心"}</h2>
-            {isOnboarding && <p className="mt-1 text-sm text-slate-500">先完成基础信息，系统将为你生成动态选校梯度。</p>}
-            </div>
-            {profile && <button aria-label="关闭抽屉" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white" onClick={onClose} type="button"><CloseIcon /></button>}
+            <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">个人资料中心</h2>
           </div>
+          <button aria-label="关闭抽屉" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white" onClick={onClose} type="button"><CloseIcon /></button>
         </div>
 
-        <div className={`mt-4 grid grid-cols-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800 ${isOnboarding ? "mx-auto w-[calc(100%-2.5rem)] max-w-3xl sm:w-[calc(100%-4rem)]" : "mx-5"}`}>
+        <div className="mx-5 mt-4 grid grid-cols-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
           {([
             ["profile", "🎓 个人背景"],
             ["settings", "⚙️ 系统设置"],
@@ -637,7 +633,7 @@ export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, p
           ))}
         </div>
 
-        <div className={`flex-1 overflow-y-auto py-5 ${isOnboarding ? "mx-auto w-full max-w-3xl px-5 sm:px-8" : "px-5"}`}>
+        <div className="flex-1 overflow-y-auto px-5 py-5">
           {activeTab === "profile" ? (
             <ProfileForm initialProfile={profile ?? emptyProfile} key={formKey} onSaved={onSaved} />
           ) : (

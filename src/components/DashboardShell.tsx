@@ -35,6 +35,12 @@ const tierDetails: Record<SchoolItem["status"], { accent: string; description: s
   },
 };
 
+const unlockMessages: Record<SchoolItem["status"], string> = {
+  Reach: "录入背景后，自动匹配你的冲刺院校。",
+  Target: "录入背景后，自动匹配你的重点申请院校。",
+  Safety: "录入背景后，自动匹配你的保底院校。",
+};
+
 function subscribeToProfile(onStoreChange: () => void) {
   const handleStorage = (event: StorageEvent) => {
     if (event.key === PROFILE_STORAGE_KEY) {
@@ -161,7 +167,15 @@ function SchoolCard({ school }: { school: SchoolMatchResult }) {
   );
 }
 
-function SchoolTierBoard({ tiers }: { tiers: MatchTiers | null }) {
+function SchoolTierBoard({
+  isInitialized,
+  onUnlock,
+  tiers,
+}: {
+  isInitialized: boolean;
+  onUnlock: () => void;
+  tiers: MatchTiers | null;
+}) {
   return (
     <section aria-label="动态选校梯度" className="grid gap-4 xl:grid-cols-3">
       {(Object.keys(tierDetails) as SchoolItem["status"][]).map((tier) => {
@@ -175,10 +189,17 @@ function SchoolTierBoard({ tiers }: { tiers: MatchTiers | null }) {
                 <h2 className="text-base font-extrabold text-slate-900 dark:text-white">{details.title}</h2>
                 <p className="mt-1 text-xs text-slate-500">{details.description}</p>
               </div>
-              <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold text-slate-600 dark:bg-slate-900/70 dark:text-slate-300">{schools.length} 所</span>
+              <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold text-slate-600 dark:bg-slate-900/70 dark:text-slate-300">{isInitialized ? `${schools.length} 所` : "待解锁"}</span>
             </div>
             <div className="mt-4 space-y-3">
-              {tiers ? (
+              {!isInitialized ? (
+                <article className="rounded-2xl border border-dashed border-blue-300 bg-white/75 p-5 shadow-sm dark:border-blue-700 dark:bg-slate-950/75">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-blue-100 text-lg text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">🔒</span>
+                  <h3 className="mt-4 text-sm font-extrabold text-slate-900 dark:text-white">解锁 {details.title} 选校梯度</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{unlockMessages[tier]}</p>
+                  <button className="mt-4 inline-flex h-9 items-center justify-center rounded-xl bg-blue-600 px-3 text-xs font-bold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20" onClick={onUnlock} type="button">⚡️ 录入学术背景</button>
+                </article>
+              ) : tiers ? (
                 schools.length > 0 ? schools.slice(0, 2).map((school) => <SchoolCard key={school.id} school={school} />) : <p className="rounded-2xl border border-dashed border-slate-300 bg-white/85 p-4 text-sm leading-6 text-slate-600 shadow-sm dark:border-slate-600 dark:bg-slate-950/85 dark:text-slate-200">当前筛选条件下暂无院校，可调整目标地区或补充背景资料。</p>
               ) : (
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-white/85 p-5 text-sm leading-6 text-slate-600 shadow-sm dark:border-slate-600 dark:bg-slate-950/85 dark:text-slate-200">保存个人背景后，这里会基于 GPA 与语言门槛自动计算院校梯度。</div>
@@ -266,6 +287,7 @@ export default function DashboardShell() {
   const storedProfile = useSyncExternalStore(subscribeToProfile, getProfileSnapshot, getServerSnapshot);
   const storedTheme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerSnapshot);
   const profile = useMemo(() => parseStoredProfile(storedProfile), [storedProfile]);
+  const isInitialized = profile !== null;
   const theme: ThemeMode = storedTheme === "dark" ? "dark" : "light";
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -274,7 +296,7 @@ export default function DashboardShell() {
   const [searchQuery, setSearchQuery] = useState("");
   const [savedSchoolIds, setSavedSchoolIds] = useState<Set<string>>(new Set());
   const { isLoading, run } = useActionLock();
-  const drawerOpen = drawerRequested || !profile;
+  const drawerOpen = drawerRequested;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -340,20 +362,20 @@ export default function DashboardShell() {
             <button aria-label="打开侧边栏" aria-expanded={mobileSidebarOpen} className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-300 xl:hidden" onClick={() => setMobileSidebarOpen(true)} type="button">☰</button>
             <div className="relative min-w-0 flex-1"><span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">⌕</span><input aria-label="全局搜索" className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" onChange={(event) => setSearchQuery(event.target.value.slice(0, 80))} placeholder="搜索院校、项目或地区…" value={searchQuery} /></div>
             {profile && <p className="hidden whitespace-nowrap text-xs font-semibold text-slate-500 2xl:block">{getProfileSnapshotText(profile)}</p>}
-            <button className="hidden h-10 shrink-0 items-center rounded-xl border border-slate-200 px-3 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 lg:inline-flex dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => setDrawerRequested(true)} type="button">✏️ 修改背景</button>
+            <button className={`inline-flex h-10 shrink-0 items-center rounded-xl border px-3 text-sm font-bold transition focus:outline-none focus:ring-4 ${isInitialized ? "border-slate-200 text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus:ring-blue-500/10 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" : "animate-pulse border-amber-300 bg-amber-50 text-amber-900 shadow-md shadow-amber-400/20 hover:bg-amber-100 focus:ring-amber-400/30 dark:border-amber-500/70 dark:bg-amber-950/50 dark:text-amber-200 dark:hover:bg-amber-950"}`} onClick={() => setDrawerRequested(true)} type="button">{isInitialized ? "✏️ 修改背景" : "⚡️ 录入学术背景"}</button>
             <button aria-label="打开个人设置" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-700 text-xs font-bold text-white" onClick={() => setDrawerRequested(true)} type="button">MP</button>
           </div>
         </header>
 
         <div className="mx-auto max-w-[1600px] px-4 py-7 sm:px-6 xl:px-8">
-          {!profile && <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200"><span><strong>当前为演示模式，</strong>请先完善个人背景以启用动态选校算法。</span><button className="font-bold underline underline-offset-4" onClick={() => setDrawerRequested(true)} type="button">立即填写</button></div>}
+          {!isInitialized && <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200"><span><strong>选校看板已就绪。</strong>录入学术背景后即可解锁个性化匹配与申请梯度。</span><button className="font-bold underline underline-offset-4" onClick={() => setDrawerRequested(true)} type="button">立即解锁</button></div>}
 
           <section className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div><p className="text-xs font-bold tracking-[0.16em] text-blue-600">APPLICATION INTELLIGENCE</p><h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl dark:text-white">申请仪表盘</h1><p className="mt-2 text-sm leading-6 text-slate-500">由你的学术背景驱动的选校策略、申请节奏与材料进度。</p></div>
-            <button className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500" disabled={!profile || isLoading} onClick={handleRefreshRecommendations} type="button">{isLoading ? "Loading..." : "✦ 刷新智能推荐"}</button>
+            <button className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500" disabled={!isInitialized || isLoading} onClick={handleRefreshRecommendations} type="button">{isLoading ? "Loading..." : "✦ 刷新智能推荐"}</button>
           </section>
 
-          <SchoolTierBoard tiers={searchedTiers} />
+          <SchoolTierBoard isInitialized={isInitialized} onUnlock={() => setDrawerRequested(true)} tiers={searchedTiers} />
           <div className="mt-7"><RecommendationCarousel isLoading={isLoading} onAdd={handleAddSchool} recommendations={recommendations} savedSchoolIds={savedSchoolIds} /></div>
           <div className="mt-7"><DeadlineChecklist schools={allSchools} /></div>
         </div>
