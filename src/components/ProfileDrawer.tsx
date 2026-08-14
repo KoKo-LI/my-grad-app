@@ -70,7 +70,7 @@ function ProfileField({
         {helper && <span className="text-xs font-normal text-slate-400">{helper}</span>}
       </span>
       <input
-        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+        className="h-11 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3.5 text-sm text-slate-900 shadow-inner shadow-slate-950/[0.03] outline-none transition-all placeholder:text-slate-400 hover:border-violet-400/50 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-black/20 dark:hover:border-violet-500/40 dark:focus:border-violet-500/60 dark:text-white"
         inputMode="decimal"
         max={maxValue}
         maxLength={maxLength}
@@ -108,7 +108,7 @@ function OptionalTextField({
         <span className="text-xs font-normal text-slate-400">选填</span>
       </span>
       <input
-        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+        className="h-11 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3.5 text-sm text-slate-900 shadow-inner shadow-slate-950/[0.03] outline-none transition-all placeholder:text-slate-400 hover:border-violet-400/50 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-black/20 dark:hover:border-violet-500/40 dark:focus:border-violet-500/60 dark:text-white"
         maxLength={120}
         onChange={(event) => onChange(sanitizePlainText(event.target.value, 120))}
         placeholder={placeholder}
@@ -130,10 +130,10 @@ function SelectionChip({
   return (
     <button
       aria-pressed={isSelected}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition focus:outline-none focus:ring-4 focus:ring-blue-500/10 ${
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/20 ${
         isSelected
-          ? "border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20"
-          : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500"
+          ? "border-violet-500/50 bg-violet-600 text-white shadow-sm shadow-violet-600/20 dark:border-violet-500/50 dark:bg-violet-500/80"
+          : "border-slate-200/80 bg-white/80 text-slate-600 hover:border-violet-400/50 hover:bg-violet-50/60 dark:border-white/10 dark:bg-zinc-900/50 dark:text-slate-300 dark:hover:border-violet-500/40"
       }`}
       onClick={onClick}
       type="button"
@@ -239,19 +239,19 @@ function CompetitionAwards({
           <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">竞赛与获奖</h4>
           <p className="mt-1 text-xs text-slate-500">选填，例如：AMC 12 AIME 晋级、科研竞赛一等奖。</p>
         </div>
-        <span className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">{awards.length}/12</span>
+        <span className="rounded-full border border-violet-200/60 bg-violet-50 px-2 py-1 text-[11px] font-bold text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">{awards.length}/12</span>
       </div>
       <div className="mt-3 flex gap-2">
         <input
           aria-label="竞赛与获奖"
-          className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200/80 bg-white/80 px-3 text-sm text-slate-900 shadow-inner shadow-slate-950/[0.03] outline-none transition-all placeholder:text-slate-400 hover:border-violet-400/50 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-black/20 dark:hover:border-violet-500/40 dark:focus:border-violet-500/60 dark:text-white"
           maxLength={80}
           onChange={(event) => setDraftAward(sanitizePlainText(event.target.value, 80))}
           placeholder="输入竞赛或奖项名称"
           value={draftAward}
         />
         <button
-          className="h-10 shrink-0 rounded-xl border border-blue-200 bg-white px-3 text-xs font-bold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-300"
+          className="h-10 shrink-0 rounded-xl border border-slate-200/80 bg-white/80 px-3 text-xs font-bold text-violet-700 transition-all hover:border-violet-400/50 hover:bg-violet-50/60 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-zinc-900/50 dark:text-violet-300 dark:hover:border-violet-500/40"
           disabled={!canAdd}
           onClick={() => {
             if (!canAdd) return;
@@ -266,7 +266,7 @@ function CompetitionAwards({
       {awards.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {awards.map((award, index) => (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white py-1 pl-2.5 pr-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" key={award}>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 py-1 pl-2.5 pr-1 text-xs font-medium text-slate-700 dark:border-white/10 dark:bg-zinc-900/50 dark:text-slate-200" key={award}>
               {award}
               <button aria-label={`删除竞赛奖项 ${award}`} className="flex size-5 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" onClick={() => onRemove(index)} type="button">×</button>
             </span>
@@ -304,22 +304,22 @@ function SubjectScoreBranch({
     <section>
       <div className="flex items-center justify-between gap-3">
         <div><h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{label}</h4><p className="mt-1 text-xs text-slate-500">按科目录入，每门课程可单独修改。</p></div>
-        <span className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">{subjects.length} 门</span>
+        <span className="rounded-full border border-violet-200/60 bg-violet-50 px-2 py-1 text-[11px] font-bold text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">{subjects.length} 门</span>
       </div>
       <div className="mt-3 flex gap-2">
-        <select aria-label={`选择${label}`} className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" disabled={availableSubjects.length === 0} onChange={(event) => setNewSubject(event.target.value)} value={newSubject}>
+        <select aria-label={`选择${label}`} className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200/80 bg-white/80 px-3 text-sm text-slate-800 shadow-inner shadow-slate-950/[0.03] outline-none transition-all hover:border-violet-400/50 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-black/20 dark:hover:border-violet-500/40 dark:focus:border-violet-500/60 dark:text-white" disabled={availableSubjects.length === 0} onChange={(event) => setNewSubject(event.target.value)} value={newSubject}>
           <option value="">选择科目</option>
           {availableSubjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}
         </select>
-        <button className="h-10 shrink-0 rounded-xl border border-blue-200 bg-white px-3 text-xs font-bold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-300" disabled={!newSubject} onClick={() => { onAdd(newSubject); setNewSubject(""); }} type="button">+ 添加</button>
+        <button className="h-10 shrink-0 rounded-xl border border-slate-200/80 bg-white/80 px-3 text-xs font-bold text-violet-700 transition-all hover:border-violet-400/50 hover:bg-violet-50/60 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-zinc-900/50 dark:text-violet-300 dark:hover:border-violet-500/40" disabled={!newSubject} onClick={() => { onAdd(newSubject); setNewSubject(""); }} type="button">+ 添加</button>
       </div>
       {subjects.length > 0 && <div className="mt-3 space-y-3">
         {subjects.map((subjectScore, index) => (
           <div className="grid grid-cols-[minmax(0,1fr)_100px_auto] gap-2" key={subjectScore.subject}>
-            <select aria-label={`${label} ${index + 1}`} className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" onChange={(event) => onChange(index, { ...subjectScore, subject: event.target.value })} value={subjectScore.subject}>
+            <select aria-label={`${label} ${index + 1}`} className="min-w-0 rounded-xl border border-slate-200/80 bg-white/80 px-3 text-sm text-slate-800 shadow-inner shadow-slate-950/[0.03] outline-none transition-all hover:border-violet-400/50 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-black/20 dark:hover:border-violet-500/40 dark:focus:border-violet-500/60 dark:text-white" onChange={(event) => onChange(index, { ...subjectScore, subject: event.target.value })} value={subjectScore.subject}>
               {subjectOptions.map((subject) => <option disabled={subject !== subjectScore.subject && selectedSubjects.has(subject)} key={subject} value={subject}>{subject}</option>)}
             </select>
-            <input aria-label={`${label} 分数 ${index + 1}`} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white" inputMode="numeric" max={maximumScore} maxLength={1} onChange={(event) => onChange(index, { ...subjectScore, score: sanitizePositiveScore(event.target.value, maximumScore, 1) })} placeholder={scoreHelper} value={subjectScore.score} />
+            <input aria-label={`${label} 分数 ${index + 1}`} className="h-10 rounded-xl border border-slate-200/80 bg-white/80 px-3 text-sm text-slate-900 shadow-inner shadow-slate-950/[0.03] outline-none transition-all hover:border-violet-400/50 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-black/20 dark:hover:border-violet-500/40 dark:focus:border-violet-500/60 dark:text-white" inputMode="numeric" max={maximumScore} maxLength={1} onChange={(event) => onChange(index, { ...subjectScore, score: sanitizePositiveScore(event.target.value, maximumScore, 1) })} placeholder={scoreHelper} value={subjectScore.score} />
             <button aria-label={`删除${label} ${subjectScore.subject}`} className="rounded-xl px-2 text-sm font-bold text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" onClick={() => onRemove(index)} type="button">×</button>
           </div>
         ))}
@@ -491,8 +491,8 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      <section className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 dark:border-blue-900/70 dark:bg-blue-950/20">
-        <p className="text-xs font-bold tracking-[0.14em] text-blue-600 dark:text-blue-300">QUICK PRESETS</p>
+      <section className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm backdrop-blur-xl transition-all hover:border-violet-400/50 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-2xl dark:hover:border-violet-500/40">
+        <p className="text-xs font-bold tracking-[0.14em] text-violet-700 dark:text-violet-300">QUICK PRESETS</p>
         <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">快速建立申请基准</h3>
@@ -502,7 +502,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
         <div className="mt-3 flex flex-wrap gap-2">
           {profilePresets.map((preset) => (
             <button
-              className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-left text-xs font-semibold text-blue-800 transition hover:border-blue-400 hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-500/15 dark:border-blue-800 dark:bg-slate-950 dark:text-blue-200 dark:hover:bg-blue-950"
+              className="rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-left text-xs font-semibold text-violet-800 shadow-sm backdrop-blur-xl transition-all hover:border-violet-500/50 hover:bg-violet-50/60 hover:shadow-[0_0_15px_rgba(139,92,246,0.15)] focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:text-violet-200 dark:hover:border-violet-500/50 dark:hover:bg-violet-500/10 dark:hover:shadow-[0_0_15px_rgba(139,92,246,0.15)]"
               key={preset.id}
               onClick={() => applyPreset(preset.id)}
               type="button"
@@ -515,7 +515,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
       </section>
       <fieldset>
         <legend className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">申请目标</legend>
-        <div className="grid grid-cols-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+        <div className="grid grid-cols-2 rounded-xl bg-slate-100 p-1 dark:bg-zinc-800/40">
           {([
             ["undergraduate", "申请本科"],
             ["graduate", "申请研究生"],
@@ -524,8 +524,8 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
               aria-pressed={draft.degreeTarget === target}
               className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
                 draft.degreeTarget === target
-                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
-                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  ? "bg-white/80 text-violet-700 shadow-sm backdrop-blur-xl dark:bg-zinc-900/50 dark:text-violet-200"
+                  : "text-slate-500 hover:text-violet-700 dark:text-slate-400 dark:hover:text-violet-200"
               }`}
               key={target}
               onClick={() => updateDegreeTarget(target)}
@@ -542,7 +542,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
           <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">当前阶段</span>
           <select
             aria-label="当前阶段"
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            className="h-11 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3.5 text-sm text-slate-900 shadow-inner shadow-slate-950/[0.03] outline-none transition-all hover:border-violet-400/50 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-black/20 dark:hover:border-violet-500/40 dark:focus:border-violet-500/60 dark:text-white"
             onChange={(event) => updateDraft((profile) => ({ ...profile, currentStage: event.target.value }))}
             value={draft.currentStage}
           >
@@ -562,7 +562,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
         <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">目标专业</span>
         <select
           aria-label="目标专业"
-          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          className="h-11 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3.5 text-sm text-slate-900 shadow-inner shadow-slate-950/[0.03] outline-none transition-all hover:border-violet-400/50 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-black/20 dark:hover:border-violet-500/40 dark:focus:border-violet-500/60 dark:text-white"
           onChange={(event) => updateDraft((profile) => ({ ...profile, targetMajor: event.target.value }))}
           value={draft.targetMajor}
         >
@@ -571,7 +571,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
         </select>
       </label>
 
-      <fieldset className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+      <fieldset className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm backdrop-blur-xl transition-all hover:border-violet-400/50 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-2xl dark:hover:border-violet-500/40">
         <legend className="px-1 text-sm font-semibold text-slate-800 dark:text-slate-100">考试成绩</legend>
         <p className="mt-1 text-xs leading-5 text-slate-500">先选择考试类型，再填写对应分数。</p>
         <div className="mt-4 space-y-4">
@@ -598,7 +598,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
         )}
       </fieldset>
 
-      <fieldset className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+      <fieldset className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm backdrop-blur-xl transition-all hover:border-violet-400/50 dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-2xl dark:hover:border-violet-500/40">
         <legend className="px-1 text-sm font-semibold text-slate-800 dark:text-slate-100">学术成绩</legend>
         <p className="mt-1 text-xs leading-5 text-slate-500">{draft.degreeTarget === "undergraduate" ? "完成 AP 至少一门科目成绩或填写 IB 总分，两者任选其一即可。" : "可随时补充论文、科研和学术奖项。"}</p>
         <div className="mt-4"><AcademicRecordFields academicRecord={draft.academicRecord} degreeTarget={draft.degreeTarget} onCompetitionAdd={addCompetitionAward} onCompetitionRemove={removeCompetitionAward} onIbTotalChange={(value) => updateAcademicRecord("ibTotalScore", value)} onScalarChange={updateAcademicRecord} onSubjectAdd={addAcademicSubject} onSubjectChange={updateAcademicSubject} onSubjectRemove={removeAcademicSubject} /></div>
@@ -614,7 +614,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
       <div className="border-t border-slate-200 pt-5 dark:border-slate-700">
         {validationError && <p aria-live="polite" className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium leading-5 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200">{validationError}</p>}
         <p className="mb-3 text-xs leading-5 text-slate-500">输入只会按受限数值和白名单选项保存，React 会安全转义界面内容。</p>
-        <button className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20" type="submit">保存并更新选校梯度</button>
+        <button className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-violet-600 px-4 text-sm font-semibold text-white transition-all hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30" type="submit">保存并更新选校梯度</button>
       </div>
     </form>
   );
@@ -659,7 +659,7 @@ export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, p
             animate={{ opacity: 1, scale: 1, y: 0 }}
             aria-label="个人资料与系统设置"
             aria-modal="true"
-            className="absolute inset-0 flex min-h-[100dvh] flex-col overflow-hidden bg-zinc-50 shadow-2xl shadow-zinc-950/30 dark:bg-zinc-950"
+            className="absolute inset-0 flex min-h-[100dvh] flex-col overflow-hidden bg-[#f5f5f7] shadow-2xl shadow-zinc-950/30 dark:bg-zinc-950"
             exit={{ opacity: 0, scale: 0.985, y: 18 }}
             initial={{ opacity: 0, scale: 0.985, y: 18 }}
             role="dialog"
@@ -668,21 +668,21 @@ export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, p
             <div className="border-b border-zinc-200/80 bg-white/80 px-5 py-4 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80 sm:px-8">
               <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-bold tracking-[0.18em] text-blue-600 dark:text-blue-300">MY GRAD PATH</p>
+                  <p className="text-xs font-bold tracking-[0.18em] text-violet-700 dark:text-violet-300">MY GRAD PATH</p>
                   <h2 className="mt-1 text-xl font-extrabold tracking-tight text-zinc-900 dark:text-white">完善个人背景</h2>
                   <p className="mt-1 hidden text-sm text-zinc-500 dark:text-zinc-400 sm:block">完成后将即时更新你的选校梯度与申请建议。</p>
                 </div>
-                <button aria-label="返回 Dashboard" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-bold text-zinc-700 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-zinc-900/70 dark:text-zinc-200 dark:hover:border-violet-400/40 dark:hover:bg-violet-500/10 dark:hover:text-violet-100" onClick={onClose} type="button"><ArrowLeft aria-hidden="true" size={16} weight="bold" />返回 Dashboard</button>
+                <button aria-label="返回 Dashboard" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200/80 bg-white/80 px-3 text-sm font-bold text-zinc-700 shadow-sm backdrop-blur-xl transition-all hover:border-violet-400/50 hover:bg-violet-50/60 hover:text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-zinc-900/50 dark:text-zinc-200 dark:hover:border-violet-500/40 dark:hover:bg-violet-500/10 dark:hover:text-violet-100" onClick={onClose} type="button"><ArrowLeft aria-hidden="true" size={16} weight="bold" />返回 Dashboard</button>
               </div>
             </div>
 
-            <div className="border-b border-zinc-200/80 bg-white/65 px-5 py-4 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/65 sm:px-8">
-              <div className="mx-auto grid w-full max-w-5xl grid-cols-2 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900">
+            <div className="border-b border-slate-200/80 bg-white/80 px-5 py-4 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/65 sm:px-8">
+              <div className="mx-auto grid w-full max-w-5xl grid-cols-2 rounded-xl bg-slate-100 p-1 dark:bg-zinc-800/40">
                 {([
                   ["profile", "个人背景", GraduationCap],
                   ["settings", "系统设置", GearSix],
                 ] as const).map(([tab, label, Icon]) => (
-                  <button aria-pressed={activeTab === tab} className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${activeTab === tab ? "bg-white text-blue-700 shadow-sm dark:bg-zinc-800 dark:text-blue-300" : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"}`} key={tab} onClick={() => setActiveTab(tab)} type="button"><Icon aria-hidden="true" size={17} weight={activeTab === tab ? "fill" : "bold"} />{label}</button>
+                  <button aria-pressed={activeTab === tab} className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all ${activeTab === tab ? "bg-white/80 text-violet-700 shadow-sm backdrop-blur-xl dark:bg-zinc-900/50 dark:text-violet-200" : "text-zinc-500 hover:text-violet-700 dark:text-zinc-400 dark:hover:text-violet-200"}`} key={tab} onClick={() => setActiveTab(tab)} type="button"><Icon aria-hidden="true" size={17} weight={activeTab === tab ? "fill" : "bold"} />{label}</button>
                 ))}
               </div>
             </div>
@@ -701,7 +701,7 @@ export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, p
                           ["light", "浅色", Sun],
                           ["dark", "深色", Moon],
                         ] as const).map(([option, label, Icon]) => (
-                          <button aria-pressed={theme === option} className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold ${theme === option ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-400/55 dark:bg-blue-500/10 dark:text-blue-200" : "border-zinc-200 text-zinc-600 hover:border-violet-300 hover:text-violet-700 dark:border-white/10 dark:text-zinc-300 dark:hover:border-violet-400/40 dark:hover:text-violet-200"}`} key={option} onClick={() => onThemeChange(option)} type="button"><Icon aria-hidden="true" size={18} weight="duotone" />{label}</button>
+                          <button aria-pressed={theme === option} className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${theme === option ? "border-violet-400/50 bg-violet-50 text-violet-700 shadow-sm dark:border-violet-500/50 dark:bg-violet-500/10 dark:text-violet-200" : "border-slate-200/80 bg-white/80 text-zinc-600 hover:border-violet-400/50 hover:text-violet-700 dark:border-white/10 dark:bg-zinc-900/50 dark:text-zinc-300 dark:hover:border-violet-500/40 dark:hover:text-violet-200"}`} key={option} onClick={() => onThemeChange(option)} type="button"><Icon aria-hidden="true" size={18} weight="duotone" />{label}</button>
                         ))}
                       </div>
                     </div>
