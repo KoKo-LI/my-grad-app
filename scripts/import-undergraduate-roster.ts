@@ -113,7 +113,16 @@ async function main(): Promise<void> {
     throw new Error(`Roster import failed: ${error.message}`);
   }
 
-  console.log(`Imported ${data.length} institution candidates into ${collectionKey}.`);
+  const { count, error: countError } = await client
+    .from("institution_intake_queue")
+    .select("*", { count: "exact", head: true })
+    .eq("collection_key", collectionKey);
+
+  if (countError) {
+    throw new Error(`Roster import completed, but the collection count could not be verified: ${countError.message}`);
+  }
+
+  console.log(`Imported ${data.length} institution candidates; ${count ?? 0} rows now exist in ${collectionKey}.`);
 }
 
 main().catch((error: unknown) => {
