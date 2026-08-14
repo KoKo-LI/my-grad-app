@@ -20,8 +20,9 @@ import ApplicationTimeline from "@/components/ApplicationTimeline";
 import ProfileDrawer from "@/components/ProfileDrawer";
 import Sidebar from "@/components/Sidebar";
 import { schoolCatalog } from "@/data/schoolCatalog";
-import type { SchoolItem, SchoolMatchResult, StudentProfile } from "@/types";
+import type { SchoolItem, SchoolMatchInput, SchoolMatchResult, StudentProfile } from "@/types";
 import { matchSchools } from "@/utils/matchEngine";
+import { parseUndergraduateCatalog } from "@/lib/undergraduateCatalog";
 import {
   createProfileFromPreset,
   parseSavedSchoolIds,
@@ -445,15 +446,41 @@ export default function DashboardShell() {
   const [toast, setToast] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [recommendationVersion, setRecommendationVersion] = useState(0);
+  const [undergraduateCatalog, setUndergraduateCatalog] = useState<SchoolMatchInput[]>([]);
   const { isLoading, run } = useActionLock();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadUndergraduateCatalog() {
+      try {
+        const response = await fetch("/api/undergraduate-programs", { signal: controller.signal });
+        if (!response.ok) return;
+
+        const payload: unknown = await response.json();
+        const catalog = parseUndergraduateCatalog(payload);
+        if (catalog.length > 0) setUndergraduateCatalog(catalog);
+      } catch {
+        // The verified API catalog is optional during initial Supabase setup.
+      }
+    }
+
+    void loadUndergraduateCatalog();
+    return () => controller.abort();
+  }, []);
+
+  const activeCatalog = useMemo(
+    () => (profile?.degreeTarget === "undergraduate" && undergraduateCatalog.length > 0 ? undergraduateCatalog : schoolCatalog),
+    [profile?.degreeTarget, undergraduateCatalog],
+  );
+
   const tiers = useMemo(
-    () => (initializedProfile ? matchSchools(initializedProfile, schoolCatalog) : null),
-    [initializedProfile],
+    () => (initializedProfile ? matchSchools(initializedProfile, activeCatalog) : null),
+    [activeCatalog, initializedProfile],
   );
   const searchedTiers = useMemo(() => {
     if (!tiers) return null;
