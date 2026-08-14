@@ -70,4 +70,25 @@
 - [x] Add hover, press, focus, loading, and Toast feedback.
 - [x] Verify desktop, mobile, and primary interactions.
 
+## Incremental pass — Deadline & timeline
+
+- Implementation evidence, dark: `/private/tmp/my-grad-incremental-dark.png` at 1440 × 1005 px, rendered from a 1440 × 1024 CSS viewport.
+- Implementation evidence, light: `/private/tmp/my-grad-incremental-light.png` at 1440 × 1005 px, rendered from the same viewport and interaction state.
+- Scope truth: this incremental pass has no new mock image; it verifies the user-specified horizontal Deadline banner, the directly following application timeline, and the requested glass/ambient treatment against the established visual system.
+
+### Findings
+
+- No actionable P0/P1/P2 findings.
+- The Deadline module now spans the complete content rail, giving the nearest deadline a dedicated title, program, date, and countdown hierarchy.
+- The application overview appears immediately below it. It shows an explicit empty state until an applicant uses the existing `加入选校` control; once populated, each selected school receives four dynamic dates calculated from its own deadline. Hover and keyboard focus reveal the complete milestone preview.
+- Header, recommendation, Deadline, timeline, and checklist surfaces use the same translucent light and dark card tokens. Fixed low-contrast ambient glows are visible without reducing text contrast.
+- Dark/light toggle was exercised in-browser and restored to the prior dark setting. Browser console reported no warnings or errors after the final reload.
+
+### Final checks
+
+- [x] Timeline types live in `src/types/index.ts`; milestone data is derived, not hard-coded per school.
+- [x] Existing Framer Motion profile transition is retained; timeline nodes add isolated hover/tap motion.
+- [x] Global active press feedback and card hover elevation remain intact.
+- [x] ESLint, TypeScript, diff whitespace check, and final Webpack production build pass.
+
 final result: passed

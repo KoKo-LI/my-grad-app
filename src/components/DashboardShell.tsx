@@ -16,6 +16,7 @@ import {
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import ApplicationTimeline from "@/components/ApplicationTimeline";
 import ProfileDrawer from "@/components/ProfileDrawer";
 import Sidebar from "@/components/Sidebar";
 import { schoolCatalog } from "@/data/schoolCatalog";
@@ -185,7 +186,7 @@ function SchoolCard({ school }: { school: SchoolMatchResult }) {
         : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200";
 
   return (
-    <article className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg hover:shadow-zinc-950/10 dark:border-white/10 dark:bg-zinc-900/50 dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-black/25">
+    <article className="rounded-2xl border border-slate-200/80 bg-white/60 p-4 shadow-sm backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg hover:shadow-zinc-950/10 dark:border-white/10 dark:bg-zinc-900/50 dark:hover:border-violet-500/40 dark:hover:shadow-black/25">
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-xs font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
           {school.shortName}
@@ -254,7 +255,7 @@ function SchoolTierBoard({
 
         return (
           <section
-            className={`min-h-[370px] rounded-3xl border p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-950/5 dark:backdrop-blur-md dark:hover:shadow-black/20 ${details.accent}`}
+            className={`min-h-[370px] rounded-3xl border p-5 backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-950/5 dark:hover:shadow-black/20 ${details.accent}`}
             key={tier}
           >
             <div className="flex items-start justify-between gap-3">
@@ -305,7 +306,7 @@ function RecommendationCarousel({
   savedSchoolIds: Set<string>;
 }) {
   return (
-    <section className="rounded-3xl border border-zinc-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50">
+    <section className="rounded-3xl border border-slate-200/80 bg-white/60 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold tracking-[0.16em] text-blue-600 dark:text-blue-300">SMART RECOMMENDATIONS</p>
@@ -350,9 +351,53 @@ function RecommendationCarousel({
   );
 }
 
-function DeadlineChecklist({ schools }: { schools: SchoolMatchResult[] }) {
+function DeadlineBanner({ schools }: { schools: SchoolMatchResult[] }) {
   const nearestSchool = [...schools].sort((first, second) => first.deadline.localeCompare(second.deadline))[0];
   const daysLeft = nearestSchool ? getDaysUntil(nearestSchool.deadline) : null;
+
+  return (
+    <article className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white/60 p-6 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50 sm:p-7">
+      <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-blue-700 shadow-sm dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-200">
+            <CalendarBlank aria-hidden="true" size={24} weight="duotone" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-bold tracking-[0.16em] text-blue-600 dark:text-blue-300">NEXT DEADLINE</p>
+            {nearestSchool ? (
+              <>
+                <h2 className="mt-2 truncate text-2xl font-extrabold tracking-tight text-zinc-950 dark:text-white sm:text-3xl">{nearestSchool.name}</h2>
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{nearestSchool.program} · {nearestSchool.region}</p>
+              </>
+            ) : (
+              <>
+                <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-zinc-950 dark:text-white sm:text-3xl">等待你的第一所申请院校</h2>
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">保存背景后，系统会根据匹配院校突出显示最近截止日期。</p>
+              </>
+            )}
+          </div>
+        </div>
+        {nearestSchool ? (
+          <div className="flex shrink-0 items-center gap-5 rounded-2xl border border-zinc-200/80 bg-white/65 px-5 py-4 shadow-sm dark:border-white/10 dark:bg-zinc-950/35">
+            <div>
+              <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400">终轮截止</p>
+              <p className="mt-1 text-sm font-bold text-zinc-800 dark:text-zinc-100">{nearestSchool.deadline}</p>
+            </div>
+            <span className="h-10 w-px bg-zinc-200 dark:bg-white/10" />
+            <div className="text-right">
+              <p className="text-3xl font-black leading-none text-blue-600 dark:text-blue-300">{daysLeft}</p>
+              <p className="mt-1 text-xs font-bold text-zinc-500 dark:text-zinc-400">天后截止</p>
+            </div>
+          </div>
+        ) : (
+          <span className="flex w-fit items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 dark:border-violet-400/25 dark:bg-violet-500/10 dark:text-violet-200"><Clock aria-hidden="true" size={15} weight="bold" />等待解锁</span>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function MaterialChecklist() {
   const checklist = [
     ["准备成绩单与在读证明", true],
     ["完成个人陈述初稿", false],
@@ -360,31 +405,7 @@ function DeadlineChecklist({ schools }: { schools: SchoolMatchResult[] }) {
   ] as const;
 
   return (
-    <section className="grid gap-4 lg:grid-cols-[1.05fr_1fr]">
-      <article className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6 text-white shadow-xl shadow-zinc-950/15 dark:border-white/10 dark:bg-zinc-900/80">
-        <p className="text-xs font-bold tracking-[0.16em] text-blue-300">NEXT DEADLINE</p>
-        {nearestSchool ? (
-          <>
-            <div className="mt-4 flex items-end justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-extrabold">{nearestSchool.name}</h2>
-                <p className="mt-2 text-sm text-zinc-400">{nearestSchool.program}</p>
-              </div>
-              <div className="text-right">
-                <span className="text-4xl font-black text-blue-300">{daysLeft}</span>
-                <p className="mt-1 text-xs font-bold text-zinc-500">天后截止</p>
-              </div>
-            </div>
-            <p className="mt-5 border-t border-white/10 pt-4 text-sm text-zinc-400">截止日期：{nearestSchool.deadline}</p>
-          </>
-        ) : (
-          <div className="mt-5 flex items-start gap-3 text-sm leading-6 text-zinc-400">
-            <Clock aria-hidden="true" className="mt-0.5 shrink-0 text-blue-300" size={18} />
-            保存背景后，将根据匹配院校展示最近申请截止日期。
-          </div>
-        )}
-      </article>
-      <article className="rounded-3xl border border-zinc-200/80 bg-white/80 p-6 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50">
+    <section className="rounded-3xl border border-slate-200/80 bg-white/60 p-6 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50">
         <p className="text-xs font-bold tracking-[0.16em] text-blue-600 dark:text-blue-300">MATERIAL CHECKLIST</p>
         <h2 className="mt-1 text-xl font-extrabold text-zinc-950 dark:text-white">材料准备清单</h2>
         <ul className="mt-4 space-y-3">
@@ -397,7 +418,6 @@ function DeadlineChecklist({ schools }: { schools: SchoolMatchResult[] }) {
             </li>
           ))}
         </ul>
-      </article>
     </section>
   );
 }
@@ -444,6 +464,10 @@ export default function DashboardShell() {
     [searchedTiers],
   );
   const allSchools = useMemo(() => (tiers ? Object.values(tiers).flat() : []), [tiers]);
+  const selectedSchools = useMemo(
+    () => allSchools.filter((school) => savedSchoolIds.has(school.id)),
+    [allSchools, savedSchoolIds],
+  );
 
   const handleThemeChange = (nextTheme: ThemeMode) => {
     window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
@@ -473,7 +497,11 @@ export default function DashboardShell() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100">
+    <div className="relative min-h-screen overflow-x-hidden bg-zinc-50 text-zinc-900 transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <span className="absolute -left-32 top-24 size-[30rem] rounded-full bg-blue-300/20 blur-[120px] dark:bg-violet-500/10" />
+        <span className="absolute -right-40 bottom-[-8rem] size-[34rem] rounded-full bg-violet-300/20 blur-[120px] dark:bg-blue-500/10" />
+      </div>
       <Sidebar
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
@@ -484,8 +512,8 @@ export default function DashboardShell() {
         }}
         onToggle={() => setSidebarCollapsed((currentValue) => !currentValue)}
       />
-      <main className={`min-h-screen transition-[padding] duration-300 ${sidebarCollapsed ? "xl:pl-[84px]" : "xl:pl-[264px]"}`}>
-        <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-white/80 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80 xl:px-8">
+      <main className={`relative z-10 min-h-screen transition-[padding] duration-300 ${sidebarCollapsed ? "xl:pl-[84px]" : "xl:pl-[264px]"}`}>
+        <header className="sticky top-0 z-20 border border-slate-200/80 bg-white/60 px-4 py-3 backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50 xl:px-8">
           <div className="mx-auto flex max-w-[1600px] items-center gap-3">
             <button
               aria-expanded={mobileSidebarOpen}
@@ -540,7 +568,7 @@ export default function DashboardShell() {
           <section className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-xs font-bold tracking-[0.19em] text-blue-600 dark:text-blue-300">APPLICATION INTELLIGENCE</p>
-              <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] text-zinc-950 sm:text-4xl dark:text-white">申请仪表盘</h1>
+              <h1 className="mt-2 bg-gradient-to-r from-zinc-950 via-blue-700 to-violet-600 bg-clip-text text-3xl font-black tracking-[-0.04em] text-transparent sm:text-4xl dark:from-white dark:via-blue-200 dark:to-violet-300">申请仪表盘</h1>
               <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">由你的学术背景驱动的选校策略、申请节奏与材料进度。</p>
             </div>
             <button
@@ -556,7 +584,11 @@ export default function DashboardShell() {
 
           <SchoolTierBoard isInitialized={isInitialized} onUnlock={() => setDrawerRequested(true)} onUseDefault={handleUseDefaultProfile} tiers={searchedTiers} />
           <div className="mt-7"><RecommendationCarousel isLoading={isLoading} onAdd={handleAddSchool} recommendations={recommendations} savedSchoolIds={savedSchoolIds} /></div>
-          <div className="mt-7"><DeadlineChecklist schools={allSchools} /></div>
+          <div className="mt-7 space-y-4">
+            <DeadlineBanner schools={allSchools} />
+            <ApplicationTimeline schools={selectedSchools} />
+            <MaterialChecklist />
+          </div>
           <footer className="mt-9 flex items-center justify-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
             <CalendarBlank aria-hidden="true" size={14} /> 你的资料仅保存在当前浏览器，可随时修改。
           </footer>

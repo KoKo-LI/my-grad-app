@@ -74,6 +74,14 @@ export interface SchoolMatchResult extends SchoolItem {
   shortName: string;
 }
 
+export type ApplicationTimelineStage = "portalOpen" | "priorityDeadline" | "finalDeadline" | "decisionRelease";
+
+export interface ApplicationTimelineMilestone {
+  date: string;
+  label: string;
+  stage: ApplicationTimelineStage;
+}
+
 /**
  * A single graduate-school application in the future application tracker.
  */
