@@ -186,7 +186,7 @@ function SchoolCard({ school }: { school: SchoolMatchResult }) {
         : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200";
 
   return (
-    <article className="rounded-2xl border border-slate-200/80 bg-white/60 p-4 shadow-sm backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg hover:shadow-zinc-950/10 dark:border-white/10 dark:bg-zinc-900/50 dark:hover:border-violet-500/40 dark:hover:shadow-black/25">
+    <article className="rounded-2xl border border-slate-200/80 bg-white/60 p-4 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] dark:border-white/10 dark:bg-zinc-900/50">
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-xs font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
           {school.shortName}
@@ -208,7 +208,7 @@ function UnlockCard({ onUnlock, onUseDefault, tier }: { onUnlock: () => void; on
   const details = tierDetails[tier];
 
   return (
-    <article className="flex min-h-[254px] flex-col rounded-2xl border border-dashed border-zinc-300 bg-white/65 p-5 shadow-sm dark:border-white/15 dark:bg-zinc-950/35">
+    <article className="dashboard-shimmer flex min-h-[254px] flex-col rounded-2xl border border-dashed border-zinc-300 bg-white/65 p-5 shadow-sm dark:border-white/15 dark:bg-zinc-950/35">
       <span className="flex size-11 items-center justify-center rounded-2xl border border-violet-200 bg-violet-50 text-violet-700 shadow-sm dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-200">
         <LockSimple aria-hidden="true" size={21} weight="duotone" />
       </span>
@@ -255,7 +255,7 @@ function SchoolTierBoard({
 
         return (
           <section
-            className={`min-h-[370px] rounded-3xl border p-5 backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-950/5 dark:hover:shadow-black/20 ${details.accent}`}
+            className={`min-h-[370px] rounded-3xl border p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] ${details.accent}`}
             key={tier}
           >
             <div className="flex items-start justify-between gap-3">
@@ -306,7 +306,7 @@ function RecommendationCarousel({
   savedSchoolIds: Set<string>;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-200/80 bg-white/60 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50">
+    <section className="rounded-3xl border border-slate-200/80 bg-white/60 p-5 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] dark:border-white/10 dark:bg-zinc-900/50">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold tracking-[0.16em] text-blue-600 dark:text-blue-300">SMART RECOMMENDATIONS</p>
@@ -320,7 +320,7 @@ function RecommendationCarousel({
             const isAdded = savedSchoolIds.has(school.id);
             return (
               <article
-                className="w-[248px] shrink-0 snap-start rounded-2xl border border-zinc-200/80 bg-zinc-50/70 p-4 transition-all duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg hover:shadow-zinc-950/10 dark:border-white/10 dark:bg-zinc-950/40 dark:hover:border-violet-500/40"
+                className="w-[248px] shrink-0 snap-start rounded-2xl border border-zinc-200/80 bg-zinc-50/70 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] dark:border-white/10 dark:bg-zinc-950/40"
                 key={school.id}
               >
                 <div className="flex items-center gap-3">
@@ -344,7 +344,7 @@ function RecommendationCarousel({
             );
           })
         ) : (
-          <p className="py-6 text-sm text-zinc-500 dark:text-zinc-400">完善背景后，即可获得按匹配度排序的推荐院校。</p>
+          <p className="dashboard-shimmer rounded-2xl border border-dashed border-zinc-300 bg-white/50 p-4 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950/30 dark:text-zinc-300">完善背景后，即可获得按匹配度排序的推荐院校。</p>
         )}
       </div>
     </section>
@@ -356,7 +356,7 @@ function DeadlineBanner({ schools }: { schools: SchoolMatchResult[] }) {
   const daysLeft = nearestSchool ? getDaysUntil(nearestSchool.deadline) : null;
 
   return (
-    <article className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white/60 p-6 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50 sm:p-7">
+    <article className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white/60 p-6 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] dark:border-white/10 dark:bg-zinc-900/50 sm:p-7">
       <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-blue-700 shadow-sm dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-200">
@@ -405,7 +405,7 @@ function MaterialChecklist() {
   ] as const;
 
   return (
-    <section className="rounded-3xl border border-slate-200/80 bg-white/60 p-6 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50">
+    <section className="rounded-3xl border border-slate-200/80 bg-white/60 p-6 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] dark:border-white/10 dark:bg-zinc-900/50">
         <p className="text-xs font-bold tracking-[0.16em] text-blue-600 dark:text-blue-300">MATERIAL CHECKLIST</p>
         <h2 className="mt-1 text-xl font-extrabold text-zinc-950 dark:text-white">材料准备清单</h2>
         <ul className="mt-4 space-y-3">
@@ -499,8 +499,8 @@ export default function DashboardShell() {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-zinc-50 text-zinc-900 transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100">
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <span className="absolute -left-32 top-24 size-[30rem] rounded-full bg-blue-300/20 blur-[120px] dark:bg-violet-500/10" />
-        <span className="absolute -right-40 bottom-[-8rem] size-[34rem] rounded-full bg-violet-300/20 blur-[120px] dark:bg-blue-500/10" />
+        <span className="absolute -top-20 left-1/4 h-96 w-96 rounded-full bg-violet-500/10 blur-[120px] dark:bg-violet-600/15" />
+        <span className="absolute -bottom-24 -right-20 h-[28rem] w-[28rem] rounded-full bg-blue-500/10 blur-[120px] dark:bg-blue-600/15" />
       </div>
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -568,7 +568,7 @@ export default function DashboardShell() {
           <section className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-xs font-bold tracking-[0.19em] text-blue-600 dark:text-blue-300">APPLICATION INTELLIGENCE</p>
-              <h1 className="mt-2 bg-gradient-to-r from-zinc-950 via-blue-700 to-violet-600 bg-clip-text text-3xl font-black tracking-[-0.04em] text-transparent sm:text-4xl dark:from-white dark:via-blue-200 dark:to-violet-300">申请仪表盘</h1>
+              <h1 className="mt-2 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-3xl font-black tracking-[-0.04em] text-transparent sm:text-4xl dark:from-white dark:via-zinc-200 dark:to-zinc-400">申请仪表盘</h1>
               <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">由你的学术背景驱动的选校策略、申请节奏与材料进度。</p>
             </div>
             <button

@@ -62,7 +62,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
   const visibleSchools = schools.slice(0, 4);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/60 p-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/50 sm:p-6">
+    <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/60 p-5 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] dark:border-white/10 dark:bg-zinc-900/50 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-violet-600 dark:text-violet-300">
@@ -83,7 +83,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
               const milestones = getMilestones(school.deadline);
 
               return (
-                <article className="grid grid-cols-[142px_minmax(0,1fr)] items-center gap-5 rounded-2xl border border-zinc-200/70 bg-white/55 p-4 transition-all duration-200 hover:-translate-y-1 hover:border-violet-300 hover:shadow-lg hover:shadow-violet-500/10 dark:border-white/10 dark:bg-zinc-950/35 dark:hover:border-violet-400/40" key={school.id}>
+                <article className="grid grid-cols-[142px_minmax(0,1fr)] items-center gap-5 rounded-2xl border border-zinc-200/70 bg-white/55 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-violet-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] dark:border-white/10 dark:bg-zinc-950/35" key={school.id}>
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold text-white dark:bg-zinc-800">{school.shortName}</span>
                     <div className="min-w-0">
@@ -125,7 +125,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
           </div>
         </div>
       ) : (
-        <div className="mt-6 flex min-h-36 items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white/45 px-5 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950/30 dark:text-zinc-300">
+        <div className="dashboard-shimmer mt-6 flex min-h-36 items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white/45 px-5 text-sm text-zinc-600 dark:border-white/15 dark:bg-zinc-950/30 dark:text-zinc-300">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-200"><CalendarCheck aria-hidden="true" size={22} weight="duotone" /></span>
           <p>先从智能推荐中加入院校；系统会在这里汇总网申开放、截止与结果发放节点。</p>
         </div>

@@ -32,12 +32,48 @@ body {
 
 button:not(:disabled) {
   transition-property: transform, color, background-color, border-color, box-shadow, opacity;
-  transition-duration: 160ms;
+  transition-duration: 300ms;
   transition-timing-function: ease-out;
 }
 
 button:not(:disabled):active {
   transform: scale(0.95);
+}
+
+@keyframes dashboard-shimmer {
+  from {
+    transform: translateX(-120%);
+  }
+
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.dashboard-shimmer {
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-shimmer::after {
+  animation: dashboard-shimmer 2.8s ease-in-out infinite;
+  background: linear-gradient(108deg, transparent 30%, rgb(255 255 255 / 0.52) 50%, transparent 70%);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-120%);
+  z-index: 0;
+}
+
+.dark .dashboard-shimmer::after {
+  background: linear-gradient(108deg, transparent 30%, rgb(255 255 255 / 0.1) 50%, transparent 70%);
+}
+
+.dashboard-shimmer > * {
+  position: relative;
+  z-index: 1;
 }
 
 ::selection {
@@ -52,5 +88,9 @@ button:not(:disabled):active {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .dashboard-shimmer::after {
+    animation: none;
   }
 }
