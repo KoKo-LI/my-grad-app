@@ -401,7 +401,8 @@ export default function DashboardShell() {
   const storedProfile = useSyncExternalStore(subscribeToProfile, getProfileSnapshot, getServerSnapshot);
   const storedTheme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerSnapshot);
   const profile = useMemo(() => parseStoredProfile(storedProfile), [storedProfile]);
-  const isInitialized = profile !== null;
+  const isInitialized = profile?.isInitialized === true;
+  const initializedProfile = isInitialized ? profile : null;
   const theme: ThemeMode = storedTheme === "dark" ? "dark" : "light";
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -415,7 +416,10 @@ export default function DashboardShell() {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
-  const tiers = useMemo(() => (profile ? matchSchools(profile, schoolCatalog) : null), [profile]);
+  const tiers = useMemo(
+    () => (initializedProfile ? matchSchools(initializedProfile, schoolCatalog) : null),
+    [initializedProfile],
+  );
   const searchedTiers = useMemo(() => {
     if (!tiers) return null;
 

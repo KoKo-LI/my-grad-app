@@ -209,6 +209,7 @@ const emptyAcademicRecord: AcademicRecord = {
 };
 
 export const emptyProfile: StudentProfile = {
+  isInitialized: false,
   degreeTarget: "graduate",
   currentStage: "",
   currentSchool: "",
@@ -228,6 +229,7 @@ export const profilePresets: readonly ProfilePreset[] = [
     label: "经典 CS 申研 3.5",
     description: "GPA 3.5 / TOEFL 100 / GRE 320",
     profile: {
+      isInitialized: true,
       degreeTarget: "graduate",
       currentStage: "大四",
       currentSchool: "",
@@ -257,6 +259,7 @@ export const profilePresets: readonly ProfilePreset[] = [
     label: "极客冲刺 3.8",
     description: "GPA 3.8 / TOEFL 108 / GRE 330",
     profile: {
+      isInitialized: true,
       degreeTarget: "graduate",
       currentStage: "大四",
       currentSchool: "",
@@ -286,6 +289,7 @@ export const profilePresets: readonly ProfilePreset[] = [
     label: "AI 专项 3.6",
     description: "GPA 3.6 / TOEFL 105 / GRE 325",
     profile: {
+      isInitialized: true,
       degreeTarget: "graduate",
       currentStage: "大四",
       currentSchool: "",
@@ -444,6 +448,7 @@ export function normalizeProfile(profile: StudentProfile): StudentProfile {
   const normalizedGpaMax = normalizeScore(profile.gpaMax, 0.1, 100) || "4.0";
 
   return {
+    isInitialized: profile.isInitialized,
     degreeTarget,
     currentStage: (stageOptions as readonly string[]).includes(profile.currentStage)
       ? profile.currentStage
@@ -558,6 +563,7 @@ export function isStudentProfile(value: unknown): value is StudentProfile {
   const profile = value as Record<string, unknown>;
   return (
     hasValidProfileCore(profile) &&
+    typeof profile.isInitialized === "boolean" &&
     typeof profile.currentSchool === "string" &&
     typeof profile.gpaMax === "string" &&
     isAcademicRecord(profile.academicRecord)
@@ -610,6 +616,7 @@ function migrateLegacyProfile(value: Record<string, unknown>): StudentProfile | 
   }
 
   return {
+    isInitialized: typeof value.isInitialized === "boolean" ? value.isInitialized : true,
     degreeTarget: value.degreeTarget as DegreeTarget,
     currentStage: value.currentStage as string,
     currentSchool: typeof value.currentSchool === "string" ? value.currentSchool : "",
@@ -647,7 +654,7 @@ export function parseStoredProfile(value: string | null): StudentProfile | null 
 }
 
 export function saveProfile(profile: StudentProfile) {
-  const safeProfile = normalizeProfile(profile);
+  const safeProfile = normalizeProfile({ ...profile, isInitialized: true });
   window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(safeProfile));
   window.dispatchEvent(new Event(PROFILE_STORAGE_EVENT));
   return safeProfile;

@@ -33,6 +33,7 @@ export interface AcademicRecord {
  * A student's reusable academic background for school matching and application tracking.
  */
 export interface StudentProfile {
+  isInitialized: boolean;
   degreeTarget: DegreeTarget;
   currentStage: string;
   currentSchool: string;
@@ -62,6 +63,7 @@ export interface SchoolMatchInput {
   program: string;
   region: string;
   deadline: string;
+  majorCategories: readonly string[];
   medianGpa: number;
   minimumToefl?: number;
   minimumIelts?: number;

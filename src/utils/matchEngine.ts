@@ -30,6 +30,13 @@ function getLanguageGap(profile: StudentProfile, school: SchoolMatchInput) {
   return null;
 }
 
+function matchesSchoolTargets(profile: StudentProfile, school: SchoolMatchInput) {
+  const matchesRegion = profile.targetRegions.length === 0 || profile.targetRegions.includes(school.region);
+  const matchesMajor = !profile.targetMajor || school.majorCategories.includes(profile.targetMajor);
+
+  return matchesRegion && matchesMajor;
+}
+
 /** Converts any declared GPA scale to the 4.0 scale used by the school catalog. */
 function getNormalizedGpa(profile: StudentProfile) {
   const score = Number(profile.gpa);
@@ -70,19 +77,21 @@ function calculateMatchScore(gpaGap: number, languageGap: number | null) {
   return Math.round(Math.max(5, Math.min(95, gpaScore + languageAdjustment)));
 }
 
-function getMatchingReason(gpaGap: number, languageGap: number | null) {
+function getMatchingReason(gpaGap: number, languageGap: number | null, targetMajor: string) {
   const gpaText =
     gpaGap >= 0
       ? `GPA 高于院校中位数 ${gpaGap.toFixed(2)}`
       : `GPA 低于院校中位数 ${Math.abs(gpaGap).toFixed(2)}`;
 
+  const majorText = targetMajor ? "专业方向匹配" : "尚未限定目标专业";
+
   if (languageGap === null) {
-    return `${gpaText}；补充语言成绩后可提高匹配精度`;
+    return `${gpaText}；${majorText}，补充语言成绩后可提高匹配精度`;
   }
 
   return languageGap >= 0
-    ? `${gpaText}；语言成绩满足门槛`
-    : `${gpaText}；语言成绩尚未达到门槛`;
+    ? `${gpaText}；${majorText}，语言成绩满足门槛`
+    : `${gpaText}；${majorText}，语言成绩尚未达到门槛`;
 }
 
 /**
@@ -101,6 +110,10 @@ export function matchSchools(
   };
 
   schools.forEach((school) => {
+    if (!matchesSchoolTargets(profile, school)) {
+      return;
+    }
+
     const gpaGap = userGpa - school.medianGpa;
     const languageGap = getLanguageGap(profile, school);
     const status = calculateStatus(gpaGap, languageGap);
@@ -115,7 +128,7 @@ export function matchSchools(
       deadline: school.deadline,
       notes: "",
       matchScore: calculateMatchScore(gpaGap, languageGap),
-      matchingReason: getMatchingReason(gpaGap, languageGap),
+      matchingReason: getMatchingReason(gpaGap, languageGap, profile.targetMajor),
     });
   });
 
