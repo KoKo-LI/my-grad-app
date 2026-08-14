@@ -96,3 +96,82 @@ export interface SchoolItem {
   deadline: string;
   notes: string;
 }
+
+export type InstitutionMetricUnit = "USD" | "ratio" | "score" | "students";
+
+export interface InstitutionMetric {
+  category: "admissions" | "cost" | "enrollment" | "outcomes";
+  metric: string;
+  sourcePeriod: string;
+  sourceTitle: string;
+  sourceUrl: string;
+  unit: InstitutionMetricUnit;
+  value: number;
+}
+
+/** Public, source-backed record used by the undergraduate school directory. */
+export interface SchoolDirectoryItem {
+  country: string;
+  ipedsUnitId: string;
+  metrics: InstitutionMetric[];
+  name: string;
+  officialWebsite: string;
+  region: string;
+  shortName: string;
+}
+
+export interface UndergraduateProgramSummary {
+  degreeName: string;
+  fieldOfStudy: string;
+  id: string;
+  majorCategories: string[];
+  officialUrl: string;
+  programName: string;
+}
+
+export type AdmissionRequirementKind = "minimum" | "recommended" | "required" | "optional" | "not_required" | "considered";
+export type ApplicantScope = "all" | "international" | "domestic";
+export type ApplicationPath = "all" | "first_year" | "transfer";
+export type AdmissionStatisticKind = "p25" | "median" | "p75" | "average" | "acceptance_rate";
+export type AdmissionCohort = "applicant" | "admitted" | "enrolled";
+
+export interface SchoolAdmissionRequirement {
+  applicantScope: ApplicantScope;
+  applicationPath: ApplicationPath;
+  id: string;
+  maximumScore: number | null;
+  metric: string;
+  minimumScore: number | null;
+  programId: string;
+  requirementKind: AdmissionRequirementKind;
+  satisfactionGroup: string | null;
+  satisfactionRule: "any_of" | "all_of" | null;
+  scoreScale: number | null;
+  sourceTitle: string;
+  sourceUrl: string;
+  subjectArea: string | null;
+  testVersion: string | null;
+  valueText: string | null;
+}
+
+export interface SchoolAdmissionStatistic {
+  applicantScope: ApplicantScope;
+  applicationPath: ApplicationPath;
+  cohort: AdmissionCohort;
+  id: string;
+  metric: string;
+  programId: string;
+  scoreScale: number | null;
+  sourceTitle: string;
+  sourceUrl: string;
+  statistic: AdmissionStatisticKind;
+  subjectArea: string | null;
+  testVersion: string | null;
+  value: number;
+}
+
+export interface SchoolDetail extends SchoolDirectoryItem {
+  programs: UndergraduateProgramSummary[];
+  requirements: SchoolAdmissionRequirement[];
+  statistics: SchoolAdmissionStatistic[];
+}

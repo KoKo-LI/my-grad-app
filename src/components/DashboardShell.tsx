@@ -18,10 +18,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import ApplicationTimeline from "@/components/ApplicationTimeline";
 import ProfileDrawer from "@/components/ProfileDrawer";
+import SchoolDetailModal from "@/components/SchoolDetailModal";
+import SchoolDirectoryOverlay from "@/components/SchoolDirectoryOverlay";
+import SchoolSearchDropdown from "@/components/SchoolSearchDropdown";
 import Sidebar from "@/components/Sidebar";
 import { schoolCatalog } from "@/data/schoolCatalog";
-import type { SchoolItem, SchoolMatchInput, SchoolMatchResult, StudentProfile } from "@/types";
+import type { SchoolDirectoryItem, SchoolItem, SchoolMatchInput, SchoolMatchResult, StudentProfile } from "@/types";
 import { matchSchools } from "@/utils/matchEngine";
+import { parseSchoolDirectoryResponse } from "@/lib/undergraduateDirectory";
 import { parseUndergraduateCatalog } from "@/lib/undergraduateCatalog";
 import {
   createProfileFromPreset,
@@ -447,6 +451,10 @@ export default function DashboardShell() {
   const [searchQuery, setSearchQuery] = useState("");
   const [recommendationVersion, setRecommendationVersion] = useState(0);
   const [undergraduateCatalog, setUndergraduateCatalog] = useState<SchoolMatchInput[]>([]);
+  const [schoolDirectory, setSchoolDirectory] = useState<SchoolDirectoryItem[]>([]);
+  const [isSchoolDirectoryLoading, setIsSchoolDirectoryLoading] = useState(true);
+  const [schoolDirectoryOpen, setSchoolDirectoryOpen] = useState(false);
+  const [selectedSchoolIpedsUnitId, setSelectedSchoolIpedsUnitId] = useState<string | null>(null);
   const { isLoading, run } = useActionLock();
 
   useEffect(() => {
@@ -470,6 +478,28 @@ export default function DashboardShell() {
     }
 
     void loadUndergraduateCatalog();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadSchoolDirectory() {
+      setIsSchoolDirectoryLoading(true);
+      try {
+        const response = await fetch("/api/undergraduate-schools", { signal: controller.signal });
+        if (!response.ok) return;
+
+        const payload: unknown = await response.json();
+        setSchoolDirectory(parseSchoolDirectoryResponse(payload));
+      } catch {
+        // The rest of the Dashboard remains available while the public directory is unavailable.
+      } finally {
+        if (!controller.signal.aborted) setIsSchoolDirectoryLoading(false);
+      }
+    }
+
+    void loadSchoolDirectory();
     return () => controller.abort();
   }, []);
 
@@ -550,6 +580,10 @@ export default function DashboardShell() {
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
+        onOpenSchoolDirectory={() => {
+          setMobileSidebarOpen(false);
+          setSchoolDirectoryOpen(true);
+        }}
         onOpenProfile={() => {
           setMobileSidebarOpen(false);
           setDrawerRequested(true);
@@ -568,7 +602,7 @@ export default function DashboardShell() {
             >
               <ClipboardText aria-hidden="true" size={19} weight="bold" />
             </button>
-            <label className="relative min-w-0 flex-1">
+            <div className="relative min-w-0 flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-400"><MagnifyingGlass aria-hidden="true" size={17} /></span>
               <input
                 aria-label="全局搜索"
@@ -577,7 +611,16 @@ export default function DashboardShell() {
                 placeholder="搜索院校、项目或地区…"
                 value={searchQuery}
               />
-            </label>
+              <SchoolSearchDropdown
+                isLoading={isSchoolDirectoryLoading}
+                onSelect={(school) => {
+                  setSearchQuery("");
+                  setSelectedSchoolIpedsUnitId(school.ipedsUnitId);
+                }}
+                query={searchQuery}
+                schools={schoolDirectory}
+              />
+            </div>
             {profile && <p className="hidden whitespace-nowrap text-xs font-semibold text-zinc-500 2xl:block dark:text-zinc-400">{getProfileSnapshotText(profile)}</p>}
             <button
               aria-label={theme === "dark" ? "切换至浅色主题" : "切换至深色主题"}
@@ -637,6 +680,16 @@ export default function DashboardShell() {
           </footer>
         </div>
       </main>
+      <SchoolDirectoryOverlay
+        onClose={() => setSchoolDirectoryOpen(false)}
+        onSelect={(school) => {
+          setSchoolDirectoryOpen(false);
+          setSelectedSchoolIpedsUnitId(school.ipedsUnitId);
+        }}
+        open={schoolDirectoryOpen}
+        schools={schoolDirectory}
+      />
+      <SchoolDetailModal key={selectedSchoolIpedsUnitId ?? "no-school"} ipedsUnitId={selectedSchoolIpedsUnitId} onClose={() => setSelectedSchoolIpedsUnitId(null)} />
       <ProfileDrawer onClose={() => setDrawerRequested(false)} onSaved={handleProfileSaved} onThemeChange={handleThemeChange} open={drawerRequested} profile={profile} theme={theme} />
       <AnimatePresence>{toast && <Toast key={toast} message={toast} onClose={() => setToast(null)} />}</AnimatePresence>
     </div>

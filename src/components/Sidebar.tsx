@@ -15,6 +15,7 @@ interface SidebarProps {
   collapsed: boolean;
   mobileOpen: boolean;
   onCloseMobile: () => void;
+  onOpenSchoolDirectory: () => void;
   onOpenProfile: () => void;
   onToggle: () => void;
 }
@@ -29,6 +30,7 @@ export default function Sidebar({
   collapsed,
   mobileOpen,
   onCloseMobile,
+  onOpenSchoolDirectory,
   onOpenProfile,
   onToggle,
 }: SidebarProps) {
@@ -77,6 +79,7 @@ export default function Sidebar({
               aria-current={active ? "page" : undefined}
               className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition-colors ${active ? "bg-zinc-950 text-white shadow-lg shadow-zinc-950/15 dark:bg-violet-500/15 dark:text-violet-100" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white"} ${showExpanded ? "" : "justify-center"}`}
               key={label}
+              onClick={label === "全球院校库" ? onOpenSchoolDirectory : undefined}
               type="button"
             >
               <Icon aria-hidden="true" size={18} weight={active ? "fill" : "regular"} />
