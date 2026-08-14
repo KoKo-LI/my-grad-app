@@ -1,0 +1,36 @@
+{
+  "records": [
+    {
+      "institutionIpedsUnitId": "123456",
+      "program": {
+        "programName": "Undergraduate admission",
+        "degreeName": "Bachelor",
+        "fieldOfStudy": "General undergraduate admission",
+        "majorCategories": ["all"],
+        "officialUrl": "https://admissions.example.edu/international"
+      },
+      "cycle": null,
+      "source": {
+        "sourceKind": "official_institution",
+        "title": "Example University undergraduate international requirements",
+        "sourceUrl": "https://admissions.example.edu/international",
+        "sourceYear": "2026",
+        "publishedAt": null
+      },
+      "requirements": [
+        {
+          "metric": "toefl_ibt_total",
+          "requirementKind": "minimum",
+          "applicantScope": "international",
+          "applicationPath": "first_year",
+          "minimumScore": 100,
+          "maximumScore": null,
+          "scoreScale": 120,
+          "testVersion": "legacy 0-120 scale",
+          "subjectArea": null,
+          "valueText": null
+        }
+      ]
+    }
+  ]
+}

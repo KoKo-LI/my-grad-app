@@ -9,7 +9,8 @@
     "lint": "eslint",
     "catalog:import-roster": "node --env-file=.env.local --experimental-strip-types scripts/import-undergraduate-roster.ts",
     "catalog:resolve-ipeds": "node --env-file=.env.local --experimental-strip-types scripts/resolve-undergraduate-ipeds.ts",
-    "catalog:import-scorecard-metrics": "node --env-file=.env.local --experimental-strip-types scripts/import-scorecard-institution-metrics.ts"
+    "catalog:import-scorecard-metrics": "node --env-file=.env.local --experimental-strip-types scripts/import-scorecard-institution-metrics.ts",
+    "catalog:import-official-requirements": "node --env-file=.env.local --experimental-strip-types scripts/import-official-undergraduate-requirements.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

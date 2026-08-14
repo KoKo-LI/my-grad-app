@@ -67,3 +67,27 @@ The initial import includes tuition, admissions rate, SAT/ACT percentiles,
 undergraduate enrollment and the 150%-of-normal-time graduation rate. Missing
 or privacy-suppressed values are skipped, not stored as zero. All imported
 metrics remain unpublished until they are reviewed for display.
+
+### Import official program and language requirements
+
+Run `migrations/20260814_expand_admission_requirements.sql` once. It adds
+source-specific test version, score-scale, applicant-path and subject fields to
+the existing requirements model. This keeps legacy TOEFL (0-120) and the
+post-January-2026 TOEFL scale distinct instead of comparing incompatible scores.
+
+Copy `data/templates/official-undergraduate-requirements.example.json` to the
+ignored path `data/intake/official-undergraduate-requirements.json`, replace all
+example values with an official university or school source, then validate before
+writing:
+
+```bash
+npm run catalog:import-official-requirements -- --input=data/intake/official-undergraduate-requirements.json --dry-run
+npm run catalog:import-official-requirements -- --input=data/intake/official-undergraduate-requirements.json
+```
+
+The importer accepts institution-wide undergraduate requirements and
+major-specific records. It supports GPA, TOEFL, IELTS, DET, PTE, Cambridge,
+MET, SAT/ACT, AP/IB, transcripts, coursework, portfolios, interviews and other
+admission obligations. Each input record must provide the official source URL,
+effective year and a resolved IPEDS UNITID. Imported rows remain unpublished;
+do not enter copied page prose, community reports or unverified score claims.
