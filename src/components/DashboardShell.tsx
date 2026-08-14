@@ -5,9 +5,11 @@ import { schoolCatalog } from "@/data/schoolCatalog";
 import type { SchoolItem, SchoolMatchResult, StudentProfile } from "@/types";
 import { matchSchools } from "@/utils/matchEngine";
 import {
+  createProfileFromPreset,
   parseStoredProfile,
   PROFILE_STORAGE_EVENT,
   PROFILE_STORAGE_KEY,
+  saveProfile,
   THEME_STORAGE_EVENT,
   THEME_STORAGE_KEY,
 } from "@/utils/profileStorage";
@@ -170,10 +172,12 @@ function SchoolCard({ school }: { school: SchoolMatchResult }) {
 function SchoolTierBoard({
   isInitialized,
   onUnlock,
+  onUseDefault,
   tiers,
 }: {
   isInitialized: boolean;
   onUnlock: () => void;
+  onUseDefault: () => void;
   tiers: MatchTiers | null;
 }) {
   return (
@@ -197,7 +201,10 @@ function SchoolTierBoard({
                   <span className="flex size-10 items-center justify-center rounded-xl bg-blue-100 text-lg text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">🔒</span>
                   <h3 className="mt-4 text-sm font-extrabold text-slate-900 dark:text-white">解锁 {details.title} 选校梯度</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{unlockMessages[tier]}</p>
-                  <button className="mt-4 inline-flex h-9 items-center justify-center rounded-xl bg-blue-600 px-3 text-xs font-bold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20" onClick={onUnlock} type="button">⚡️ 录入学术背景</button>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button className="inline-flex h-9 items-center justify-center rounded-xl bg-blue-600 px-3 text-xs font-bold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20" onClick={onUnlock} type="button">⚡️ 录入学术背景</button>
+                    <button className="inline-flex h-9 items-center justify-center rounded-xl border border-blue-200 bg-white px-3 text-xs font-bold text-blue-700 transition hover:border-blue-400 hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-blue-950" onClick={onUseDefault} type="button">💡 一键使用默认基准</button>
+                  </div>
                 </article>
               ) : tiers ? (
                 schools.length > 0 ? schools.slice(0, 2).map((school) => <SchoolCard key={school.id} school={school} />) : <p className="rounded-2xl border border-dashed border-slate-300 bg-white/85 p-4 text-sm leading-6 text-slate-600 shadow-sm dark:border-slate-600 dark:bg-slate-950/85 dark:text-slate-200">当前筛选条件下暂无院校，可调整目标地区或补充背景资料。</p>
@@ -333,6 +340,11 @@ export default function DashboardShell() {
     setToast("已根据你的最新成绩重新计算选校梯度！");
   };
 
+  const handleUseDefaultProfile = () => {
+    saveProfile(createProfileFromPreset("cs-foundation"));
+    setToast("已载入经典 CS 申研基准，并完成选校梯度计算！");
+  };
+
   const handleAddSchool = (school: SchoolMatchResult) => {
     run(() => {
       setSavedSchoolIds((currentIds) => new Set(currentIds).add(school.id));
@@ -375,7 +387,7 @@ export default function DashboardShell() {
             <button className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500" disabled={!isInitialized || isLoading} onClick={handleRefreshRecommendations} type="button">{isLoading ? "Loading..." : "✦ 刷新智能推荐"}</button>
           </section>
 
-          <SchoolTierBoard isInitialized={isInitialized} onUnlock={() => setDrawerRequested(true)} tiers={searchedTiers} />
+          <SchoolTierBoard isInitialized={isInitialized} onUnlock={() => setDrawerRequested(true)} onUseDefault={handleUseDefaultProfile} tiers={searchedTiers} />
           <div className="mt-7"><RecommendationCarousel isLoading={isLoading} onAdd={handleAddSchool} recommendations={recommendations} savedSchoolIds={savedSchoolIds} /></div>
           <div className="mt-7"><DeadlineChecklist schools={allSchools} /></div>
         </div>

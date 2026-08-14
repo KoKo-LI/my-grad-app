@@ -47,6 +47,15 @@ export interface StudentProfile {
   targetMajor: string;
 }
 
+export type ProfilePresetId = "cs-foundation" | "cs-ambitious" | "ai-specialist";
+
+export interface ProfilePreset {
+  id: ProfilePresetId;
+  label: string;
+  description: string;
+  profile: StudentProfile;
+}
+
 export interface SchoolMatchInput {
   id: string;
   name: string;

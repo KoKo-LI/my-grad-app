@@ -2,6 +2,8 @@ import type {
   AcademicRecord,
   AcademicSubjectScore,
   DegreeTarget,
+  ProfilePreset,
+  ProfilePresetId,
   StandardizedTestScore,
   StandardizedTestType,
   StudentProfile,
@@ -219,6 +221,121 @@ export const emptyProfile: StudentProfile = {
   targetRegions: [],
   targetMajor: "",
 };
+
+export const profilePresets: readonly ProfilePreset[] = [
+  {
+    id: "cs-foundation",
+    label: "经典 CS 申研 3.5",
+    description: "GPA 3.5 / TOEFL 100 / GRE 320",
+    profile: {
+      degreeTarget: "graduate",
+      currentStage: "大四",
+      currentSchool: "",
+      gpa: "3.5",
+      gpaMax: "4.0",
+      languageScore: "TOEFL 100",
+      greGmat: "GRE 320",
+      standardizedTests: [
+        { test: "TOEFL", score: "100" },
+        { test: "GRE", score: "320" },
+      ],
+      academicRecord: {
+        apSubjects: [],
+        ibTotalScore: "",
+        ibSubjects: [],
+        competitionAwards: [],
+        paperCount: "1",
+        researchProjectCount: "2",
+        academicAwardCount: "1",
+      },
+      targetRegions: ["美国", "加拿大"],
+      targetMajor: "计算机科学",
+    },
+  },
+  {
+    id: "cs-ambitious",
+    label: "极客冲刺 3.8",
+    description: "GPA 3.8 / TOEFL 108 / GRE 330",
+    profile: {
+      degreeTarget: "graduate",
+      currentStage: "大四",
+      currentSchool: "",
+      gpa: "3.8",
+      gpaMax: "4.0",
+      languageScore: "TOEFL 108",
+      greGmat: "GRE 330",
+      standardizedTests: [
+        { test: "TOEFL", score: "108" },
+        { test: "GRE", score: "330" },
+      ],
+      academicRecord: {
+        apSubjects: [],
+        ibTotalScore: "",
+        ibSubjects: [],
+        competitionAwards: ["ACM / ICPC 区域赛获奖"],
+        paperCount: "2",
+        researchProjectCount: "3",
+        academicAwardCount: "2",
+      },
+      targetRegions: ["美国", "英国", "加拿大"],
+      targetMajor: "计算机科学",
+    },
+  },
+  {
+    id: "ai-specialist",
+    label: "AI 专项 3.6",
+    description: "GPA 3.6 / TOEFL 105 / GRE 325",
+    profile: {
+      degreeTarget: "graduate",
+      currentStage: "大四",
+      currentSchool: "",
+      gpa: "3.6",
+      gpaMax: "4.0",
+      languageScore: "TOEFL 105",
+      greGmat: "GRE 325",
+      standardizedTests: [
+        { test: "TOEFL", score: "105" },
+        { test: "GRE", score: "325" },
+      ],
+      academicRecord: {
+        apSubjects: [],
+        ibTotalScore: "",
+        ibSubjects: [],
+        competitionAwards: ["机器学习项目展示"],
+        paperCount: "1",
+        researchProjectCount: "3",
+        academicAwardCount: "1",
+      },
+      targetRegions: ["美国", "新加坡", "中国香港"],
+      targetMajor: "数据科学 / 人工智能",
+    },
+  },
+];
+
+export function createProfileFromPreset(id: ProfilePresetId): StudentProfile {
+  const preset = profilePresets.find((item) => item.id === id);
+
+  if (!preset) {
+    return {
+      ...emptyProfile,
+      standardizedTests: [],
+      academicRecord: { ...emptyAcademicRecord, apSubjects: [], ibSubjects: [], competitionAwards: [] },
+      targetRegions: [],
+    };
+  }
+
+  return {
+    ...preset.profile,
+    standardizedTests: preset.profile.standardizedTests.map((test) => ({ ...test })),
+    academicRecord: {
+      ...preset.profile.academicRecord,
+      apSubjects: preset.profile.academicRecord.apSubjects.map((subject) => ({ ...subject })),
+      ibSubjects: preset.profile.academicRecord.ibSubjects.map((subject) => ({ ...subject })),
+      competitionAwards: [...preset.profile.academicRecord.competitionAwards],
+    },
+    targetRegions: [...preset.profile.targetRegions],
+  };
+}
 
 function isDegreeTarget(value: unknown): value is DegreeTarget {
   return value === "undergraduate" || value === "graduate";

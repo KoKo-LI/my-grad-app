@@ -11,6 +11,7 @@ import type {
 import {
   apSubjectOptions,
   clearLocalProfileData,
+  createProfileFromPreset,
   emptyProfile,
   graduateTests,
   graduateStageOptions,
@@ -19,6 +20,7 @@ import {
   majorOptions,
   clampNumericValue,
   regionOptions,
+  profilePresets,
   sanitizeNumericValue,
   sanitizePlainText,
   sanitizePositiveScore,
@@ -44,14 +46,6 @@ function CheckIcon() {
   return (
     <svg aria-hidden="true" className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.6">
       <path strokeLinecap="round" strokeLinejoin="round" d="m5 12 4.2 4.2L19 6.5" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg aria-hidden="true" className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m6 6 12 12M18 6 6 18" />
     </svg>
   );
 }
@@ -353,6 +347,13 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
     setDraft((currentProfile) => updater(currentProfile));
   };
 
+  const applyPreset = (presetId: (typeof profilePresets)[number]["id"]) => {
+    const presetProfile = createProfileFromPreset(presetId);
+    setDraft(presetProfile);
+    setValidationError(null);
+    onSaved(saveProfile(presetProfile));
+  };
+
   const updateAcademicRecord = (
     field: "paperCount" | "researchProjectCount" | "academicAwardCount" | "ibTotalScore",
     value: string,
@@ -496,6 +497,28 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
+      <section className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 dark:border-blue-900/70 dark:bg-blue-950/20">
+        <p className="text-xs font-bold tracking-[0.14em] text-blue-600 dark:text-blue-300">QUICK PRESETS</p>
+        <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">快速建立申请基准</h3>
+            <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">选择后将立即保存背景并返回 Dashboard，你仍可随时修改。</p>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {profilePresets.map((preset) => (
+            <button
+              className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-left text-xs font-semibold text-blue-800 transition hover:border-blue-400 hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-500/15 dark:border-blue-800 dark:bg-slate-950 dark:text-blue-200 dark:hover:bg-blue-950"
+              key={preset.id}
+              onClick={() => applyPreset(preset.id)}
+              type="button"
+            >
+              <span className="block">{preset.label}</span>
+              <span className="mt-0.5 block text-[11px] font-normal text-slate-500 dark:text-slate-400">{preset.description}</span>
+            </button>
+          ))}
+        </div>
+      </section>
       <fieldset>
         <legend className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">申请目标</legend>
         <div className="grid grid-cols-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
@@ -605,7 +628,7 @@ function ProfileForm({ initialProfile, onSaved }: { initialProfile: StudentProfi
 
 export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, profile, theme }: ProfileDrawerProps) {
   const [activeTab, setActiveTab] = useState<DrawerTab>("profile");
-  const formKey = profile ? JSON.stringify(profile) : "onboarding";
+  const formKey = profile ? JSON.stringify(profile) : "new-profile";
 
   const handleClear = () => {
     clearLocalProfileData();
@@ -614,30 +637,36 @@ export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, p
 
   return (
     <div aria-hidden={!open} className={`fixed inset-0 z-50 transition ${open ? "pointer-events-auto" : "pointer-events-none"}`}>
-      <button aria-label="关闭个人资料抽屉" className={`absolute inset-0 bg-slate-950/45 backdrop-blur-[2px] transition-opacity ${open ? "opacity-100" : "opacity-0"}`} onClick={onClose} tabIndex={open ? 0 : -1} type="button" />
-      <aside aria-label="个人资料与系统设置" aria-modal="true" className={`absolute inset-y-0 right-0 flex w-full max-w-xl flex-col border-l border-slate-200 bg-white shadow-2xl transition-transform duration-300 dark:border-slate-700 dark:bg-slate-950 ${open ? "translate-x-0" : "translate-x-full"}`} role="dialog">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
-          <div>
-            <p className="text-xs font-bold tracking-[0.16em] text-blue-600">MY GRAD PATH</p>
-            <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">个人资料中心</h2>
+      <div className={`absolute inset-0 bg-slate-950/55 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`} />
+      <aside aria-label="个人资料与系统设置" aria-modal="true" className={`absolute inset-0 flex min-h-[100dvh] flex-col overflow-hidden bg-slate-50 shadow-2xl transition-[opacity,transform] duration-300 ease-out dark:bg-slate-950 ${open ? "translate-y-0 scale-100 opacity-100" : "translate-y-3 scale-[0.985] opacity-0"}`} role="dialog">
+        <div className="border-b border-slate-200 bg-white/85 px-5 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85 sm:px-8">
+          <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold tracking-[0.16em] text-blue-600">MY GRAD PATH</p>
+              <h2 className="mt-1 text-xl font-extrabold text-slate-900 dark:text-white">完善个人背景</h2>
+              <p className="mt-1 hidden text-sm text-slate-500 sm:block">完成后将即时更新你的选校梯度与申请建议。</p>
+            </div>
+            <button aria-label="返回 Dashboard" className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" onClick={onClose} type="button">← 返回 Dashboard</button>
           </div>
-          <button aria-label="关闭抽屉" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white" onClick={onClose} type="button"><CloseIcon /></button>
         </div>
 
-        <div className="mx-5 mt-4 grid grid-cols-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-          {([
-            ["profile", "🎓 个人背景"],
-            ["settings", "⚙️ 系统设置"],
-          ] as const).map(([tab, label]) => (
-            <button className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${activeTab === tab ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300" : "text-slate-500 dark:text-slate-400"}`} key={tab} onClick={() => setActiveTab(tab)} type="button">{label}</button>
-          ))}
+        <div className="border-b border-slate-200 bg-white/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-950/70 sm:px-8">
+          <div className="mx-auto grid w-full max-w-5xl grid-cols-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            {([
+              ["profile", "🎓 个人背景"],
+              ["settings", "⚙️ 系统设置"],
+            ] as const).map(([tab, label]) => (
+              <button className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${activeTab === tab ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300" : "text-slate-500 dark:text-slate-400"}`} key={tab} onClick={() => setActiveTab(tab)} type="button">{label}</button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5">
-          {activeTab === "profile" ? (
-            <ProfileForm initialProfile={profile ?? emptyProfile} key={formKey} onSaved={onSaved} />
-          ) : (
-            <section className="space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8">
+          <div className="mx-auto w-full max-w-5xl pb-8">
+            {activeTab === "profile" ? (
+              <ProfileForm initialProfile={profile ?? emptyProfile} key={formKey} onSaved={onSaved} />
+            ) : (
+              <section className="space-y-6">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">外观主题</h3>
                 <p className="mt-1 text-sm leading-6 text-slate-500">选择更适合当前环境的 Dashboard 主题。</p>
@@ -652,11 +681,12 @@ export default function ProfileDrawer({ onClose, onSaved, onThemeChange, open, p
               </div>
               <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/70 dark:bg-rose-950/30">
                 <h3 className="font-bold text-rose-800 dark:text-rose-200">重新开始</h3>
-                <p className="mt-1 text-sm leading-6 text-rose-700 dark:text-rose-300">将删除本应用的背景资料与主题偏好，并重新打开引导。</p>
+                <p className="mt-1 text-sm leading-6 text-rose-700 dark:text-rose-300">将删除本应用的背景资料与主题偏好，并返回未初始化的 Dashboard。</p>
                 <button className="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-500/20" onClick={handleClear} type="button">🗑️ 清空本地数据并重新引导</button>
               </div>
-            </section>
-          )}
+              </section>
+            )}
+          </div>
         </div>
       </aside>
     </div>
