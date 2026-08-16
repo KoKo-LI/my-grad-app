@@ -994,6 +994,7 @@ export default function DashboardShell() {
           setSelectedSchoolIpedsUnitId(school.ipedsUnitId);
         }}
         open={schoolDirectoryOpen}
+        profile={profile}
         schools={visibleDirectorySchools}
       />
       <SchoolDetailModal key={selectedSchoolIpedsUnitId ?? "no-school"} ipedsUnitId={selectedSchoolIpedsUnitId} onClose={() => setSelectedSchoolIpedsUnitId(null)} />

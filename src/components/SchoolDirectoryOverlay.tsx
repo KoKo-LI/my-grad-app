@@ -3,7 +3,7 @@
 import { ArrowUpRight, Buildings, MagnifyingGlass, X } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import type { InstitutionMetric, SchoolDirectoryItem } from "@/types";
+import type { InstitutionMetric, SchoolDirectoryItem, StudentProfile } from "@/types";
 
 interface SchoolDirectoryOverlayProps {
   description: string;
@@ -11,6 +11,7 @@ interface SchoolDirectoryOverlayProps {
   onClose: () => void;
   onSelect: (school: SchoolDirectoryItem) => void;
   open: boolean;
+  profile: StudentProfile | null;
   schools: SchoolDirectoryItem[];
 }
 
@@ -22,13 +23,51 @@ function formatRate(value: number | null) {
   return value === null ? "—" : `${(value * 100).toFixed(1)}%`;
 }
 
-function formatTuition(value: number | null) {
-  return value === null
-    ? "—"
-    : new Intl.NumberFormat("en-US", { maximumFractionDigits: 0, style: "currency", currency: "USD" }).format(value);
+function formatScore(value: number | null) {
+  return value === null ? "未披露" : Math.round(value).toLocaleString("en-US");
 }
 
-export default function SchoolDirectoryOverlay({ description, heading, onClose, onSelect, open, schools }: SchoolDirectoryOverlayProps) {
+function getPersonalGpa(profile: StudentProfile | null) {
+  return profile?.gpa ? `${profile.gpa} / ${profile.gpaMax || "4.0"}` : "未填写";
+}
+
+function getPersonalTestScore(profile: StudentProfile | null, testName: "SAT" | "ACT") {
+  const score = profile?.standardizedTests.find((test) => test.test === testName)?.score;
+  return score || "未填写";
+}
+
+function getPersonalLanguageScore(profile: StudentProfile | null) {
+  const languageScores = profile?.standardizedTests
+    .filter((test) => test.test === "TOEFL" || test.test === "IELTS" || test.test === "Duolingo English Test")
+    .filter((test) => Boolean(test.score))
+    .map((test) => `${test.test} ${test.score}`) ?? [];
+
+  return languageScores.length > 0 ? languageScores.join(" · ") : "未填写";
+}
+
+function getPersonalAcademicScore(profile: StudentProfile | null) {
+  if (!profile) return "未填写";
+
+  const apSubjectCount = profile.academicRecord.apSubjects.filter((subject) => Boolean(subject.score)).length;
+  const items = [
+    apSubjectCount > 0 ? `AP ${apSubjectCount} 门` : "",
+    profile.academicRecord.ibTotalScore ? `IB ${profile.academicRecord.ibTotalScore}` : "",
+  ].filter(Boolean);
+
+  return items.length > 0 ? items.join(" · ") : "未填写";
+}
+
+function ComparisonMetric({ applicantValue, label, schoolValue }: { applicantValue: string; label: string; schoolValue: string }) {
+  return (
+    <span className="min-w-0 rounded-xl bg-slate-50/90 p-2 dark:bg-zinc-950/45">
+      <span className="block text-[10px] font-bold tracking-wide text-zinc-400">{label}</span>
+      <span className="mt-1 block truncate text-[11px] font-bold text-violet-700 dark:text-violet-200">你：{applicantValue}</span>
+      <span className="mt-0.5 block truncate text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">校：{schoolValue}</span>
+    </span>
+  );
+}
+
+export default function SchoolDirectoryOverlay({ description, heading, onClose, onSelect, open, profile, schools }: SchoolDirectoryOverlayProps) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const visibleSchools = useMemo(
@@ -102,7 +141,10 @@ export default function SchoolDirectoryOverlay({ description, heading, onClose, 
               <div className="mt-4 grid max-h-[60vh] gap-3 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
                 {visibleSchools.map((school) => {
                   const admissionRate = findMetric(school.metrics, "admission_rate");
-                  const tuition = findMetric(school.metrics, "tuition_out_of_state_usd");
+                  const satEbrwMedian = findMetric(school.metrics, "sat_ebrw_median");
+                  const satMathMedian = findMetric(school.metrics, "sat_math_median");
+                  const satMedian = satEbrwMedian !== null && satMathMedian !== null ? satEbrwMedian + satMathMedian : null;
+                  const actMedian = findMetric(school.metrics, "act_composite_median");
                   return (
                     <button
                       className="group rounded-2xl border border-slate-200/80 bg-white/80 p-4 text-left shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]"
@@ -120,9 +162,18 @@ export default function SchoolDirectoryOverlay({ description, heading, onClose, 
                           <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">{school.region}</span>
                         </span>
                       </div>
-                      <span className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-3 dark:border-white/5">
-                        <span><span className="block text-[10px] font-bold tracking-wide text-zinc-400">录取率</span><span className="mt-0.5 block text-sm font-bold text-zinc-700 dark:text-zinc-200">{formatRate(admissionRate)}</span></span>
-                        <span><span className="block text-[10px] font-bold tracking-wide text-zinc-400">州外学费</span><span className="mt-0.5 block truncate text-sm font-bold text-zinc-700 dark:text-zinc-200">{formatTuition(tuition)}</span></span>
+                      <span className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-white/5">
+                        <span className="min-w-0 rounded-xl bg-emerald-50/70 p-2 dark:bg-emerald-500/10">
+                          <span className="block text-[10px] font-bold tracking-wide text-zinc-400">录取率</span>
+                          <span className="mt-1 block text-sm font-bold text-emerald-700 dark:text-emerald-200">{formatRate(admissionRate)}</span>
+                        </span>
+                        <ComparisonMetric applicantValue={getPersonalTestScore(profile, "SAT")} label="SAT 本人/中位" schoolValue={formatScore(satMedian)} />
+                        <ComparisonMetric applicantValue={getPersonalTestScore(profile, "ACT")} label="ACT 本人/中位" schoolValue={formatScore(actMedian)} />
+                      </span>
+                      <span className="mt-2 grid grid-cols-3 gap-2">
+                        <ComparisonMetric applicantValue={getPersonalGpa(profile)} label="GPA 本人/学校" schoolValue="未披露" />
+                        <ComparisonMetric applicantValue={getPersonalLanguageScore(profile)} label="语言 本人/学校" schoolValue="未披露" />
+                        <ComparisonMetric applicantValue={getPersonalAcademicScore(profile)} label="AP / IB 本人/学校" schoolValue="未披露" />
                       </span>
                     </button>
                   );
