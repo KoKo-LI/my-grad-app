@@ -173,6 +173,29 @@ function hasConfirmedDeadline(deadline: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(deadline);
 }
 
+function normalizeSchoolName(name: string) {
+  return name
+    .toLocaleLowerCase()
+    .replace(/^the\s+/, "")
+    .replace(/\bat\b/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function findDirectorySchoolByName(schools: SchoolDirectoryItem[], schoolName: string) {
+  const normalizedSchoolName = normalizeSchoolName(schoolName);
+
+  return (
+    schools.find((school) => normalizeSchoolName(school.name) === normalizedSchoolName) ??
+    schools.find((school) => {
+      const normalizedDirectoryName = normalizeSchoolName(school.name);
+      return normalizedDirectoryName.includes(normalizedSchoolName) || normalizedSchoolName.includes(normalizedDirectoryName);
+    }) ??
+    null
+  );
+}
+
 function takeRecommendationBatch<T>(items: readonly T[], batch: number, batchSize: number): T[] {
   if (items.length === 0) return [];
 
@@ -280,27 +303,47 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 }
 
 function TargetSchoolCard({
+  onOpenSchool,
   onRemove,
   onStatusChange,
   school,
 }: {
+  onOpenSchool: (school: SavedTargetSchool) => void;
   onRemove: (schoolId: string) => void;
   onStatusChange: (schoolId: string, status: SchoolItem["status"]) => void;
   school: SavedTargetSchool;
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-sm dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
+    <article
+      className="cursor-pointer rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-sm dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]"
+      onClick={() => onOpenSchool(school)}
+    >
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-xs font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
           {school.shortName}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate text-sm font-bold text-zinc-900 dark:text-white">{school.name}</h3>
+            <h3 className="min-w-0 truncate text-sm font-bold text-zinc-900 dark:text-white">
+              <button
+                aria-label={`查看 ${school.name} 的学校数据`}
+                className="max-w-full truncate text-left outline-none hover:text-violet-700 focus-visible:text-violet-700 dark:hover:text-violet-200 dark:focus-visible:text-violet-200"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenSchool(school);
+                }}
+                type="button"
+              >
+                {school.name}
+              </button>
+            </h3>
             <button
               aria-label={`从目标库移除 ${school.name}`}
               className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-rose-600 active:scale-95 dark:hover:bg-zinc-800 dark:hover:text-rose-300"
-              onClick={() => onRemove(school.id)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemove(school.id);
+              }}
               type="button"
             >
               <X aria-hidden="true" size={15} weight="bold" />
@@ -311,6 +354,7 @@ function TargetSchoolCard({
             <select
               aria-label={`${school.name} 的目标分组`}
               className="h-8 min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-zinc-700 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/15 dark:border-white/10 dark:bg-zinc-950/50 dark:text-zinc-200"
+              onClick={(event) => event.stopPropagation()}
               onChange={(event) => {
                 const nextStatus = parseTargetStatus(event.target.value);
                 if (nextStatus) onStatusChange(school.id, nextStatus);
@@ -368,6 +412,7 @@ function SchoolTierBoard({
   directoryTiers,
   isInitialized,
   onOpenDirectory,
+  onOpenSchool,
   onRemoveTarget,
   onSetTargetStatus,
   onUnlock,
@@ -378,6 +423,7 @@ function SchoolTierBoard({
   directoryTiers: DirectorySchoolTiers;
   isInitialized: boolean;
   onOpenDirectory: (tier: SchoolItem["status"] | null) => void;
+  onOpenSchool: (school: SavedTargetSchool) => void;
   onRemoveTarget: (schoolId: string) => void;
   onSetTargetStatus: (schoolId: string, status: SchoolItem["status"]) => void;
   onUnlock: () => void;
@@ -412,6 +458,7 @@ function SchoolTierBoard({
                 schools.map((school) => (
                   <TargetSchoolCard
                     key={school.id}
+                    onOpenSchool={onOpenSchool}
                     onRemove={onRemoveTarget}
                     onStatusChange={onSetTargetStatus}
                     school={school}
@@ -443,15 +490,20 @@ function MatchedRecommendationCard({
   isLoading,
   isSaved,
   onAdd,
+  onOpenSchool,
   school,
 }: {
   isLoading: boolean;
   isSaved: boolean;
   onAdd: (school: SchoolMatchResult) => void;
+  onOpenSchool?: () => void;
   school: SchoolMatchResult;
 }) {
   return (
-    <article className="w-[248px] shrink-0 snap-start rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-950/40 dark:shadow-none dark:backdrop-blur-none dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
+    <article
+      className={`w-[248px] shrink-0 snap-start rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-950/40 dark:shadow-none dark:backdrop-blur-none dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] ${onOpenSchool ? "cursor-pointer" : ""}`}
+      onClick={onOpenSchool}
+    >
       <div className="flex items-center gap-3">
         <span className="flex size-10 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold text-white dark:bg-zinc-800">{school.shortName}</span>
         <div className="min-w-0">
@@ -463,7 +515,10 @@ function MatchedRecommendationCard({
       <button
         className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-white text-xs font-bold text-blue-700 transition-transform hover:border-blue-400 hover:bg-blue-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-400/20 dark:bg-zinc-900/70 dark:text-blue-200 dark:hover:border-violet-400/45 dark:hover:bg-violet-500/10"
         disabled={isLoading || isSaved}
-        onClick={() => onAdd(school)}
+        onClick={(event) => {
+          event.stopPropagation();
+          onAdd(school);
+        }}
         type="button"
       >
         {isSaved ? <Check aria-hidden="true" size={14} weight="bold" /> : <Plus aria-hidden="true" size={14} weight="bold" />}
@@ -477,15 +532,20 @@ function DirectoryRecommendationCard({
   isLoading,
   isSaved,
   onAdd,
+  onOpenSchool,
   school,
 }: {
   isLoading: boolean;
   isSaved: boolean;
   onAdd: (school: SchoolDirectoryItem) => void;
+  onOpenSchool: () => void;
   school: SchoolDirectoryItem;
 }) {
   return (
-    <article className="w-[248px] shrink-0 snap-start rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-950/40 dark:shadow-none dark:backdrop-blur-none dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
+    <article
+      className="w-[248px] shrink-0 snap-start cursor-pointer rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-950/40 dark:shadow-none dark:backdrop-blur-none dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]"
+      onClick={onOpenSchool}
+    >
       <div className="flex items-center gap-3">
         <span className="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-xs font-bold text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">{school.shortName.slice(0, 4)}</span>
         <div className="min-w-0">
@@ -497,7 +557,10 @@ function DirectoryRecommendationCard({
       <button
         className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 text-xs font-bold text-violet-700 transition-transform hover:border-violet-400 hover:bg-violet-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-violet-400/25 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:border-violet-400/50 dark:hover:bg-violet-500/15"
         disabled={isLoading || isSaved}
-        onClick={() => onAdd(school)}
+        onClick={(event) => {
+          event.stopPropagation();
+          onAdd(school);
+        }}
         type="button"
       >
         {isSaved ? <Check aria-hidden="true" size={14} weight="bold" /> : <Plus aria-hidden="true" size={14} weight="bold" />}
@@ -511,9 +574,11 @@ function RecommendationCarousel({
   directoryBatch,
   directoryBatchCount,
   directorySuggestions,
+  schoolDirectory,
   recommendations,
   onAdd,
   onAddDirectorySchool,
+  onOpenSchool,
   onRefresh,
   isLoading,
   refreshVersion,
@@ -523,9 +588,11 @@ function RecommendationCarousel({
   directoryBatch: number;
   directoryBatchCount: number;
   directorySuggestions: SchoolDirectoryItem[];
+  schoolDirectory: SchoolDirectoryItem[];
   recommendations: SchoolMatchResult[];
   onAdd: (school: SchoolMatchResult) => void;
   onAddDirectorySchool: (school: SchoolDirectoryItem) => void;
+  onOpenSchool: (school: SchoolDirectoryItem) => void;
   onRefresh: () => void;
   isLoading: boolean;
   refreshVersion: number;
@@ -538,6 +605,10 @@ function RecommendationCarousel({
       isSaved={savedSchoolIds.has(school.id)}
       key={school.id}
       onAdd={onAdd}
+      onOpenSchool={(() => {
+        const directorySchool = findDirectorySchoolByName(schoolDirectory, school.name);
+        return directorySchool ? () => onOpenSchool(directorySchool) : undefined;
+      })()}
       school={school}
     />
   ));
@@ -547,6 +618,7 @@ function RecommendationCarousel({
       isSaved={savedSchoolIds.has(`directory-${school.ipedsUnitId}`)}
       key={`directory-${school.ipedsUnitId}`}
       onAdd={onAddDirectorySchool}
+      onOpenSchool={() => onOpenSchool(school)}
       school={school}
     />
   ));
@@ -823,6 +895,18 @@ export default function DashboardShell() {
     () => new Set(targetSchools.map((school) => school.id)),
     [targetSchools],
   );
+  const handleOpenTargetSchool = (targetSchool: SavedTargetSchool) => {
+    const directorySchool = targetSchool.id.startsWith("directory-")
+      ? schoolDirectory.find((school) => `directory-${school.ipedsUnitId}` === targetSchool.id) ?? null
+      : findDirectorySchoolByName(schoolDirectory, targetSchool.name);
+
+    if (!directorySchool) {
+      setToast(`${targetSchool.name} 的已核验详情数据正在接入`);
+      return;
+    }
+
+    setSelectedSchoolIpedsUnitId(directorySchool.ipedsUnitId);
+  };
 
   useEffect(() => {
     if (storedSavedTargets.length > 0 || legacySavedSchoolIds.size === 0 || allSchools.length === 0) return;
@@ -1021,6 +1105,7 @@ export default function DashboardShell() {
               setDirectoryTierFilter(tier);
               setSchoolDirectoryOpen(true);
             }}
+            onOpenSchool={handleOpenTargetSchool}
             onRemoveTarget={handleRemoveTarget}
             onSetTargetStatus={handleSetTargetStatus}
             onUnlock={() => setDrawerRequested(true)}
@@ -1035,10 +1120,12 @@ export default function DashboardShell() {
               isLoading={isLoading}
               onAdd={handleAddSchool}
               onAddDirectorySchool={handleAddDirectorySchool}
+              onOpenSchool={(school) => setSelectedSchoolIpedsUnitId(school.ipedsUnitId)}
               onRefresh={handleRefreshRecommendations}
               recommendations={recommendations}
               refreshVersion={recommendationVersion}
               savedSchoolIds={savedSchoolIds}
+              schoolDirectory={schoolDirectory}
               showDirectoryFirst={recommendationBatch > 0}
             />
           </div>
