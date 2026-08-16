@@ -712,11 +712,11 @@ function normalizeSavedTargetSchool(value: unknown): SavedTargetSchool | null {
   const shortName = typeof school.shortName === "string" ? sanitizePlainText(school.shortName, 16).trim() : "";
   const program = typeof school.program === "string" ? sanitizePlainText(school.program, 140).trim() : "";
   const region = typeof school.region === "string" ? sanitizePlainText(school.region, 40).trim() : "";
-  const deadline = typeof school.deadline === "string" && /^\d{4}-\d{2}-\d{2}$/.test(school.deadline) ? school.deadline : "";
+  const deadline = typeof school.deadline === "string" && (school.deadline === "" || /^\d{4}-\d{2}-\d{2}$/.test(school.deadline)) ? school.deadline : "";
   const status = isSchoolStatus(school.status) ? school.status : null;
   const lastAlgorithmStatus = isSchoolStatus(school.lastAlgorithmStatus) ? school.lastAlgorithmStatus : null;
 
-  if (!id || !name || !shortName || !program || !region || !deadline || !status || !lastAlgorithmStatus || !isIsoDateTime(school.addedAt)) {
+  if (!id || !name || !shortName || !program || !region || !status || !lastAlgorithmStatus || !isIsoDateTime(school.addedAt)) {
     return null;
   }
 

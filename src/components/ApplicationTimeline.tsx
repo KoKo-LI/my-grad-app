@@ -58,8 +58,13 @@ function isCompleted(date: string) {
   return new Date(`${date}T23:59:59`).getTime() < Date.now();
 }
 
+function hasConfirmedDeadline(deadline: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(deadline);
+}
+
 export default function ApplicationTimeline({ schools }: ApplicationTimelineProps) {
-  const visibleSchools = schools.slice(0, 4);
+  const visibleSchools = schools.filter((school) => hasConfirmedDeadline(school.deadline)).slice(0, 4);
+  const schoolsAwaitingDeadlines = schools.length - visibleSchools.length;
 
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-sm dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] sm:p-6">
@@ -72,7 +77,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">悬浮节点查看各校的关键申请节奏。</p>
         </div>
         <span className="w-fit rounded-full border border-violet-200/60 bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700 dark:border-white/10 dark:bg-zinc-950/40 dark:text-zinc-300">
-          已加入 {schools.length} 所
+          已加入 {schools.length} 所{schoolsAwaitingDeadlines > 0 ? ` · ${schoolsAwaitingDeadlines} 所待确认` : ""}
         </span>
       </div>
 
@@ -127,7 +132,7 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
       ) : (
         <div className="dashboard-shimmer mt-6 flex min-h-36 items-center gap-4 rounded-2xl border border-dashed border-slate-200/80 bg-slate-200/80 px-5 text-sm text-zinc-600 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl dark:border-white/15 dark:bg-zinc-950/30 dark:text-zinc-300 dark:shadow-none dark:backdrop-blur-none">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-200"><CalendarCheck aria-hidden="true" size={22} weight="duotone" /></span>
-          <p>先从智能推荐中加入院校；系统会在这里汇总网申开放、截止与结果发放节点。</p>
+          <p>{schools.length > 0 ? "已加入院校，待接入项目级官方截止日期后，系统会在这里汇总网申开放、截止与结果发放节点。" : "先从智能推荐中加入院校；系统会在这里汇总网申开放、截止与结果发放节点。"}</p>
         </div>
       )}
     </section>

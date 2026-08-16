@@ -169,6 +169,10 @@ function getDaysUntil(dateString: string) {
   return Math.max(0, difference);
 }
 
+function hasConfirmedDeadline(deadline: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(deadline);
+}
+
 function takeRecommendationBatch<T>(items: readonly T[], batch: number, batchSize: number): T[] {
   if (items.length === 0) return [];
 
@@ -189,6 +193,26 @@ function createSavedTargetSchool(school: SchoolMatchResult, addedAt = new Date()
     region: school.region,
     shortName: school.shortName,
     status: school.status,
+    userOverrideStatus: false,
+  };
+}
+
+function createSavedTargetSchoolFromDirectory(
+  school: SchoolDirectoryItem,
+  status: SchoolItem["status"],
+  addedAt = new Date().toISOString(),
+): SavedTargetSchool {
+  return {
+    addedAt,
+    deadline: "",
+    id: `directory-${school.ipedsUnitId}`,
+    lastAlgorithmStatus: status,
+    name: school.name,
+    notes: "来自已核验的官方 / 政府公开院校数据。",
+    program: "本科申请方向待确认",
+    region: school.region,
+    shortName: school.shortName,
+    status,
     userOverrideStatus: false,
   };
 }
@@ -449,7 +473,17 @@ function MatchedRecommendationCard({
   );
 }
 
-function DirectoryRecommendationCard({ onOpenSchool, school }: { onOpenSchool: (school: SchoolDirectoryItem) => void; school: SchoolDirectoryItem }) {
+function DirectoryRecommendationCard({
+  isLoading,
+  isSaved,
+  onAdd,
+  school,
+}: {
+  isLoading: boolean;
+  isSaved: boolean;
+  onAdd: (school: SchoolDirectoryItem) => void;
+  school: SchoolDirectoryItem;
+}) {
   return (
     <article className="w-[248px] shrink-0 snap-start rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-950/40 dark:shadow-none dark:backdrop-blur-none dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
       <div className="flex items-center gap-3">
@@ -461,12 +495,13 @@ function DirectoryRecommendationCard({ onOpenSchool, school }: { onOpenSchool: (
       </div>
       <p className="mt-4 h-9 text-xs leading-5 text-zinc-500 dark:text-zinc-400">已接入官方 / 政府公开数据，可查看学费、录取率与成绩区间。</p>
       <button
-        className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 text-xs font-bold text-violet-700 transition-transform hover:border-violet-400 hover:bg-violet-100 active:scale-95 dark:border-violet-400/25 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:border-violet-400/50 dark:hover:bg-violet-500/15"
-        onClick={() => onOpenSchool(school)}
+        className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 text-xs font-bold text-violet-700 transition-transform hover:border-violet-400 hover:bg-violet-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-violet-400/25 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:border-violet-400/50 dark:hover:bg-violet-500/15"
+        disabled={isLoading || isSaved}
+        onClick={() => onAdd(school)}
         type="button"
       >
-        查看学校数据
-        <ArrowRight aria-hidden="true" size={14} weight="bold" />
+        {isSaved ? <Check aria-hidden="true" size={14} weight="bold" /> : <Plus aria-hidden="true" size={14} weight="bold" />}
+        {isSaved ? "已加入选校" : isLoading ? "Loading..." : "加入选校"}
       </button>
     </article>
   );
@@ -478,7 +513,7 @@ function RecommendationCarousel({
   directorySuggestions,
   recommendations,
   onAdd,
-  onOpenSchool,
+  onAddDirectorySchool,
   onRefresh,
   isLoading,
   refreshVersion,
@@ -490,7 +525,7 @@ function RecommendationCarousel({
   directorySuggestions: SchoolDirectoryItem[];
   recommendations: SchoolMatchResult[];
   onAdd: (school: SchoolMatchResult) => void;
-  onOpenSchool: (school: SchoolDirectoryItem) => void;
+  onAddDirectorySchool: (school: SchoolDirectoryItem) => void;
   onRefresh: () => void;
   isLoading: boolean;
   refreshVersion: number;
@@ -507,7 +542,13 @@ function RecommendationCarousel({
     />
   ));
   const directoryCards = directorySuggestions.map((school) => (
-    <DirectoryRecommendationCard key={`directory-${school.ipedsUnitId}`} onOpenSchool={onOpenSchool} school={school} />
+    <DirectoryRecommendationCard
+      isLoading={isLoading}
+      isSaved={savedSchoolIds.has(`directory-${school.ipedsUnitId}`)}
+      key={`directory-${school.ipedsUnitId}`}
+      onAdd={onAddDirectorySchool}
+      school={school}
+    />
   ));
 
   return (
@@ -551,7 +592,8 @@ function RecommendationCarousel({
 }
 
 function DeadlineBanner({ schools }: { schools: SavedTargetSchool[] }) {
-  const nearestSchool = [...schools].sort((first, second) => first.deadline.localeCompare(second.deadline))[0];
+  const schoolsWithConfirmedDeadlines = schools.filter((school) => hasConfirmedDeadline(school.deadline));
+  const nearestSchool = [...schoolsWithConfirmedDeadlines].sort((first, second) => first.deadline.localeCompare(second.deadline))[0];
   const daysLeft = nearestSchool ? getDaysUntil(nearestSchool.deadline) : null;
 
   return (
@@ -570,8 +612,8 @@ function DeadlineBanner({ schools }: { schools: SavedTargetSchool[] }) {
               </>
             ) : (
               <>
-                <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-zinc-950 dark:text-white sm:text-3xl">等待你的第一所申请院校</h2>
-                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">保存背景后，系统会根据匹配院校突出显示最近截止日期。</p>
+                <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-zinc-950 dark:text-white sm:text-3xl">{schools.length > 0 ? "目标院校的截止日期待确认" : "等待你的第一所申请院校"}</h2>
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{schools.length > 0 ? "已加入院校，待接入项目级官方截止日期后将在这里提示。" : "保存背景后，系统会根据匹配院校突出显示最近截止日期。"}</p>
               </>
             )}
           </div>
@@ -741,6 +783,17 @@ export default function DashboardShell() {
     () => getDirectoryTierCount(directoryTiers),
     [directoryTiers],
   );
+  const directoryStatusByIpedsUnitId = useMemo(() => {
+    const statuses = new Map<string, SchoolItem["status"]>();
+
+    (Object.keys(directoryTiers) as SchoolItem["status"][]).forEach((status) => {
+      directoryTiers[status].forEach((school) => {
+        statuses.set(school.ipedsUnitId, status);
+      });
+    });
+
+    return statuses;
+  }, [directoryTiers]);
   const visibleDirectorySchools = directoryTierFilter ? directoryTiers[directoryTierFilter] : schoolDirectory;
   const directoryHeading = directoryTierFilter ? `${tierDetails[directoryTierFilter].title} 候选院校` : "全球院校库";
   const directoryDescription = directoryTierFilter
@@ -805,6 +858,23 @@ export default function DashboardShell() {
       if (savedSchoolIds.has(school.id)) return;
       saveSavedTargetSchools([...targetSchools, createSavedTargetSchool(school)]);
       setToast(`${school.name} 已加入你的选校清单`);
+    });
+  };
+
+  const handleAddDirectorySchool = (school: SchoolDirectoryItem) => {
+    run(() => {
+      const status = directoryStatusByIpedsUnitId.get(school.ipedsUnitId);
+      const targetId = `directory-${school.ipedsUnitId}`;
+
+      if (!status) {
+        setToast("该院校不在当前目标地区的候选范围内");
+        return;
+      }
+
+      if (savedSchoolIds.has(targetId)) return;
+
+      saveSavedTargetSchools([...targetSchools, createSavedTargetSchoolFromDirectory(school, status)]);
+      setToast(`${school.name} 已加入 ${tierDetails[status].title}`);
     });
   };
 
@@ -964,7 +1034,7 @@ export default function DashboardShell() {
               directorySuggestions={directorySuggestions}
               isLoading={isLoading}
               onAdd={handleAddSchool}
-              onOpenSchool={(school) => setSelectedSchoolIpedsUnitId(school.ipedsUnitId)}
+              onAddDirectorySchool={handleAddDirectorySchool}
               onRefresh={handleRefreshRecommendations}
               recommendations={recommendations}
               refreshVersion={recommendationVersion}
