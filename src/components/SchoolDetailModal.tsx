@@ -14,11 +14,12 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { parseSchoolDetailResponse } from "@/lib/undergraduateDirectory";
-import type { InstitutionMetric, SchoolAdmissionRequirement, SchoolAdmissionStatistic, SchoolDetail } from "@/types";
+import type { InstitutionMetric, SchoolAdmissionRequirement, SchoolAdmissionStatistic, SchoolDetail, StudentProfile } from "@/types";
 
 interface SchoolDetailModalProps {
   ipedsUnitId: string | null;
   onClose: () => void;
+  profile: StudentProfile | null;
 }
 
 const metricLabels: Record<string, string> = {
@@ -116,6 +117,126 @@ function formatStatisticValue(statistic: SchoolAdmissionStatistic) {
     : `${statistic.value}${statistic.scoreScale ? ` / ${statistic.scoreScale}` : ""}`;
 }
 
+interface ProfileComparisonItem {
+  applicantValue: string;
+  label: string;
+  schoolValue: string;
+}
+
+function formatScore(value: number | null) {
+  return value === null ? "未披露" : Math.round(value).toLocaleString("en-US");
+}
+
+function getPersonalGpa(profile: StudentProfile | null) {
+  return profile?.gpa ? `${profile.gpa} / ${profile.gpaMax || "4.0"}` : "未填写";
+}
+
+function getPersonalTestScore(profile: StudentProfile | null, testName: "SAT" | "ACT") {
+  return profile?.standardizedTests.find((test) => test.test === testName)?.score || "未填写";
+}
+
+function getActiveLanguage(profile: StudentProfile | null) {
+  const languageTests = [
+    { databaseMetrics: ["toefl", "toefl_ibt_total"], test: "TOEFL" },
+    { databaseMetrics: ["ielts", "ielts_academic_overall"], test: "IELTS" },
+    { databaseMetrics: ["duolingo_english_test"], test: "Duolingo English Test" },
+  ] as const;
+  const activeTest = languageTests.find(({ test }) => {
+    const score = profile?.standardizedTests.find((item) => item.test === test)?.score;
+    return Boolean(score);
+  });
+
+  if (!activeTest) return { databaseMetrics: [] as string[], applicantValue: "未填写" };
+
+  const score = profile?.standardizedTests.find((item) => item.test === activeTest.test)?.score;
+  return { databaseMetrics: [...activeTest.databaseMetrics], applicantValue: `${activeTest.test} ${score}` };
+}
+
+function getPersonalAcademicScore(profile: StudentProfile | null) {
+  if (!profile) return "未填写";
+
+  const apSubjectCount = profile.academicRecord.apSubjects.filter((subject) => Boolean(subject.score)).length;
+  const values = [
+    apSubjectCount > 0 ? `AP ${apSubjectCount} 门` : "",
+    profile.academicRecord.ibTotalScore ? `IB ${profile.academicRecord.ibTotalScore}` : "",
+  ].filter(Boolean);
+
+  return values.length > 0 ? values.join(" · ") : "未填写";
+}
+
+function getTargetProgramIds(detail: SchoolDetail, profile: StudentProfile | null) {
+  const majorMatchedProgramIds = profile?.targetMajor
+    ? detail.programs
+      .filter((program) => program.majorCategories.includes(profile.targetMajor))
+      .map((program) => program.id)
+    : [];
+
+  return new Set(majorMatchedProgramIds.length > 0 ? majorMatchedProgramIds : detail.programs.map((program) => program.id));
+}
+
+function findProgramStatistic(
+  detail: SchoolDetail,
+  programIds: ReadonlySet<string>,
+  metric: string,
+) {
+  const statistic = detail.statistics.find(
+    (item) => programIds.has(item.programId) && item.metric === metric && (item.statistic === "median" || item.statistic === "average"),
+  );
+
+  return statistic ? formatStatisticValue(statistic) : "未披露";
+}
+
+function findProgramRequirement(
+  detail: SchoolDetail,
+  programIds: ReadonlySet<string>,
+  metricNames: readonly string[],
+) {
+  const requirement = detail.requirements.find(
+    (item) => programIds.has(item.programId) && metricNames.includes(item.metric) && item.minimumScore !== null,
+  );
+
+  return requirement ? formatRequirementValue(requirement) : "未披露";
+}
+
+function getProfileComparisons(detail: SchoolDetail, profile: StudentProfile | null): ProfileComparisonItem[] {
+  const programIds = getTargetProgramIds(detail, profile);
+  const satEbrwMedian = findMetric(detail.metrics, "sat_ebrw_median")?.value ?? null;
+  const satMathMedian = findMetric(detail.metrics, "sat_math_median")?.value ?? null;
+  const activeLanguage = getActiveLanguage(profile);
+  const academicRequirements = [
+    findProgramRequirement(detail, programIds, ["ap_subject"]),
+    findProgramRequirement(detail, programIds, ["ib_total"]),
+  ].filter((value) => value !== "未披露");
+
+  return [
+    {
+      applicantValue: getPersonalTestScore(profile, "SAT"),
+      label: "SAT 本人 / 中位",
+      schoolValue: formatScore(satEbrwMedian !== null && satMathMedian !== null ? satEbrwMedian + satMathMedian : null),
+    },
+    {
+      applicantValue: getPersonalTestScore(profile, "ACT"),
+      label: "ACT 本人 / 中位",
+      schoolValue: formatScore(findMetric(detail.metrics, "act_composite_median")?.value ?? null),
+    },
+    {
+      applicantValue: getPersonalGpa(profile),
+      label: "GPA 本人 / 项目",
+      schoolValue: findProgramStatistic(detail, programIds, "gpa"),
+    },
+    {
+      applicantValue: activeLanguage.applicantValue,
+      label: "语言 本人 / 门槛",
+      schoolValue: findProgramRequirement(detail, programIds, activeLanguage.databaseMetrics),
+    },
+    {
+      applicantValue: getPersonalAcademicScore(profile),
+      label: "AP / IB 本人 / 项目",
+      schoolValue: academicRequirements.length > 0 ? academicRequirements.join(" · ") : "未披露",
+    },
+  ];
+}
+
 function DetailLoading() {
   return (
     <div className="flex min-h-72 items-center justify-center gap-3 text-sm font-semibold text-zinc-500 dark:text-zinc-400">
@@ -135,7 +256,7 @@ function DetailError({ onClose }: { onClose: () => void }) {
   );
 }
 
-function SchoolDetailContent({ detail }: { detail: SchoolDetail }) {
+function SchoolDetailContent({ detail, profile }: { detail: SchoolDetail; profile: StudentProfile | null }) {
   const primaryMetrics = [
     { icon: TrendUp, metric: "admission_rate" },
     { icon: CurrencyDollar, metric: "tuition_out_of_state_usd" },
@@ -152,6 +273,7 @@ function SchoolDetailContent({ detail }: { detail: SchoolDetail }) {
     [detail.programs, detail.statistics],
   );
   const sourcePeriods = Array.from(new Set(detail.metrics.map((metric) => metric.sourcePeriod)));
+  const profileComparisons = getProfileComparisons(detail, profile);
 
   return (
     <>
@@ -185,6 +307,22 @@ function SchoolDetailContent({ detail }: { detail: SchoolDetail }) {
               </article>
             );
           })}
+        </section>
+
+        <section className="rounded-3xl border border-violet-200/80 bg-violet-50/50 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:border-violet-400/20 dark:bg-violet-500/5">
+          <div className="flex items-center gap-2"><ChartLineUp aria-hidden="true" className="text-violet-600 dark:text-violet-300" size={19} weight="duotone" /><h2 className="text-lg font-extrabold text-zinc-950 dark:text-white">你的背景与院校数据对比</h2></div>
+          <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">学校值优先使用已录取学生中位数与项目公开门槛；没有公开数据的字段不会估算。</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {profileComparisons.map((comparison) => (
+              <article className="rounded-2xl border border-white/80 bg-white/80 p-3.5 dark:border-white/10 dark:bg-zinc-950/45" key={comparison.label}>
+                <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400">{comparison.label}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div><p className="text-zinc-400">你</p><p className="mt-1 truncate font-bold text-violet-700 dark:text-violet-200">{comparison.applicantValue}</p></div>
+                  <div><p className="text-zinc-400">学校</p><p className="mt-1 truncate font-bold text-zinc-800 dark:text-zinc-100">{comparison.schoolValue}</p></div>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
 
         {scoreMetrics.length > 0 && (
@@ -248,7 +386,7 @@ function SchoolDetailContent({ detail }: { detail: SchoolDetail }) {
   );
 }
 
-export default function SchoolDetailModal({ ipedsUnitId, onClose }: SchoolDetailModalProps) {
+export default function SchoolDetailModal({ ipedsUnitId, onClose, profile }: SchoolDetailModalProps) {
   const [detail, setDetail] = useState<SchoolDetail | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "ready">("loading");
 
@@ -290,7 +428,7 @@ export default function SchoolDetailModal({ ipedsUnitId, onClose }: SchoolDetail
         <motion.div animate={{ opacity: 1 }} className="fixed inset-0 z-[65] overflow-y-auto bg-zinc-950/45 px-3 py-3 backdrop-blur-sm sm:px-6 sm:py-8" exit={{ opacity: 0 }} initial={{ opacity: 0 }} onMouseDown={onClose} role="presentation">
           <motion.section animate={{ opacity: 1, scale: 1, y: 0 }} aria-modal="true" className="mx-auto min-h-full w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200/80 bg-white/95 shadow-2xl shadow-zinc-950/25 backdrop-blur-2xl dark:border-white/10 dark:bg-zinc-950/95 sm:min-h-0" exit={{ opacity: 0, scale: 0.98, y: 12 }} initial={{ opacity: 0, scale: 0.98, y: 12 }} onMouseDown={(event) => event.stopPropagation()} role="dialog" transition={{ duration: 0.22, ease: "easeOut" }}>
             <button aria-label="关闭院校详情" className="fixed right-7 top-7 z-10 flex size-10 items-center justify-center rounded-xl border border-slate-200/80 bg-white/90 text-zinc-500 shadow-lg hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 dark:border-white/10 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:border-violet-400/40 dark:hover:bg-violet-500/10 dark:hover:text-violet-100" onClick={onClose} type="button"><X aria-hidden="true" size={19} weight="bold" /></button>
-            {status === "loading" ? <DetailLoading /> : status === "error" || !detail ? <DetailError onClose={onClose} /> : <SchoolDetailContent detail={detail} />}
+            {status === "loading" ? <DetailLoading /> : status === "error" || !detail ? <DetailError onClose={onClose} /> : <SchoolDetailContent detail={detail} profile={profile} />}
           </motion.section>
         </motion.div>
       )}

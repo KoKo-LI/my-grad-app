@@ -162,15 +162,20 @@ export default function SchoolDirectoryOverlay({ description, heading, onClose, 
                           <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">{school.region}</span>
                         </span>
                       </div>
-                      <span className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-white/5">
-                        <span className="min-w-0 rounded-xl bg-emerald-50/70 p-2 dark:bg-emerald-500/10">
+                      <span className="mt-4 flex items-end justify-between gap-3 border-t border-slate-100 pt-3 dark:border-white/5">
+                        <span>
                           <span className="block text-[10px] font-bold tracking-wide text-zinc-400">录取率</span>
                           <span className="mt-1 block text-sm font-bold text-emerald-700 dark:text-emerald-200">{formatRate(admissionRate)}</span>
                         </span>
+                        <span className="min-w-0 text-right">
+                          <span className="block text-[10px] font-bold tracking-wide text-zinc-400">录取中位分</span>
+                          <span className="mt-1 block truncate text-xs font-bold text-zinc-700 dark:text-zinc-200">SAT {formatScore(satMedian)} · ACT {formatScore(actMedian)}</span>
+                        </span>
+                      </span>
+                      <span className="mt-2 block text-[10px] font-semibold text-violet-600 opacity-80 transition-opacity group-hover:opacity-100 dark:text-violet-300">悬停查看个人背景对比</span>
+                      <span className="grid max-h-0 grid-cols-3 gap-2 overflow-hidden opacity-0 transition-[max-height,opacity,margin,padding] duration-300 group-hover:mt-3 group-hover:max-h-72 group-hover:opacity-100 group-focus-visible:mt-3 group-focus-visible:max-h-72 group-focus-visible:opacity-100">
                         <ComparisonMetric applicantValue={getPersonalTestScore(profile, "SAT")} label="SAT 本人/中位" schoolValue={formatScore(satMedian)} />
                         <ComparisonMetric applicantValue={getPersonalTestScore(profile, "ACT")} label="ACT 本人/中位" schoolValue={formatScore(actMedian)} />
-                      </span>
-                      <span className="mt-2 grid grid-cols-3 gap-2">
                         <ComparisonMetric applicantValue={getPersonalGpa(profile)} label="GPA 本人/学校" schoolValue="未披露" />
                         <ComparisonMetric applicantValue={getPersonalLanguageScore(profile)} label="语言 本人/学校" schoolValue="未披露" />
                         <ComparisonMetric applicantValue={getPersonalAcademicScore(profile)} label="AP / IB 本人/学校" schoolValue="未披露" />

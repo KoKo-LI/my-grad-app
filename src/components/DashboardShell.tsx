@@ -997,7 +997,7 @@ export default function DashboardShell() {
         profile={profile}
         schools={visibleDirectorySchools}
       />
-      <SchoolDetailModal key={selectedSchoolIpedsUnitId ?? "no-school"} ipedsUnitId={selectedSchoolIpedsUnitId} onClose={() => setSelectedSchoolIpedsUnitId(null)} />
+      <SchoolDetailModal key={selectedSchoolIpedsUnitId ?? "no-school"} ipedsUnitId={selectedSchoolIpedsUnitId} onClose={() => setSelectedSchoolIpedsUnitId(null)} profile={profile} />
       <ProfileDrawer onClose={() => setDrawerRequested(false)} onSaved={handleProfileSaved} onThemeChange={handleThemeChange} open={drawerRequested} profile={profile} theme={theme} />
       <AnimatePresence>{toast && <Toast key={toast} message={toast} onClose={() => setToast(null)} />}</AnimatePresence>
     </div>
