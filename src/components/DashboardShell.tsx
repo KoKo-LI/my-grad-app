@@ -26,6 +26,7 @@ import SchoolSearchDropdown from "@/components/SchoolSearchDropdown";
 import Sidebar from "@/components/Sidebar";
 import { schoolCatalog } from "@/data/schoolCatalog";
 import type { SavedTargetSchool, SchoolDirectoryItem, SchoolItem, SchoolMatchInput, SchoolMatchResult, StudentProfile } from "@/types";
+import { buildDirectorySchoolTiers, getDirectoryTierCount, type DirectorySchoolTiers } from "@/utils/directoryTierEngine";
 import { matchSchools } from "@/utils/matchEngine";
 import { parseSchoolDirectoryResponse } from "@/lib/undergraduateDirectory";
 import { parseUndergraduateCatalog } from "@/lib/undergraduateCatalog";
@@ -339,28 +340,31 @@ function UnlockCard({ onUnlock, onUseDefault, tier }: { onUnlock: () => void; on
 }
 
 function SchoolTierBoard({
+  directoryTotal,
+  directoryTiers,
   isInitialized,
   onOpenDirectory,
   onRemoveTarget,
   onSetTargetStatus,
   onUnlock,
   onUseDefault,
-  schoolDirectoryCount,
   targetSchools,
 }: {
+  directoryTotal: number;
+  directoryTiers: DirectorySchoolTiers;
   isInitialized: boolean;
-  onOpenDirectory: () => void;
+  onOpenDirectory: (tier: SchoolItem["status"] | null) => void;
   onRemoveTarget: (schoolId: string) => void;
   onSetTargetStatus: (schoolId: string, status: SchoolItem["status"]) => void;
   onUnlock: () => void;
   onUseDefault: () => void;
-  schoolDirectoryCount: number;
   targetSchools: SavedTargetSchool[];
 }) {
   return (
     <section aria-label="动态选校梯度" className="grid gap-4 xl:grid-cols-3">
       {(Object.keys(tierDetails) as SchoolItem["status"][]).map((tier) => {
         const details = tierDetails[tier];
+        const directorySchoolCount = directoryTiers[tier].length;
         const schools = targetSchools.filter((school) => school.status === tier);
 
         return (
@@ -397,10 +401,12 @@ function SchoolTierBoard({
             </div>
             <button
               className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-blue-700 transition-transform hover:text-violet-700 active:scale-95 dark:text-blue-300 dark:hover:text-violet-200"
-              onClick={onOpenDirectory}
+              onClick={() => onOpenDirectory(isInitialized ? tier : null)}
               type="button"
             >
-              {schoolDirectoryCount > 0 ? `浏览全部 ${schoolDirectoryCount} 所` : "查看全部"} <ArrowRight aria-hidden="true" size={13} weight="bold" />
+              {isInitialized
+                ? `浏览更多 · ${directorySchoolCount}/${directoryTotal} 所候选`
+                : "浏览院校库"} <ArrowRight aria-hidden="true" size={13} weight="bold" />
             </button>
           </section>
         );
@@ -623,6 +629,7 @@ export default function DashboardShell() {
   const [schoolDirectory, setSchoolDirectory] = useState<SchoolDirectoryItem[]>([]);
   const [isSchoolDirectoryLoading, setIsSchoolDirectoryLoading] = useState(true);
   const [schoolDirectoryOpen, setSchoolDirectoryOpen] = useState(false);
+  const [directoryTierFilter, setDirectoryTierFilter] = useState<SchoolItem["status"] | null>(null);
   const [selectedSchoolIpedsUnitId, setSelectedSchoolIpedsUnitId] = useState<string | null>(null);
   const { isLoading, run } = useActionLock();
 
@@ -726,6 +733,19 @@ export default function DashboardShell() {
     [directoryBatchSize, directoryCandidates, recommendationBatch],
   );
   const allSchools = useMemo(() => (tiers ? Object.values(tiers).flat() : []), [tiers]);
+  const directoryTiers = useMemo<DirectorySchoolTiers>(
+    () => (initializedProfile ? buildDirectorySchoolTiers(initializedProfile, schoolDirectory) : { Reach: [], Target: [], Safety: [] }),
+    [initializedProfile, schoolDirectory],
+  );
+  const selectedRegionDirectoryCount = useMemo(
+    () => getDirectoryTierCount(directoryTiers),
+    [directoryTiers],
+  );
+  const visibleDirectorySchools = directoryTierFilter ? directoryTiers[directoryTierFilter] : schoolDirectory;
+  const directoryHeading = directoryTierFilter ? `${tierDetails[directoryTierFilter].title} 候选院校` : "全球院校库";
+  const directoryDescription = directoryTierFilter
+    ? `已按你的成绩与目标地区筛选出 ${visibleDirectorySchools.length} 所候选院校。`
+    : `已接入 ${schoolDirectory.length} 所院校的官方与政府公开数据。`;
   const targetSchools = useMemo(() => {
     const algorithmSchoolsById = new Map(allSchools.map((school) => [school.id, school]));
 
@@ -835,6 +855,7 @@ export default function DashboardShell() {
         onCloseMobile={() => setMobileSidebarOpen(false)}
         onOpenSchoolDirectory={() => {
           setMobileSidebarOpen(false);
+          setDirectoryTierFilter(null);
           setSchoolDirectoryOpen(true);
         }}
         onOpenProfile={() => {
@@ -923,13 +944,17 @@ export default function DashboardShell() {
           </section>
 
           <SchoolTierBoard
+            directoryTotal={selectedRegionDirectoryCount}
+            directoryTiers={directoryTiers}
             isInitialized={isInitialized}
-            onOpenDirectory={() => setSchoolDirectoryOpen(true)}
+            onOpenDirectory={(tier) => {
+              setDirectoryTierFilter(tier);
+              setSchoolDirectoryOpen(true);
+            }}
             onRemoveTarget={handleRemoveTarget}
             onSetTargetStatus={handleSetTargetStatus}
             onUnlock={() => setDrawerRequested(true)}
             onUseDefault={handleUseDefaultProfile}
-            schoolDirectoryCount={schoolDirectory.length}
             targetSchools={targetSchools}
           />
           <div className="mt-7">
@@ -957,13 +982,19 @@ export default function DashboardShell() {
         </div>
       </main>
       <SchoolDirectoryOverlay
-        onClose={() => setSchoolDirectoryOpen(false)}
+        description={directoryDescription}
+        heading={directoryHeading}
+        onClose={() => {
+          setSchoolDirectoryOpen(false);
+          setDirectoryTierFilter(null);
+        }}
         onSelect={(school) => {
           setSchoolDirectoryOpen(false);
+          setDirectoryTierFilter(null);
           setSelectedSchoolIpedsUnitId(school.ipedsUnitId);
         }}
         open={schoolDirectoryOpen}
-        schools={schoolDirectory}
+        schools={visibleDirectorySchools}
       />
       <SchoolDetailModal key={selectedSchoolIpedsUnitId ?? "no-school"} ipedsUnitId={selectedSchoolIpedsUnitId} onClose={() => setSelectedSchoolIpedsUnitId(null)} />
       <ProfileDrawer onClose={() => setDrawerRequested(false)} onSaved={handleProfileSaved} onThemeChange={handleThemeChange} open={drawerRequested} profile={profile} theme={theme} />

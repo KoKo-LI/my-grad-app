@@ -6,6 +6,8 @@ import { useMemo, useState } from "react";
 import type { InstitutionMetric, SchoolDirectoryItem } from "@/types";
 
 interface SchoolDirectoryOverlayProps {
+  description: string;
+  heading: string;
   onClose: () => void;
   onSelect: (school: SchoolDirectoryItem) => void;
   open: boolean;
@@ -26,7 +28,7 @@ function formatTuition(value: number | null) {
     : new Intl.NumberFormat("en-US", { maximumFractionDigits: 0, style: "currency", currency: "USD" }).format(value);
 }
 
-export default function SchoolDirectoryOverlay({ onClose, onSelect, open, schools }: SchoolDirectoryOverlayProps) {
+export default function SchoolDirectoryOverlay({ description, heading, onClose, onSelect, open, schools }: SchoolDirectoryOverlayProps) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const visibleSchools = useMemo(
@@ -58,7 +60,7 @@ export default function SchoolDirectoryOverlay({ onClose, onSelect, open, school
         >
           <motion.section
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            aria-label="全球院校库"
+            aria-label={heading}
             aria-modal="true"
             className="my-auto w-full max-w-6xl overflow-hidden rounded-3xl border border-slate-200/80 bg-white/95 shadow-2xl shadow-zinc-950/25 backdrop-blur-2xl dark:border-white/10 dark:bg-zinc-950/95"
             exit={{ opacity: 0, scale: 0.98, y: 12 }}
@@ -70,8 +72,8 @@ export default function SchoolDirectoryOverlay({ onClose, onSelect, open, school
             <header className="flex items-start justify-between gap-4 border-b border-slate-200/80 px-5 py-5 dark:border-white/10 sm:px-7">
               <div>
                 <p className="text-xs font-bold tracking-[0.18em] text-violet-600 dark:text-violet-300">VERIFIED UNDERGRADUATE CATALOG</p>
-                <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-zinc-950 dark:text-white">全球院校库</h2>
-                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">已接入 {schools.length} 所院校的官方与政府公开数据。</p>
+                <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-zinc-950 dark:text-white">{heading}</h2>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
               </div>
               <button
                 aria-label="关闭院校库"
