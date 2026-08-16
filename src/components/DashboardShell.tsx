@@ -14,6 +14,7 @@ import {
   Plus,
   Sparkle,
   Sun,
+  X,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -24,13 +25,14 @@ import SchoolDirectoryOverlay from "@/components/SchoolDirectoryOverlay";
 import SchoolSearchDropdown from "@/components/SchoolSearchDropdown";
 import Sidebar from "@/components/Sidebar";
 import { schoolCatalog } from "@/data/schoolCatalog";
-import type { SchoolDirectoryItem, SchoolItem, SchoolMatchInput, SchoolMatchResult, StudentProfile } from "@/types";
+import type { SavedTargetSchool, SchoolDirectoryItem, SchoolItem, SchoolMatchInput, SchoolMatchResult, StudentProfile } from "@/types";
 import { matchSchools } from "@/utils/matchEngine";
 import { parseSchoolDirectoryResponse } from "@/lib/undergraduateDirectory";
 import { parseUndergraduateCatalog } from "@/lib/undergraduateCatalog";
 import {
   createProfileFromPreset,
   parseSavedSchoolIds,
+  parseSavedTargetSchools,
   parseStoredProfile,
   PROFILE_STORAGE_EVENT,
   PROFILE_STORAGE_KEY,
@@ -38,8 +40,11 @@ import {
   SAVED_SCHOOL_IDS_STORAGE_KEY,
   saveProfile,
   saveSavedSchoolIds,
+  saveSavedTargetSchools,
   THEME_STORAGE_EVENT,
   THEME_STORAGE_KEY,
+  TARGET_SCHOOLS_STORAGE_EVENT,
+  TARGET_SCHOOLS_STORAGE_KEY,
 } from "@/utils/profileStorage";
 
 type ThemeMode = "light" | "dark";
@@ -106,6 +111,23 @@ function getSavedSchoolIdsSnapshot() {
   return window.localStorage.getItem(SAVED_SCHOOL_IDS_STORAGE_KEY);
 }
 
+function subscribeToTargetSchools(onStoreChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === TARGET_SCHOOLS_STORAGE_KEY) onStoreChange();
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(TARGET_SCHOOLS_STORAGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(TARGET_SCHOOLS_STORAGE_EVENT, onStoreChange);
+  };
+}
+
+function getTargetSchoolsSnapshot() {
+  return window.localStorage.getItem(TARGET_SCHOOLS_STORAGE_KEY);
+}
+
 function subscribeToTheme(onStoreChange: () => void) {
   const handleStorage = (event: StorageEvent) => {
     if (event.key === THEME_STORAGE_KEY) onStoreChange();
@@ -152,6 +174,26 @@ function takeRecommendationBatch<T>(items: readonly T[], batch: number, batchSiz
   const normalizedBatch = ((batch % Math.ceil(items.length / batchSize)) + Math.ceil(items.length / batchSize)) % Math.ceil(items.length / batchSize);
   const start = normalizedBatch * batchSize;
   return items.slice(start, start + batchSize);
+}
+
+function createSavedTargetSchool(school: SchoolMatchResult, addedAt = new Date().toISOString()): SavedTargetSchool {
+  return {
+    addedAt,
+    deadline: school.deadline,
+    id: school.id,
+    lastAlgorithmStatus: school.status,
+    name: school.name,
+    notes: school.notes,
+    program: school.program,
+    region: school.region,
+    shortName: school.shortName,
+    status: school.status,
+    userOverrideStatus: false,
+  };
+}
+
+function parseTargetStatus(value: string): SchoolItem["status"] | null {
+  return value === "Reach" || value === "Target" || value === "Safety" ? value : null;
 }
 
 function useActionLock(cooldownMs = 3000) {
@@ -212,14 +254,15 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   );
 }
 
-function SchoolCard({ school }: { school: SchoolMatchResult }) {
-  const badgeStyle =
-    school.status === "Reach"
-      ? "border border-violet-200/60 bg-violet-50 text-violet-700 dark:border-0 dark:bg-violet-500/15 dark:text-violet-200"
-      : school.status === "Target"
-        ? "border border-violet-200/60 bg-violet-50 text-violet-700 dark:border-0 dark:bg-blue-500/15 dark:text-blue-200"
-        : "border border-violet-200/60 bg-violet-50 text-violet-700 dark:border-0 dark:bg-emerald-500/15 dark:text-emerald-200";
-
+function TargetSchoolCard({
+  onRemove,
+  onStatusChange,
+  school,
+}: {
+  onRemove: (schoolId: string) => void;
+  onStatusChange: (schoolId: string, status: SchoolItem["status"]) => void;
+  school: SavedTargetSchool;
+}) {
   return (
     <article className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-sm dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
       <div className="flex items-start gap-3">
@@ -229,10 +272,34 @@ function SchoolCard({ school }: { school: SchoolMatchResult }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="truncate text-sm font-bold text-zinc-900 dark:text-white">{school.name}</h3>
-            <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold ${badgeStyle}`}>约 {school.matchScore}%</span>
+            <button
+              aria-label={`从目标库移除 ${school.name}`}
+              className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-rose-600 active:scale-95 dark:hover:bg-zinc-800 dark:hover:text-rose-300"
+              onClick={() => onRemove(school.id)}
+              type="button"
+            >
+              <X aria-hidden="true" size={15} weight="bold" />
+            </button>
           </div>
           <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">{school.program}</p>
-          <p className="mt-2 text-[11px] leading-4 text-zinc-500 dark:text-zinc-400">{school.matchingReason}</p>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <select
+              aria-label={`${school.name} 的目标分组`}
+              className="h-8 min-w-0 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-zinc-700 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/15 dark:border-white/10 dark:bg-zinc-950/50 dark:text-zinc-200"
+              onChange={(event) => {
+                const nextStatus = parseTargetStatus(event.target.value);
+                if (nextStatus) onStatusChange(school.id, nextStatus);
+              }}
+              value={school.status}
+            >
+              <option value="Reach">Reach 梦校</option>
+              <option value="Target">Target 匹配</option>
+              <option value="Safety">Safety 保底</option>
+            </select>
+            <span className="truncate text-[10px] text-zinc-400 dark:text-zinc-500">
+              {school.userOverrideStatus ? `已锁定 · 算法建议 ${school.lastAlgorithmStatus}` : `算法建议 ${school.lastAlgorithmStatus}`}
+            </span>
+          </div>
         </div>
       </div>
     </article>
@@ -274,23 +341,27 @@ function UnlockCard({ onUnlock, onUseDefault, tier }: { onUnlock: () => void; on
 function SchoolTierBoard({
   isInitialized,
   onOpenDirectory,
+  onRemoveTarget,
+  onSetTargetStatus,
   onUnlock,
   onUseDefault,
   schoolDirectoryCount,
-  tiers,
+  targetSchools,
 }: {
   isInitialized: boolean;
   onOpenDirectory: () => void;
+  onRemoveTarget: (schoolId: string) => void;
+  onSetTargetStatus: (schoolId: string, status: SchoolItem["status"]) => void;
   onUnlock: () => void;
   onUseDefault: () => void;
   schoolDirectoryCount: number;
-  tiers: MatchTiers | null;
+  targetSchools: SavedTargetSchool[];
 }) {
   return (
     <section aria-label="动态选校梯度" className="grid gap-4 xl:grid-cols-3">
       {(Object.keys(tierDetails) as SchoolItem["status"][]).map((tier) => {
         const details = tierDetails[tier];
-        const schools = tiers?.[tier] ?? [];
+        const schools = targetSchools.filter((school) => school.status === tier);
 
         return (
           <section
@@ -309,17 +380,18 @@ function SchoolTierBoard({
             <div className="mt-5 space-y-3">
               {!isInitialized ? (
                 <UnlockCard onUnlock={onUnlock} onUseDefault={onUseDefault} tier={tier} />
-              ) : tiers ? (
-                schools.length > 0 ? (
-                  schools.map((school) => <SchoolCard key={school.id} school={school} />)
-                ) : (
-                  <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/80 p-4 text-sm leading-6 text-zinc-700 shadow-sm dark:border-white/15 dark:bg-zinc-900/70 dark:text-zinc-200">
-                    当前筛选条件下暂无院校，可调整目标地区或补充背景资料。
-                  </p>
-                )
+              ) : schools.length > 0 ? (
+                schools.map((school) => (
+                  <TargetSchoolCard
+                    key={school.id}
+                    onRemove={onRemoveTarget}
+                    onStatusChange={onSetTargetStatus}
+                    school={school}
+                  />
+                ))
               ) : (
                 <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/80 p-4 text-sm leading-6 text-zinc-700 shadow-sm dark:border-white/15 dark:bg-zinc-900/70 dark:text-zinc-200">
-                  保存个人背景后，这里会基于 GPA 与语言门槛自动计算院校梯度。
+                  从智能推荐或院校库加入学校后，它会在这里成为你的申请目标。
                 </p>
               )}
             </div>
@@ -472,7 +544,7 @@ function RecommendationCarousel({
   );
 }
 
-function DeadlineBanner({ schools }: { schools: SchoolMatchResult[] }) {
+function DeadlineBanner({ schools }: { schools: SavedTargetSchool[] }) {
   const nearestSchool = [...schools].sort((first, second) => first.deadline.localeCompare(second.deadline))[0];
   const daysLeft = nearestSchool ? getDaysUntil(nearestSchool.deadline) : null;
 
@@ -520,14 +592,23 @@ function DeadlineBanner({ schools }: { schools: SchoolMatchResult[] }) {
 
 export default function DashboardShell() {
   const storedProfile = useSyncExternalStore(subscribeToProfile, getProfileSnapshot, getServerSnapshot);
-  const storedSavedSchoolIds = useSyncExternalStore(
+  const storedLegacySavedSchoolIds = useSyncExternalStore(
     subscribeToSavedSchoolIds,
     getSavedSchoolIdsSnapshot,
     getServerSnapshot,
   );
+  const storedTargetSchools = useSyncExternalStore(
+    subscribeToTargetSchools,
+    getTargetSchoolsSnapshot,
+    getServerSnapshot,
+  );
   const storedTheme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerSnapshot);
   const profile = useMemo(() => parseStoredProfile(storedProfile), [storedProfile]);
-  const savedSchoolIds = useMemo(() => new Set(parseSavedSchoolIds(storedSavedSchoolIds)), [storedSavedSchoolIds]);
+  const legacySavedSchoolIds = useMemo(
+    () => new Set(parseSavedSchoolIds(storedLegacySavedSchoolIds)),
+    [storedLegacySavedSchoolIds],
+  );
+  const storedSavedTargets = useMemo(() => parseSavedTargetSchools(storedTargetSchools), [storedTargetSchools]);
   const isInitialized = profile?.isInitialized === true;
   const initializedProfile = isInitialized ? profile : null;
   const theme: ThemeMode = storedTheme === "dark" ? "dark" : "light";
@@ -645,10 +726,43 @@ export default function DashboardShell() {
     [directoryBatchSize, directoryCandidates, recommendationBatch],
   );
   const allSchools = useMemo(() => (tiers ? Object.values(tiers).flat() : []), [tiers]);
-  const selectedSchools = useMemo(
-    () => allSchools.filter((school) => savedSchoolIds.has(school.id)),
-    [allSchools, savedSchoolIds],
+  const targetSchools = useMemo(() => {
+    const algorithmSchoolsById = new Map(allSchools.map((school) => [school.id, school]));
+
+    return storedSavedTargets.map((targetSchool) => {
+      const updatedSchool = algorithmSchoolsById.get(targetSchool.id);
+      if (!updatedSchool) return targetSchool;
+
+      return {
+        ...targetSchool,
+        deadline: updatedSchool.deadline,
+        lastAlgorithmStatus: updatedSchool.status,
+        name: updatedSchool.name,
+        notes: updatedSchool.notes,
+        program: updatedSchool.program,
+        region: updatedSchool.region,
+        shortName: updatedSchool.shortName,
+        status: targetSchool.userOverrideStatus ? targetSchool.status : updatedSchool.status,
+      };
+    });
+  }, [allSchools, storedSavedTargets]);
+  const savedSchoolIds = useMemo(
+    () => new Set(targetSchools.map((school) => school.id)),
+    [targetSchools],
   );
+
+  useEffect(() => {
+    if (storedSavedTargets.length > 0 || legacySavedSchoolIds.size === 0 || allSchools.length === 0) return;
+
+    const migratedTargets = allSchools
+      .filter((school) => legacySavedSchoolIds.has(school.id))
+      .map((school) => createSavedTargetSchool(school));
+
+    if (migratedTargets.length > 0) {
+      saveSavedTargetSchools(migratedTargets);
+      saveSavedSchoolIds([]);
+    }
+  }, [allSchools, legacySavedSchoolIds, storedSavedTargets.length]);
 
   const handleThemeChange = (nextTheme: ThemeMode) => {
     window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
@@ -668,9 +782,31 @@ export default function DashboardShell() {
 
   const handleAddSchool = (school: SchoolMatchResult) => {
     run(() => {
-      saveSavedSchoolIds(new Set(savedSchoolIds).add(school.id));
+      if (savedSchoolIds.has(school.id)) return;
+      saveSavedTargetSchools([...targetSchools, createSavedTargetSchool(school)]);
       setToast(`${school.name} 已加入你的选校清单`);
     });
+  };
+
+  const handleSetTargetStatus = (schoolId: string, status: SchoolItem["status"]) => {
+    const nextTargets = targetSchools.map((school) =>
+      school.id === schoolId
+        ? {
+            ...school,
+            status,
+            userOverrideStatus: status !== school.lastAlgorithmStatus,
+          }
+        : school,
+    );
+
+    saveSavedTargetSchools(nextTargets);
+    setToast(status === nextTargets.find((school) => school.id === schoolId)?.lastAlgorithmStatus ? "已恢复算法建议分组" : "已锁定到你的自定义分组");
+  };
+
+  const handleRemoveTarget = (schoolId: string) => {
+    const targetSchool = targetSchools.find((school) => school.id === schoolId);
+    saveSavedTargetSchools(targetSchools.filter((school) => school.id !== schoolId));
+    setToast(targetSchool ? `${targetSchool.name} 已从目标库移除` : "已从目标库移除");
   };
 
   const handleRefreshRecommendations = () => {
@@ -789,10 +925,12 @@ export default function DashboardShell() {
           <SchoolTierBoard
             isInitialized={isInitialized}
             onOpenDirectory={() => setSchoolDirectoryOpen(true)}
+            onRemoveTarget={handleRemoveTarget}
+            onSetTargetStatus={handleSetTargetStatus}
             onUnlock={() => setDrawerRequested(true)}
             onUseDefault={handleUseDefaultProfile}
             schoolDirectoryCount={schoolDirectory.length}
-            tiers={searchedTiers}
+            targetSchools={targetSchools}
           />
           <div className="mt-7">
             <RecommendationCarousel
@@ -810,8 +948,8 @@ export default function DashboardShell() {
             />
           </div>
           <div className="mt-7 space-y-4">
-            <DeadlineBanner schools={allSchools} />
-            <ApplicationTimeline schools={selectedSchools} />
+            <DeadlineBanner schools={targetSchools} />
+            <ApplicationTimeline schools={targetSchools} />
           </div>
           <footer className="mt-9 flex items-center justify-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
             <CalendarBlank aria-hidden="true" size={14} /> 你的资料仅保存在当前浏览器，可随时修改。

@@ -12,11 +12,11 @@ import { motion } from "framer-motion";
 import type {
   ApplicationTimelineMilestone,
   ApplicationTimelineStage,
-  SchoolMatchResult,
+  SavedTargetSchool,
 } from "@/types";
 
 interface ApplicationTimelineProps {
-  schools: SchoolMatchResult[];
+  schools: SavedTargetSchool[];
 }
 
 const stageConfiguration: Record<

@@ -4,6 +4,7 @@ import type {
   DegreeTarget,
   ProfilePreset,
   ProfilePresetId,
+  SavedTargetSchool,
   StandardizedTestScore,
   StandardizedTestType,
   StudentProfile,
@@ -13,6 +14,8 @@ export const PROFILE_STORAGE_KEY = "grad_user_profile";
 export const PROFILE_STORAGE_EVENT = "grad-profile-updated";
 export const SAVED_SCHOOL_IDS_STORAGE_KEY = "grad_saved_school_ids";
 export const SAVED_SCHOOL_IDS_STORAGE_EVENT = "grad-saved-school-ids-updated";
+export const TARGET_SCHOOLS_STORAGE_KEY = "grad_target_schools";
+export const TARGET_SCHOOLS_STORAGE_EVENT = "grad-target-schools-updated";
 export const THEME_STORAGE_KEY = "grad_dashboard_theme";
 export const THEME_STORAGE_EVENT = "grad-theme-updated";
 
@@ -692,11 +695,89 @@ export function saveSavedSchoolIds(schoolIds: Iterable<string>) {
   return safeSchoolIds;
 }
 
+function isSchoolStatus(value: unknown): value is SavedTargetSchool["status"] {
+  return value === "Reach" || value === "Target" || value === "Safety";
+}
+
+function isIsoDateTime(value: unknown): value is string {
+  return typeof value === "string" && Number.isFinite(Date.parse(value));
+}
+
+function normalizeSavedTargetSchool(value: unknown): SavedTargetSchool | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+
+  const school = value as Record<string, unknown>;
+  const id = typeof school.id === "string" && /^[a-z0-9-]{1,80}$/i.test(school.id) ? school.id : null;
+  const name = typeof school.name === "string" ? sanitizePlainText(school.name, 140).trim() : "";
+  const shortName = typeof school.shortName === "string" ? sanitizePlainText(school.shortName, 16).trim() : "";
+  const program = typeof school.program === "string" ? sanitizePlainText(school.program, 140).trim() : "";
+  const region = typeof school.region === "string" ? sanitizePlainText(school.region, 40).trim() : "";
+  const deadline = typeof school.deadline === "string" && /^\d{4}-\d{2}-\d{2}$/.test(school.deadline) ? school.deadline : "";
+  const status = isSchoolStatus(school.status) ? school.status : null;
+  const lastAlgorithmStatus = isSchoolStatus(school.lastAlgorithmStatus) ? school.lastAlgorithmStatus : null;
+
+  if (!id || !name || !shortName || !program || !region || !deadline || !status || !lastAlgorithmStatus || !isIsoDateTime(school.addedAt)) {
+    return null;
+  }
+
+  return {
+    addedAt: school.addedAt,
+    deadline,
+    id,
+    lastAlgorithmStatus,
+    name,
+    notes: typeof school.notes === "string" ? sanitizePlainText(school.notes, 500) : "",
+    program,
+    region,
+    shortName,
+    status,
+    userOverrideStatus: school.userOverrideStatus === true,
+  };
+}
+
+function normalizeSavedTargetSchools(schools: Iterable<SavedTargetSchool>) {
+  const seenIds = new Set<string>();
+  const safeSchools: SavedTargetSchool[] = [];
+
+  for (const school of schools) {
+    const normalizedSchool = normalizeSavedTargetSchool(school);
+    if (!normalizedSchool || seenIds.has(normalizedSchool.id)) continue;
+
+    seenIds.add(normalizedSchool.id);
+    safeSchools.push(normalizedSchool);
+    if (safeSchools.length === 50) break;
+  }
+
+  return safeSchools;
+}
+
+export function parseSavedTargetSchools(value: string | null) {
+  if (!value) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? normalizeSavedTargetSchools(parsed.filter((school): school is SavedTargetSchool => normalizeSavedTargetSchool(school) !== null))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveSavedTargetSchools(schools: Iterable<SavedTargetSchool>) {
+  const safeSchools = normalizeSavedTargetSchools(schools);
+  window.localStorage.setItem(TARGET_SCHOOLS_STORAGE_KEY, JSON.stringify(safeSchools));
+  window.dispatchEvent(new Event(TARGET_SCHOOLS_STORAGE_EVENT));
+  return safeSchools;
+}
+
 export function clearLocalProfileData() {
   window.localStorage.removeItem(PROFILE_STORAGE_KEY);
   window.localStorage.removeItem(SAVED_SCHOOL_IDS_STORAGE_KEY);
+  window.localStorage.removeItem(TARGET_SCHOOLS_STORAGE_KEY);
   window.localStorage.removeItem(THEME_STORAGE_KEY);
   window.dispatchEvent(new Event(PROFILE_STORAGE_EVENT));
   window.dispatchEvent(new Event(SAVED_SCHOOL_IDS_STORAGE_EVENT));
+  window.dispatchEvent(new Event(TARGET_SCHOOLS_STORAGE_EVENT));
   window.dispatchEvent(new Event(THEME_STORAGE_EVENT));
 }

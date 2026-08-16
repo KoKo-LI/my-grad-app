@@ -97,6 +97,14 @@ export interface SchoolItem {
   notes: string;
 }
 
+/** A school explicitly saved by the user for their application plan. */
+export interface SavedTargetSchool extends SchoolItem {
+  addedAt: string;
+  lastAlgorithmStatus: SchoolItem["status"];
+  shortName: string;
+  userOverrideStatus: boolean;
+}
+
 export type InstitutionMetricUnit = "USD" | "ratio" | "score" | "students";
 
 export interface InstitutionMetric {
