@@ -3,7 +3,7 @@
 import { ArrowUpRight, Buildings, MagnifyingGlass, X } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import type { InstitutionMetric, SchoolDirectoryItem, StudentProfile } from "@/types";
+import type { InstitutionMetric, InstitutionRanking, InstitutionRankingKey, SchoolDirectoryItem, StudentProfile } from "@/types";
 
 interface SchoolDirectoryOverlayProps {
   description: string;
@@ -25,6 +25,15 @@ function formatRate(value: number | null) {
 
 function formatScore(value: number | null) {
   return value === null ? "未披露" : Math.round(value).toLocaleString("en-US");
+}
+
+const rankingLabels: Record<InstitutionRankingKey, string> = {
+  qs_world_university_rankings: "QS",
+  usnews_national_universities: "U.S. News",
+};
+
+function findRanking(rankings: InstitutionRanking[], key: InstitutionRankingKey) {
+  return rankings.find((ranking) => ranking.key === key) ?? null;
 }
 
 function getPersonalGpa(profile: StudentProfile | null) {
@@ -113,6 +122,7 @@ export default function SchoolDirectoryOverlay({ description, heading, onClose, 
                 <p className="text-xs font-bold tracking-[0.18em] text-violet-600 dark:text-violet-300">VERIFIED UNDERGRADUATE CATALOG</p>
                 <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-zinc-950 dark:text-white">{heading}</h2>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
+                <p className="mt-2 text-xs leading-5 text-zinc-500 dark:text-zinc-400">所有数据均来源于网络公开数据；排名以对应发布机构、版本与披露范围为准。</p>
               </div>
               <button
                 aria-label="关闭院校库"
@@ -145,6 +155,8 @@ export default function SchoolDirectoryOverlay({ description, heading, onClose, 
                   const satMathMedian = findMetric(school.metrics, "sat_math_median");
                   const satMedian = satEbrwMedian !== null && satMathMedian !== null ? satEbrwMedian + satMathMedian : null;
                   const actMedian = findMetric(school.metrics, "act_composite_median");
+                  const usNewsRanking = findRanking(school.rankings, "usnews_national_universities");
+                  const qsRanking = findRanking(school.rankings, "qs_world_university_rankings");
                   return (
                     <button
                       className="group rounded-2xl border border-slate-200/80 bg-white/80 p-4 text-left shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]"
@@ -160,6 +172,15 @@ export default function SchoolDirectoryOverlay({ description, heading, onClose, 
                             <ArrowUpRight aria-hidden="true" className="shrink-0 text-violet-500 opacity-0 transition-opacity group-hover:opacity-100" size={16} weight="bold" />
                           </span>
                           <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">{school.region}</span>
+                          {(usNewsRanking || qsRanking) && (
+                            <span className="mt-2 flex flex-wrap gap-1.5">
+                              {[usNewsRanking, qsRanking].filter((ranking): ranking is InstitutionRanking => ranking !== null).map((ranking) => (
+                                <span className="rounded-full border border-violet-200/60 bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-700 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-200" key={ranking.key} title={`${ranking.edition} · ${ranking.sourceTitle}`}>
+                                  {rankingLabels[ranking.key]} {ranking.rankDisplay}
+                                </span>
+                              ))}
+                            </span>
+                          )}
                         </span>
                       </div>
                       <span className="mt-4 flex items-end justify-between gap-3 border-t border-slate-100 pt-3 dark:border-white/5">

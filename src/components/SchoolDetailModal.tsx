@@ -14,7 +14,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { parseSchoolDetailResponse } from "@/lib/undergraduateDirectory";
-import type { InstitutionMetric, SchoolAdmissionRequirement, SchoolAdmissionStatistic, SchoolDetail, StudentProfile } from "@/types";
+import type { InstitutionMetric, InstitutionRankingKey, SchoolAdmissionRequirement, SchoolAdmissionStatistic, SchoolDetail, StudentProfile } from "@/types";
 
 interface SchoolDetailModalProps {
   ipedsUnitId: string | null;
@@ -82,6 +82,11 @@ const statisticLabels: Record<SchoolAdmissionStatistic["statistic"], string> = {
   median: "中位数",
   p25: "25 分位",
   p75: "75 分位",
+};
+
+const rankingLabels: Record<InstitutionRankingKey, string> = {
+  qs_world_university_rankings: "QS 世界大学排名",
+  usnews_national_universities: "U.S. News 全美综合大学",
 };
 
 function findMetric(metrics: InstitutionMetric[], metric: string) {
@@ -274,6 +279,7 @@ function SchoolDetailContent({ detail, profile }: { detail: SchoolDetail; profil
   );
   const sourcePeriods = Array.from(new Set(detail.metrics.map((metric) => metric.sourcePeriod)));
   const profileComparisons = getProfileComparisons(detail, profile);
+  const rankings = [...detail.rankings].sort((first, second) => first.key.localeCompare(second.key));
 
   return (
     <>
@@ -288,6 +294,7 @@ function SchoolDetailContent({ detail, profile }: { detail: SchoolDetail; profil
               </div>
             </div>
             <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{detail.region} · IPEDS {detail.ipedsUnitId}{sourcePeriods.length > 0 ? ` · 数据期：${sourcePeriods.join(" / ")}` : ""}</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">所有数据均来源于网络公开数据；排名以对应发布机构、版本与披露范围为准。</p>
           </div>
           <a className="inline-flex w-fit items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-bold text-violet-700 hover:border-violet-400 hover:bg-violet-100 dark:border-violet-400/25 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:border-violet-400/50" href={detail.officialWebsite} rel="noreferrer" target="_blank">
             学校官网 <ArrowSquareOut aria-hidden="true" size={15} weight="bold" />
@@ -308,6 +315,22 @@ function SchoolDetailContent({ detail, profile }: { detail: SchoolDetail; profil
             );
           })}
         </section>
+
+        {rankings.length > 0 && (
+          <section className="rounded-3xl border border-slate-200/80 bg-white/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:border-white/10 dark:bg-zinc-900/50">
+            <div className="flex items-center gap-2"><ChartLineUp aria-hidden="true" className="text-violet-600 dark:text-violet-300" size={19} weight="duotone" /><h2 className="text-lg font-extrabold text-zinc-950 dark:text-white">公开网络排名</h2></div>
+            <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">所有数据均来源于网络公开数据；点击来源可核对发布机构与对应版本。</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {rankings.map((ranking) => (
+                <a className="group rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 transition-all hover:border-violet-400/50 hover:bg-violet-50/70 dark:border-white/10 dark:bg-zinc-950/45 dark:hover:border-violet-500/40 dark:hover:bg-violet-500/10" href={ranking.sourceUrl} key={`${ranking.key}-${ranking.edition}`} rel="noreferrer" target="_blank">
+                  <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold text-zinc-500 dark:text-zinc-400">{rankingLabels[ranking.key]}</p><p className="mt-1 text-2xl font-black tracking-tight text-zinc-950 dark:text-white">{ranking.rankDisplay}</p></div><ArrowSquareOut aria-hidden="true" className="mt-1 text-violet-500 opacity-60 transition-opacity group-hover:opacity-100" size={17} weight="bold" /></div>
+                  <p className="mt-3 text-xs font-semibold text-zinc-700 dark:text-zinc-200">{ranking.edition}</p>
+                  <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">{ranking.sourceTitle}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="rounded-3xl border border-violet-200/80 bg-violet-50/50 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:border-violet-400/20 dark:bg-violet-500/5">
           <div className="flex items-center gap-2"><ChartLineUp aria-hidden="true" className="text-violet-600 dark:text-violet-300" size={19} weight="duotone" /><h2 className="text-lg font-extrabold text-zinc-950 dark:text-white">你的背景与院校数据对比</h2></div>

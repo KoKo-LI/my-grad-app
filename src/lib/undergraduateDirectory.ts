@@ -1,5 +1,6 @@
 import type {
   InstitutionMetric,
+  InstitutionRanking,
   SchoolAdmissionRequirement,
   SchoolAdmissionStatistic,
   SchoolDetail,
@@ -11,6 +12,7 @@ type RawRecord = Record<string, unknown>;
 
 const metricCategories = ["admissions", "cost", "enrollment", "outcomes"] as const;
 const metricUnits = ["USD", "ratio", "score", "students"] as const;
+const rankingKeys = ["usnews_national_universities", "qs_world_university_rankings"] as const;
 const requirementKinds = ["minimum", "recommended", "required", "optional", "not_required", "considered"] as const;
 const applicantScopes = ["all", "international", "domestic"] as const;
 const applicationPaths = ["all", "first_year", "transfer"] as const;
@@ -88,7 +90,7 @@ function parseInstitution(value: unknown): ParsedInstitution | null {
     return null;
   }
 
-  return { country, internalId, ipedsUnitId, metrics: [], name, officialWebsite, region, shortName };
+  return { country, internalId, ipedsUnitId, metrics: [], name, officialWebsite, rankings: [], region, shortName };
 }
 
 type ParsedMetric = InstitutionMetric & { institutionId: string };
@@ -128,9 +130,45 @@ function parseMetric(value: unknown): ParsedMetric | null {
   };
 }
 
+type ParsedRanking = InstitutionRanking & { institutionId: string };
+
+function parseRanking(value: unknown): ParsedRanking | null {
+  if (!isRecord(value)) return null;
+
+  const institutionId = readText(value.institution_id);
+  const key = readText(value.ranking_key);
+  const edition = readText(value.edition);
+  const rankValue = readNumber(value.rank_value);
+  const rankDisplay = readText(value.rank_display);
+  const source = readSource(value.data_sources);
+
+  if (
+    !institutionId ||
+    !isOneOf(key, rankingKeys) ||
+    !edition ||
+    rankValue === null ||
+    !Number.isInteger(rankValue) ||
+    rankValue < 1 ||
+    !rankDisplay ||
+    !source
+  ) {
+    return null;
+  }
+
+  return {
+    edition,
+    institutionId,
+    key,
+    rankDisplay,
+    rankValue,
+    sourceTitle: source.title,
+    sourceUrl: source.url,
+  };
+}
+
 /** Converts RLS-filtered Supabase rows into safe public directory records. */
-export function buildSchoolDirectory(institutionsValue: unknown, metricsValue: unknown): SchoolDirectoryItem[] {
-  if (!Array.isArray(institutionsValue) || !Array.isArray(metricsValue)) return [];
+export function buildSchoolDirectory(institutionsValue: unknown, metricsValue: unknown, rankingsValue: unknown = []): SchoolDirectoryItem[] {
+  if (!Array.isArray(institutionsValue) || !Array.isArray(metricsValue) || !Array.isArray(rankingsValue)) return [];
 
   const metricsByInstitutionId = new Map<string, InstitutionMetric[]>();
   metricsValue.map(parseMetric).filter((metric): metric is ParsedMetric => metric !== null).forEach((metric) => {
@@ -140,12 +178,21 @@ export function buildSchoolDirectory(institutionsValue: unknown, metricsValue: u
     metricsByInstitutionId.set(institutionId, current);
   });
 
+  const rankingsByInstitutionId = new Map<string, InstitutionRanking[]>();
+  rankingsValue.map(parseRanking).filter((ranking): ranking is ParsedRanking => ranking !== null).forEach((ranking) => {
+    const { institutionId, ...publicRanking } = ranking;
+    const current = rankingsByInstitutionId.get(institutionId) ?? [];
+    current.push(publicRanking);
+    rankingsByInstitutionId.set(institutionId, current);
+  });
+
   return institutionsValue
     .map(parseInstitution)
     .filter((institution): institution is ParsedInstitution => institution !== null)
     .map(({ internalId, ...institution }) => ({
       ...institution,
       metrics: (metricsByInstitutionId.get(internalId) ?? []).sort((first, second) => first.metric.localeCompare(second.metric)),
+      rankings: (rankingsByInstitutionId.get(internalId) ?? []).sort((first, second) => first.key.localeCompare(second.key)),
     }))
     .sort((first, second) => first.name.localeCompare(second.name));
 }
@@ -268,7 +315,7 @@ function parseStatistic(value: unknown): SchoolAdmissionStatistic | null {
 export function buildSchoolDetail(value: unknown): SchoolDetail | null {
   if (!isRecord(value)) return null;
 
-  const directory = buildSchoolDirectory([value.institution], value.metrics);
+  const directory = buildSchoolDirectory([value.institution], value.metrics, value.rankings);
   const school = directory[0];
   if (!school || !Array.isArray(value.programs) || !Array.isArray(value.requirements) || !Array.isArray(value.statistics)) {
     return null;
@@ -318,6 +365,32 @@ function parsePublicMetric(value: unknown): InstitutionMetric | null {
   return { category, metric, sourcePeriod, sourceTitle, sourceUrl, unit, value: numericValue };
 }
 
+function parsePublicRanking(value: unknown): InstitutionRanking | null {
+  if (!isRecord(value)) return null;
+
+  const edition = readText(value.edition);
+  const key = readText(value.key);
+  const rankDisplay = readText(value.rankDisplay);
+  const rankValue = readNumber(value.rankValue);
+  const sourceTitle = readText(value.sourceTitle);
+  const sourceUrl = readHttpUrl(value.sourceUrl);
+
+  if (
+    !edition ||
+    !isOneOf(key, rankingKeys) ||
+    !rankDisplay ||
+    rankValue === null ||
+    !Number.isInteger(rankValue) ||
+    rankValue < 1 ||
+    !sourceTitle ||
+    !sourceUrl
+  ) {
+    return null;
+  }
+
+  return { edition, key, rankDisplay, rankValue, sourceTitle, sourceUrl };
+}
+
 function parsePublicDirectoryItem(value: unknown): SchoolDirectoryItem | null {
   if (!isRecord(value)) return null;
 
@@ -328,7 +401,7 @@ function parsePublicDirectoryItem(value: unknown): SchoolDirectoryItem | null {
   const region = readText(value.region);
   const shortName = readText(value.shortName);
 
-  if (!country || !ipedsUnitId || !name || !officialWebsite || !region || !shortName || !Array.isArray(value.metrics)) {
+  if (!country || !ipedsUnitId || !name || !officialWebsite || !region || !shortName || !Array.isArray(value.metrics) || !Array.isArray(value.rankings)) {
     return null;
   }
 
@@ -338,6 +411,7 @@ function parsePublicDirectoryItem(value: unknown): SchoolDirectoryItem | null {
     metrics: value.metrics.map(parsePublicMetric).filter((metric): metric is InstitutionMetric => metric !== null),
     name,
     officialWebsite,
+    rankings: value.rankings.map(parsePublicRanking).filter((ranking): ranking is InstitutionRanking => ranking !== null),
     region,
     shortName,
   };

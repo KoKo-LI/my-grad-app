@@ -31,7 +31,7 @@ export async function GET(
     return Response.json({ error: "Institution not found." }, { status: 404 });
   }
 
-  const [{ data: metrics, error: metricError }, { data: programs, error: programError }] = await Promise.all([
+  const [{ data: metrics, error: metricError }, { data: programs, error: programError }, { data: rankings, error: rankingError }] = await Promise.all([
     supabase
       .from("institution_metrics")
       .select("institution_id, metric_category, metric, value_numeric, unit, source_period, data_sources(title, source_url)")
@@ -39,6 +39,10 @@ export async function GET(
     supabase
       .from("undergraduate_programs")
       .select("id, program_name, degree_name, field_of_study, major_categories, official_url")
+      .eq("institution_id", institution.id),
+    supabase
+      .from("institution_rankings")
+      .select("institution_id, ranking_key, edition, rank_value, rank_display, data_sources(title, source_url)")
       .eq("institution_id", institution.id),
   ]);
 
@@ -73,6 +77,7 @@ export async function GET(
   const detail = buildSchoolDetail({
     institution,
     metrics,
+    rankings: rankingError ? [] : rankings ?? [],
     programs,
     requirements: requirementsResponse.data,
     statistics: statisticsResponse.data,

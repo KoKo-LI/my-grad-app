@@ -68,6 +68,27 @@ undergraduate enrollment and the 150%-of-normal-time graduation rate. Missing
 or privacy-suppressed values are skipped, not stored as zero. All imported
 metrics remain unpublished until they are reviewed for display.
 
+### Publish source-attributed U.S. News and QS rankings
+
+Run `migrations/20260816_create_institution_rankings.sql` after the catalog,
+intake queue and institution metrics migrations. It creates a dedicated
+rankings table and publishes the existing resolved 2026 U.S. News National
+Universities cohort using the private intake queue already in this project.
+
+Then run the QS importer to retrieve the official QS World University Rankings
+2027 workbook and match its U.S. rows only to the resolved 101-school cohort:
+
+```bash
+npm run catalog:import-qs-rankings -- --validate-only
+npm run catalog:import-qs-rankings
+```
+
+The importer stores only university name-to-rank matches plus the QS publisher,
+edition, publication date and source URL; it does not copy descriptions,
+methodology or editorial analysis. Display the source link and edition with
+every ranking, and review the publisher's current terms before redistributing
+rankings outside this product.
+
 ### Import official program and language requirements
 
 Run `migrations/20260814_expand_admission_requirements.sql` once. It adds

@@ -117,6 +117,18 @@ export interface InstitutionMetric {
   value: number;
 }
 
+/** A source-attributed institutional ranking, kept separate from admissions metrics. */
+export type InstitutionRankingKey = "usnews_national_universities" | "qs_world_university_rankings";
+
+export interface InstitutionRanking {
+  edition: string;
+  key: InstitutionRankingKey;
+  rankDisplay: string;
+  rankValue: number;
+  sourceTitle: string;
+  sourceUrl: string;
+}
+
 /** Public, source-backed record used by the undergraduate school directory. */
 export interface SchoolDirectoryItem {
   country: string;
@@ -124,6 +136,7 @@ export interface SchoolDirectoryItem {
   metrics: InstitutionMetric[];
   name: string;
   officialWebsite: string;
+  rankings: InstitutionRanking[];
   region: string;
   shortName: string;
 }
