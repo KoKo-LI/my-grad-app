@@ -92,3 +92,39 @@
 - [x] ESLint, TypeScript, diff whitespace check, and final Webpack production build pass.
 
 final result: passed
+
+## Incremental pass — Saved target-school tier route
+
+### Comparison target
+
+- Source visual truth: `/Users/edward/.codex/generated_images/019ff714-8b5e-7940-ae04-4e3c369b5541/exec-eec5b359-be0b-481d-a8d1-b4d8d042507d.png` (the established Dashboard visual system).
+- Implementation screenshot: `/private/tmp/my-grad-saved-target-schools-reach-final.png`.
+- Full-view comparison: `/private/tmp/my-grad-saved-target-schools-comparison.png`.
+- State: dark theme, Reach collection route, one locally saved school. The source is the established Dashboard rather than a one-to-one mock for this new route, so this review validates the inherited visual system rather than matching page composition.
+- Source raster: 1487 × 1058 px. Implementation screenshot: 462 × 674 px at the in-app browser’s active CSS viewport and device scale factor 1. The comparison image normalizes both captures to 900 px content height and labels their distinct states.
+
+### Findings
+
+- No actionable P0/P1/P2 findings.
+- The fixed-height tier panels retain a stable 420 px frame and render only two saved-school previews. Above that limit, their primary footer action becomes `浏览更多已添加 · N 所` and routes to the matching Reach, Target, or Safety collection.
+- The collection route preserves the dark glass surfaces, violet accent hierarchy, rounded control geometry, restrained shadows, and compact high-contrast typography of the established Dashboard.
+- The direct route, return-to-Dashboard link, school-detail overlay, visible group selector, and remove control were exercised in-browser. School detail loaded verified public data and rankings without console warnings or errors.
+- The current browser profile held only one Reach school, so the overflow CTA was not clicked against user data merely to fabricate a test state. Its conditional route and all three statically generated destinations pass TypeScript, ESLint, and production Webpack build validation.
+
+### Required fidelity surfaces
+
+- **Fonts and typography:** The collection title uses the same bold, near-black gradient hierarchy; school names, metadata, and compact controls remain readable without clipping at the active narrow viewport.
+- **Spacing and layout rhythm:** The new route uses the existing 24–32 px glass-card rhythm, consistent radii, and a three-column desktop / two-column tablet / single-column mobile content grid.
+- **Colors and visual tokens:** The pale violet collection surface, translucent white cards, dark `zinc` glass treatment, subtle borders, and violet interaction affordances match the established theme system.
+- **Image and icon fidelity:** No new non-standard imagery is required. The existing Phosphor icon family remains consistent across navigation, school actions, and metadata.
+- **Copy and content:** The route uses the user’s saved school names, regions, programs, assigned tier, and addition date; it does not fabricate admission data.
+
+### Implementation checklist
+
+- [x] Stabilize the three Dashboard tier-panel heights as saved-school counts grow.
+- [x] Limit each panel preview to two saved schools.
+- [x] Add tier-specific, statically generated routes for the complete saved-school collection.
+- [x] Preserve school detail, grouping, and removal workflows within the new route.
+- [x] Verify the new route and school-detail interaction in the browser; check browser console, TypeScript, ESLint, and production build.
+
+final result: passed

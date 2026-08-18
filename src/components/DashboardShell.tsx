@@ -17,6 +17,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import ApplicationTimeline from "@/components/ApplicationTimeline";
 import ProfileDrawer from "@/components/ProfileDrawer";
@@ -430,16 +431,20 @@ function SchoolTierBoard({
   onUseDefault: () => void;
   targetSchools: SavedTargetSchool[];
 }) {
+  const previewLimit = 2;
+
   return (
     <section aria-label="动态选校梯度" className="grid gap-4 xl:grid-cols-3">
       {(Object.keys(tierDetails) as SchoolItem["status"][]).map((tier) => {
         const details = tierDetails[tier];
         const directorySchoolCount = directoryTiers[tier].length;
         const schools = targetSchools.filter((school) => school.status === tier);
+        const previewSchools = schools.slice(0, previewLimit);
+        const hasMoreSavedSchools = schools.length > previewLimit;
 
         return (
           <section
-            className={`min-h-[370px] rounded-3xl border p-5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:shadow-none dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] ${details.accent}`}
+            className={`flex h-[420px] flex-col overflow-hidden rounded-3xl border p-5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:shadow-none dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] ${details.accent}`}
             key={tier}
           >
             <div className="flex items-start justify-between gap-3">
@@ -451,11 +456,11 @@ function SchoolTierBoard({
                 {isInitialized ? `${schools.length} 所` : "待解锁"}
               </span>
             </div>
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 min-h-0 flex-1 space-y-3 overflow-hidden">
               {!isInitialized ? (
                 <UnlockCard onUnlock={onUnlock} onUseDefault={onUseDefault} tier={tier} />
               ) : schools.length > 0 ? (
-                schools.map((school) => (
+                previewSchools.map((school) => (
                   <TargetSchoolCard
                     key={school.id}
                     onOpenSchool={onOpenSchool}
@@ -470,15 +475,24 @@ function SchoolTierBoard({
                 </p>
               )}
             </div>
-            <button
-              className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-blue-700 transition-transform hover:text-violet-700 active:scale-95 dark:text-blue-300 dark:hover:text-violet-200"
-              onClick={() => onOpenDirectory(isInitialized ? tier : null)}
-              type="button"
-            >
-              {isInitialized
-                ? `浏览更多 · ${directorySchoolCount}/${directoryTotal} 所候选`
-                : "浏览院校库"} <ArrowRight aria-hidden="true" size={13} weight="bold" />
-            </button>
+            {isInitialized && hasMoreSavedSchools ? (
+              <Link
+                className="mt-5 inline-flex w-fit items-center gap-1 text-xs font-bold text-blue-700 transition-transform hover:text-violet-700 active:scale-95 dark:text-blue-300 dark:hover:text-violet-200"
+                href={`/target-schools/${tier.toLocaleLowerCase()}`}
+              >
+                浏览更多已添加 · {schools.length} 所 <ArrowRight aria-hidden="true" size={13} weight="bold" />
+              </Link>
+            ) : (
+              <button
+                className="mt-5 inline-flex w-fit items-center gap-1 text-xs font-bold text-blue-700 transition-transform hover:text-violet-700 active:scale-95 dark:text-blue-300 dark:hover:text-violet-200"
+                onClick={() => onOpenDirectory(isInitialized ? tier : null)}
+                type="button"
+              >
+                {isInitialized
+                  ? `浏览候选 · ${directorySchoolCount}/${directoryTotal} 所`
+                  : "浏览院校库"} <ArrowRight aria-hidden="true" size={13} weight="bold" />
+              </button>
+            )}
           </section>
         );
       })}
