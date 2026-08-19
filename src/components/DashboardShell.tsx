@@ -475,16 +475,17 @@ function SchoolTierBoard({
                 </p>
               )}
             </div>
-            {isInitialized && hasMoreSavedSchools ? (
-              <Link
-                className="mt-5 inline-flex w-fit items-center gap-1 text-xs font-bold text-blue-700 transition-transform hover:text-violet-700 active:scale-95 dark:text-blue-300 dark:hover:text-violet-200"
-                href={`/target-schools/${tier.toLocaleLowerCase()}`}
-              >
-                浏览更多已添加 · {schools.length} 所 <ArrowRight aria-hidden="true" size={13} weight="bold" />
-              </Link>
-            ) : (
+            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+              {isInitialized && hasMoreSavedSchools && (
+                <Link
+                  className="inline-flex w-fit items-center gap-1 text-xs font-bold text-blue-700 transition-transform hover:text-violet-700 active:scale-95 dark:text-blue-300 dark:hover:text-violet-200"
+                  href={`/target-schools/${tier.toLocaleLowerCase()}`}
+                >
+                  浏览更多已添加 · {schools.length} 所 <ArrowRight aria-hidden="true" size={13} weight="bold" />
+                </Link>
+              )}
               <button
-                className="mt-5 inline-flex w-fit items-center gap-1 text-xs font-bold text-blue-700 transition-transform hover:text-violet-700 active:scale-95 dark:text-blue-300 dark:hover:text-violet-200"
+                className="inline-flex w-fit items-center gap-1 text-xs font-bold text-blue-700 transition-transform hover:text-violet-700 active:scale-95 dark:text-blue-300 dark:hover:text-violet-200"
                 onClick={() => onOpenDirectory(isInitialized ? tier : null)}
                 type="button"
               >
@@ -492,7 +493,7 @@ function SchoolTierBoard({
                   ? `浏览候选 · ${directorySchoolCount}/${directoryTotal} 所`
                   : "浏览院校库"} <ArrowRight aria-hidden="true" size={13} weight="bold" />
               </button>
-            )}
+            </div>
           </section>
         );
       })}
