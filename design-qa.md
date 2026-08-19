@@ -93,6 +93,44 @@
 
 final result: passed
 
+## Incremental pass — Full-screen global school catalog
+
+### Comparison target
+
+- Source visual truth: `/Users/edward/.codex/generated_images/019ff714-8b5e-7940-ae04-4e3c369b5541/exec-eec5b359-be0b-481d-a8d1-b4d8d042507d.png` (the established dark Dashboard system: fixed rail, subdued glass surfaces, violet accents, compact metadata).
+- Implementation screenshot: `/private/tmp/my-grad-catalog-fullscreen-dark.png`.
+- Implementation route: `http://localhost:3000/catalog`.
+- State: initialized profile, dark theme, complete catalog scope, no active checkbox filters.
+- Source raster: 1487 × 1058 px. Implementation raster and CSS viewport: 1280 × 720 px at device scale factor 1. This is a system-extension comparison, not a one-to-one catalog mock; the comparison normalizes by shared sidebar, surface, type, accent, and card patterns rather than forcing identical content geometry.
+- Full-view comparison evidence: the source and the browser-rendered implementation capture were opened together in the same visual review input. The implementation was also inspected directly at the active mobile viewport.
+- Focused-region comparison: not needed as a separate crop. The desktop capture clearly exposes the new sidebar/filter/results composition; the interactive filter controls, page links, school-detail entry, tier-scoped route, and theme toggle were exercised in-browser.
+
+### Findings
+
+- No actionable P0/P1/P2 findings.
+- The full-screen catalog intentionally replaces the prior modal with a durable route. It preserves the fixed left rail and places the persistent, checkbox-based region and verified-program filter bar immediately to its right.
+- Source-backed school cards maintain the inherited low-contrast glass surface, rounded geometry, compact uppercase metadata, violet ranking labels, and no-new-image icon treatment. The result grid stays readable without clipping at 1280 px and collapses to the existing mobile navigation pattern.
+- Navigation was verified in both contexts: mobile menu → catalog and desktop sidebar → Dashboard → catalog. Search narrowed the catalog to Yale; program selection narrowed the source-backed catalog to one result and reset to 101; school selection opened its verified detail view; `/catalog?tier=Target` applied the existing candidate scope and returned 39 result cards.
+- The dark/light theme control was exercised and restored to dark. Browser console showed no error-level runtime messages after the final route checks.
+
+### Required fidelity surfaces
+
+- **Fonts and typography:** The route uses the existing system sans, display-weight page heading, uppercase metadata tracking, and compact card labels. School titles preserve a clear title/region/metric hierarchy without harmful wrapping at desktop or active mobile widths.
+- **Spacing and layout rhythm:** The 264 px rail, 272 px sticky filter column, breathing room around the title, 16–20 px grid gaps, and rounded card rhythm inherit the Dashboard system while giving filters a dedicated working area.
+- **Colors and visual tokens:** `zinc-950` dark base, low-opacity white borders, restrained violet accents, cool blue metadata, and translucent glass cards align with the source. Existing light-mode tokens remain intact and the route-specific light state was exercised.
+- **Image quality and asset fidelity:** No new raster or decorative image is required by the existing visual system. All visible controls use the already-established Phosphor icon library; no custom SVG, CSS illustration, or placeholder asset was introduced.
+- **Copy and content:** The standalone title, filter labels, source-data notice, empty state, candidate-scope notice, and public-data wording make sense outside the old overlay and accurately describe only data the route exposes.
+
+### Implementation checklist
+
+- [x] Move global school discovery into the dedicated `/catalog` page route.
+- [x] Make the Sidebar use page-level navigation for Dashboard and Catalog, including mobile navigation.
+- [x] Add searchable region and source-backed major checkbox filters beside the sidebar.
+- [x] Retain school detail, profile, rankings, and tier-candidate flows from the Dashboard.
+- [x] Verify primary filters, page navigation, details, scoped candidates, theme state, console output, TypeScript, ESLint, whitespace checks, and production build.
+
+final result: passed
+
 ## Incremental pass — Saved target-school tier route
 
 ### Comparison target

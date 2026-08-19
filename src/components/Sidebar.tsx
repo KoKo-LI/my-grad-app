@@ -10,31 +10,35 @@ import {
   Sparkle,
   X,
 } from "@phosphor-icons/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface SidebarProps {
   collapsed: boolean;
   mobileOpen: boolean;
   onCloseMobile: () => void;
-  onOpenSchoolDirectory: () => void;
   onOpenProfile: () => void;
   onToggle: () => void;
 }
 
 const navigationItems = [
-  { Icon: ChartBar, label: "申请总览", active: true },
-  { Icon: GlobeHemisphereWest, label: "全球院校库", active: false },
-  { Icon: FolderSimple, label: "申请材料网盘", active: false },
+  { Icon: ChartBar, href: "/", label: "申请总览" },
+  { Icon: GlobeHemisphereWest, href: "/catalog", label: "全球院校库" },
+  { Icon: FolderSimple, label: "申请材料网盘" },
 ];
 
 export default function Sidebar({
   collapsed,
   mobileOpen,
   onCloseMobile,
-  onOpenSchoolDirectory,
   onOpenProfile,
   onToggle,
 }: SidebarProps) {
+  const pathname = usePathname();
   const showExpanded = !collapsed || mobileOpen;
+
+  const getNavigationClassName = (active: boolean) =>
+    `flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition-colors ${active ? "bg-zinc-950 text-white shadow-lg shadow-zinc-950/15 dark:bg-violet-500/15 dark:text-violet-100" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white"} ${showExpanded ? "" : "justify-center"}`;
 
   return (
     <>
@@ -74,18 +78,35 @@ export default function Sidebar({
         </div>
 
         <nav aria-label="主导航" className="mt-9 space-y-2">
-          {navigationItems.map(({ Icon, active, label }) => (
-            <button
-              aria-current={active ? "page" : undefined}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition-colors ${active ? "bg-zinc-950 text-white shadow-lg shadow-zinc-950/15 dark:bg-violet-500/15 dark:text-violet-100" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white"} ${showExpanded ? "" : "justify-center"}`}
-              key={label}
-              onClick={label === "全球院校库" ? onOpenSchoolDirectory : undefined}
-              type="button"
-            >
-              <Icon aria-hidden="true" size={18} weight={active ? "fill" : "regular"} />
-              {showExpanded && <span>{label}</span>}
-            </button>
-          ))}
+          {navigationItems.map(({ Icon, href, label }) => {
+            const active = href !== undefined && pathname === href;
+            const content = (
+              <>
+                <Icon aria-hidden="true" size={18} weight={active ? "fill" : "regular"} />
+                {showExpanded && <span>{label}</span>}
+              </>
+            );
+
+            return href ? (
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={getNavigationClassName(active)}
+                href={href}
+                key={label}
+                onClick={onCloseMobile}
+              >
+                {content}
+              </Link>
+            ) : (
+              <button
+                className={getNavigationClassName(false)}
+                key={label}
+                type="button"
+              >
+                {content}
+              </button>
+            );
+          })}
         </nav>
 
         {showExpanded && (

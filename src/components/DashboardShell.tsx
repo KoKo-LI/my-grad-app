@@ -18,11 +18,11 @@ import {
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import ApplicationTimeline from "@/components/ApplicationTimeline";
 import ProfileDrawer from "@/components/ProfileDrawer";
 import SchoolDetailModal from "@/components/SchoolDetailModal";
-import SchoolDirectoryOverlay from "@/components/SchoolDirectoryOverlay";
 import SchoolSearchDropdown from "@/components/SchoolSearchDropdown";
 import Sidebar from "@/components/Sidebar";
 import { schoolCatalog } from "@/data/schoolCatalog";
@@ -747,6 +747,7 @@ export default function DashboardShell() {
   const isInitialized = profile?.isInitialized === true;
   const initializedProfile = isInitialized ? profile : null;
   const theme: ThemeMode = storedTheme === "dark" ? "dark" : "light";
+  const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [drawerRequested, setDrawerRequested] = useState(false);
@@ -757,8 +758,6 @@ export default function DashboardShell() {
   const [undergraduateCatalog, setUndergraduateCatalog] = useState<SchoolMatchInput[]>([]);
   const [schoolDirectory, setSchoolDirectory] = useState<SchoolDirectoryItem[]>([]);
   const [isSchoolDirectoryLoading, setIsSchoolDirectoryLoading] = useState(true);
-  const [schoolDirectoryOpen, setSchoolDirectoryOpen] = useState(false);
-  const [directoryTierFilter, setDirectoryTierFilter] = useState<SchoolItem["status"] | null>(null);
   const [selectedSchoolIpedsUnitId, setSelectedSchoolIpedsUnitId] = useState<string | null>(null);
   const { isLoading, run } = useActionLock();
 
@@ -881,11 +880,6 @@ export default function DashboardShell() {
 
     return statuses;
   }, [directoryTiers]);
-  const visibleDirectorySchools = directoryTierFilter ? directoryTiers[directoryTierFilter] : schoolDirectory;
-  const directoryHeading = directoryTierFilter ? `${tierDetails[directoryTierFilter].title} 候选院校` : "全球院校库";
-  const directoryDescription = directoryTierFilter
-    ? `已按你的成绩与目标地区筛选出 ${visibleDirectorySchools.length} 所候选院校。`
-    : `已接入 ${schoolDirectory.length} 所院校的官方与政府公开数据。`;
   const targetSchools = useMemo(() => {
     const algorithmSchoolsById = new Map(allSchools.map((school) => [school.id, school]));
 
@@ -1022,11 +1016,6 @@ export default function DashboardShell() {
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
-        onOpenSchoolDirectory={() => {
-          setMobileSidebarOpen(false);
-          setDirectoryTierFilter(null);
-          setSchoolDirectoryOpen(true);
-        }}
         onOpenProfile={() => {
           setMobileSidebarOpen(false);
           setDrawerRequested(true);
@@ -1117,8 +1106,7 @@ export default function DashboardShell() {
             directoryTiers={directoryTiers}
             isInitialized={isInitialized}
             onOpenDirectory={(tier) => {
-              setDirectoryTierFilter(tier);
-              setSchoolDirectoryOpen(true);
+              router.push(tier ? `/catalog?tier=${tier}` : "/catalog");
             }}
             onOpenSchool={handleOpenTargetSchool}
             onRemoveTarget={handleRemoveTarget}
@@ -1153,22 +1141,6 @@ export default function DashboardShell() {
           </footer>
         </div>
       </main>
-      <SchoolDirectoryOverlay
-        description={directoryDescription}
-        heading={directoryHeading}
-        onClose={() => {
-          setSchoolDirectoryOpen(false);
-          setDirectoryTierFilter(null);
-        }}
-        onSelect={(school) => {
-          setSchoolDirectoryOpen(false);
-          setDirectoryTierFilter(null);
-          setSelectedSchoolIpedsUnitId(school.ipedsUnitId);
-        }}
-        open={schoolDirectoryOpen}
-        profile={profile}
-        schools={visibleDirectorySchools}
-      />
       <SchoolDetailModal key={selectedSchoolIpedsUnitId ?? "no-school"} ipedsUnitId={selectedSchoolIpedsUnitId} onClose={() => setSelectedSchoolIpedsUnitId(null)} profile={profile} />
       <ProfileDrawer onClose={() => setDrawerRequested(false)} onSaved={handleProfileSaved} onThemeChange={handleThemeChange} open={drawerRequested} profile={profile} theme={theme} />
       <AnimatePresence>{toast && <Toast key={toast} message={toast} onClose={() => setToast(null)} />}</AnimatePresence>

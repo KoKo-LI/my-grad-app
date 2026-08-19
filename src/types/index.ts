@@ -145,6 +145,12 @@ export interface SchoolDirectoryItem {
   shortName: string;
 }
 
+/** A public, filter-only projection of source-backed undergraduate programs. */
+export interface SchoolDirectoryProgramFilter {
+  ipedsUnitId: string;
+  majorCategories: string[];
+}
+
 export interface UndergraduateProgramSummary {
   degreeName: string;
   fieldOfStudy: string;
