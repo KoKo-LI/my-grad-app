@@ -586,8 +586,6 @@ function DirectoryRecommendationCard({
 }
 
 function RecommendationCarousel({
-  directoryBatch,
-  directoryBatchCount,
   directorySuggestions,
   schoolDirectory,
   recommendations,
@@ -600,8 +598,6 @@ function RecommendationCarousel({
   savedSchoolIds,
   showDirectoryFirst,
 }: {
-  directoryBatch: number;
-  directoryBatchCount: number;
   directorySuggestions: SchoolDirectoryItem[];
   schoolDirectory: SchoolDirectoryItem[];
   recommendations: SchoolMatchResult[];
@@ -614,7 +610,7 @@ function RecommendationCarousel({
   savedSchoolIds: Set<string>;
   showDirectoryFirst: boolean;
 }) {
-  const matchingCards = recommendations.map((school) => (
+  const matchingCards = recommendations.filter((school) => !savedSchoolIds.has(school.id)).map((school) => (
     <MatchedRecommendationCard
       isLoading={isLoading}
       isSaved={savedSchoolIds.has(school.id)}
@@ -627,7 +623,7 @@ function RecommendationCarousel({
       school={school}
     />
   ));
-  const directoryCards = directorySuggestions.map((school) => (
+  const directoryCards = directorySuggestions.filter((school) => !savedSchoolIds.has(`directory-${school.ipedsUnitId}`)).map((school) => (
     <DirectoryRecommendationCard
       isLoading={isLoading}
       isSaved={savedSchoolIds.has(`directory-${school.ipedsUnitId}`)}
@@ -646,10 +642,6 @@ function RecommendationCarousel({
           <h2 className="mt-1 text-xl font-extrabold tracking-tight text-zinc-950 dark:text-white">热门 / AI 智能推荐</h2>
         </div>
         <div className="flex items-center gap-3">
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {recommendations.length > 0 ? `${recommendations.length} 所匹配推荐` : "匹配数据补充中"}
-            {directoryBatchCount > 0 ? ` · 官方探索第 ${directoryBatch}/${directoryBatchCount} 组` : ""}
-          </p>
           <button
             className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200/80 bg-white/80 px-3 text-xs font-bold text-zinc-700 transition-all hover:border-violet-400/50 hover:text-violet-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-zinc-900/60 dark:text-zinc-200 dark:hover:border-violet-400/45 dark:hover:text-violet-100"
             disabled={isLoading}
@@ -838,48 +830,7 @@ export default function DashboardShell() {
         : [],
     [searchedTiers],
   );
-  const recommendations = useMemo(
-    () => rankedRecommendations.slice(0, 12),
-    [rankedRecommendations],
-  );
-  const directoryCandidates = useMemo(() => {
-    if (!isInitialized || schoolDirectory.length === 0) return [];
-
-    const matchNames = new Set(recommendations.map((school) => school.name));
-    const regions = profile?.targetRegions ?? [];
-    const regionalSchools = schoolDirectory.filter((school) => {
-      if (regions.length === 0) return true;
-      return regions.some((region) => school.region.includes(region) || (region === "美国" && school.country === "United States"));
-    });
-    return (regionalSchools.length > 0 ? regionalSchools : schoolDirectory).filter((school) => !matchNames.has(school.name));
-  }, [isInitialized, profile?.targetRegions, recommendations, schoolDirectory]);
-  const directoryBatchSize = Math.max(8, 12 - recommendations.length);
-  const directoryBatchCount = Math.ceil(directoryCandidates.length / directoryBatchSize);
-  const activeDirectoryBatch = directoryBatchCount > 0 ? (recommendationBatch % directoryBatchCount) + 1 : 0;
-  const directorySuggestions = useMemo(
-    () => takeRecommendationBatch(directoryCandidates, recommendationBatch, directoryBatchSize),
-    [directoryBatchSize, directoryCandidates, recommendationBatch],
-  );
   const allSchools = useMemo(() => (tiers ? Object.values(tiers).flat() : []), [tiers]);
-  const directoryTiers = useMemo<DirectorySchoolTiers>(
-    () => (initializedProfile ? buildDirectorySchoolTiers(initializedProfile, schoolDirectory) : { Reach: [], Target: [], Safety: [] }),
-    [initializedProfile, schoolDirectory],
-  );
-  const selectedRegionDirectoryCount = useMemo(
-    () => getDirectoryTierCount(directoryTiers),
-    [directoryTiers],
-  );
-  const directoryStatusByIpedsUnitId = useMemo(() => {
-    const statuses = new Map<string, SchoolItem["status"]>();
-
-    (Object.keys(directoryTiers) as SchoolItem["status"][]).forEach((status) => {
-      directoryTiers[status].forEach((school) => {
-        statuses.set(school.ipedsUnitId, status);
-      });
-    });
-
-    return statuses;
-  }, [directoryTiers]);
   const targetSchools = useMemo(() => {
     const algorithmSchoolsById = new Map(allSchools.map((school) => [school.id, school]));
 
@@ -904,6 +855,77 @@ export default function DashboardShell() {
     () => new Set(targetSchools.map((school) => school.id)),
     [targetSchools],
   );
+  const savedSchoolNames = useMemo(
+    () => new Set(targetSchools.map((school) => school.name)),
+    [targetSchools],
+  );
+  const savedDirectoryIpedsUnitIds = useMemo(
+    () => new Set(
+      targetSchools.flatMap((school) => {
+        if (school.id.startsWith("directory-")) return [school.id.slice("directory-".length)];
+
+        const directorySchool = findDirectorySchoolByName(schoolDirectory, school.name);
+        return directorySchool ? [directorySchool.ipedsUnitId] : [];
+      }),
+    ),
+    [schoolDirectory, targetSchools],
+  );
+  const recommendations = useMemo(
+    () =>
+      rankedRecommendations
+        .filter((school) => !savedSchoolIds.has(school.id) && !savedSchoolNames.has(school.name))
+        .slice(0, 12),
+    [rankedRecommendations, savedSchoolIds, savedSchoolNames],
+  );
+  const directoryCandidates = useMemo(() => {
+    if (!isInitialized || schoolDirectory.length === 0) return [];
+
+    const matchNames = new Set(recommendations.map((school) => school.name));
+    const regions = profile?.targetRegions ?? [];
+    const regionalSchools = schoolDirectory.filter((school) => {
+      if (regions.length === 0) return true;
+      return regions.some((region) => school.region.includes(region) || (region === "美国" && school.country === "United States"));
+    });
+    return (regionalSchools.length > 0 ? regionalSchools : schoolDirectory).filter(
+      (school) =>
+        !matchNames.has(school.name) &&
+        !savedSchoolIds.has(`directory-${school.ipedsUnitId}`) &&
+        !savedSchoolNames.has(school.name) &&
+        !savedDirectoryIpedsUnitIds.has(school.ipedsUnitId),
+    );
+  }, [
+    isInitialized,
+    profile?.targetRegions,
+    recommendations,
+    savedDirectoryIpedsUnitIds,
+    savedSchoolIds,
+    savedSchoolNames,
+    schoolDirectory,
+  ]);
+  const directoryBatchSize = Math.max(8, 12 - recommendations.length);
+  const directorySuggestions = useMemo(
+    () => takeRecommendationBatch(directoryCandidates, recommendationBatch, directoryBatchSize),
+    [directoryBatchSize, directoryCandidates, recommendationBatch],
+  );
+  const directoryTiers = useMemo<DirectorySchoolTiers>(
+    () => (initializedProfile ? buildDirectorySchoolTiers(initializedProfile, schoolDirectory) : { Reach: [], Target: [], Safety: [] }),
+    [initializedProfile, schoolDirectory],
+  );
+  const selectedRegionDirectoryCount = useMemo(
+    () => getDirectoryTierCount(directoryTiers),
+    [directoryTiers],
+  );
+  const directoryStatusByIpedsUnitId = useMemo(() => {
+    const statuses = new Map<string, SchoolItem["status"]>();
+
+    (Object.keys(directoryTiers) as SchoolItem["status"][]).forEach((status) => {
+      directoryTiers[status].forEach((school) => {
+        statuses.set(school.ipedsUnitId, status);
+      });
+    });
+
+    return statuses;
+  }, [directoryTiers]);
   const handleOpenTargetSchool = (targetSchool: SavedTargetSchool) => {
     const directorySchool = targetSchool.id.startsWith("directory-")
       ? schoolDirectory.find((school) => `directory-${school.ipedsUnitId}` === targetSchool.id) ?? null
@@ -1117,8 +1139,6 @@ export default function DashboardShell() {
           />
           <div className="mt-7">
             <RecommendationCarousel
-              directoryBatch={activeDirectoryBatch}
-              directoryBatchCount={directoryBatchCount}
               directorySuggestions={directorySuggestions}
               isLoading={isLoading}
               onAdd={handleAddSchool}
