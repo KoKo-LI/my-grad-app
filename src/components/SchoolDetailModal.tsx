@@ -342,7 +342,7 @@ function SchoolDetailContent({ detail, profile }: { detail: SchoolDetail; profil
                 <h1 className="mt-1 truncate text-2xl font-black tracking-[-0.04em] text-zinc-950 dark:text-white sm:text-3xl">{detail.name}</h1>
               </div>
             </div>
-            <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{detail.region} · IPEDS {detail.ipedsUnitId}{sourcePeriods.length > 0 ? ` · 数据期：${sourcePeriods.join(" / ")}` : ""}</p>
+            <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{detail.region} · {/^\d+$/.test(detail.ipedsUnitId) ? `IPEDS ${detail.ipedsUnitId}` : `院校 ID ${detail.ipedsUnitId}`}{sourcePeriods.length > 0 ? ` · 数据期：${sourcePeriods.join(" / ")}` : ""}</p>
             <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">所有数据均来源于网络公开数据；排名以对应发布机构、版本与披露范围为准。</p>
           </div>
           <a className="inline-flex w-fit items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-bold text-violet-700 hover:border-violet-400 hover:bg-violet-100 dark:border-violet-400/25 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:border-violet-400/50" href={detail.officialWebsite} rel="noreferrer" target="_blank">
