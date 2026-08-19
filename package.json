@@ -12,7 +12,8 @@
     "catalog:import-scorecard-metrics": "node --env-file=.env.local --experimental-strip-types scripts/import-scorecard-institution-metrics.ts",
     "catalog:import-official-requirements": "node --env-file=.env.local --experimental-strip-types scripts/import-official-undergraduate-requirements.ts",
     "catalog:import-qs-rankings": "node --env-file=.env.local --experimental-strip-types scripts/import-qs-world-rankings.ts",
-    "import-hk-uk-catalog": "node --env-file=.env.local --experimental-strip-types scripts/import-hk-uk-undergraduate-catalog.ts"
+    "import-hk-uk-catalog": "node --env-file=.env.local --experimental-strip-types scripts/import-hk-uk-undergraduate-catalog.ts",
+    "import-canada-europe-japan-catalog": "node --env-file=.env.local --experimental-strip-types scripts/import-canada-europe-japan-undergraduate-catalog.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

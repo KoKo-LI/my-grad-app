@@ -10,7 +10,7 @@ export async function GET(
   const { ipedsUnitId } = await context.params;
   // U.S. catalog rows use IPEDS UNITIDs, while verified international rows use
   // stable, non-IPEDS catalog IDs such as `HK-HKU` and `GB-OXFORD`.
-  if (!/^(?:\d{1,10}|(?:HK|GB)-[A-Z0-9-]{2,62})$/.test(ipedsUnitId)) {
+  if (!/^(?:\d{1,10}|[A-Z]{2}-[A-Z0-9-]{2,62})$/.test(ipedsUnitId)) {
     return Response.json({ error: "Invalid institution identifier." }, { status: 400 });
   }
 

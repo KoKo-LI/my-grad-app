@@ -49,7 +49,7 @@ export async function GET() {
     .from("institutions")
     .select("id, ipeds_unitid, name, short_name, country, region, official_website")
     .order("name")
-    .limit(160);
+    .limit(256);
 
   if (institutionError || !institutions) {
     return Response.json({ data: [], source: "unavailable" }, { headers: { "Cache-Control": "no-store" }, status: 503 });
