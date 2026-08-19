@@ -560,7 +560,10 @@ async function main(): Promise<void> {
           field_of_study: record.program.fieldOfStudy,
           major_categories: record.program.majorCategories,
           official_url: record.program.officialUrl,
-          is_published: false,
+          // The input validator accepts only original official URLs and marks
+          // the corresponding source verified, so these records are safe for
+          // the public directory immediately after import.
+          is_published: true,
         },
         { onConflict: "institution_id,program_name,degree_name" },
       )
@@ -659,7 +662,7 @@ async function main(): Promise<void> {
       satisfaction_rule: requirement.satisfactionRule,
       value_text: requirement.valueText,
       source_record_key: sourceRecordKey(requirement, record.cycle?.cycleName ?? null),
-      is_published: false,
+      is_published: true,
     }));
     const { error: requirementError } = await client
       .from("admission_requirements")
@@ -684,7 +687,7 @@ async function main(): Promise<void> {
       test_version: statistic.testVersion,
       subject_area: statistic.subjectArea,
       source_record_key: statisticSourceRecordKey(statistic, record.cycle?.cycleName ?? null),
-      is_published: false,
+      is_published: true,
     }));
     if (statisticRows.length > 0) {
       const { error: statisticError } = await client
@@ -697,7 +700,7 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(`Imported ${importedRequirements} unpublished official requirements and ${importedStatistics} statistics from ${input.records.length} source records.`);
+  console.log(`Imported and published ${importedRequirements} official requirements and ${importedStatistics} statistics from ${input.records.length} source records.`);
 }
 
 main().catch((error: unknown) => {

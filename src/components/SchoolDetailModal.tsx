@@ -24,11 +24,44 @@ interface SchoolDetailModalProps {
 
 const metricLabels: Record<string, string> = {
   admission_rate: "录取率",
+  average_cost_of_attendance_usd: "平均年度就读成本",
+  average_net_price_private_usd: "私立院校平均净价",
+  average_net_price_public_usd: "公立院校平均净价",
+  books_and_supplies_usd: "书本与用品估算",
+  cohort_default_rate_3_years: "三年贷款违约率",
   act_composite_median: "ACT 中位数",
   act_composite_p25: "ACT 25 分位",
   act_composite_p75: "ACT 75 分位",
+  act_english_median: "ACT 英语中位数",
+  act_english_p25: "ACT 英语 25 分位",
+  act_english_p75: "ACT 英语 75 分位",
+  act_math_median: "ACT 数学中位数",
+  act_math_p25: "ACT 数学 25 分位",
+  act_math_p75: "ACT 数学 75 分位",
+  federal_loan_recipient_share: "联邦贷款获得者占比",
+  first_year_full_time_retention_rate: "首年全日制留存率",
+  first_year_part_time_retention_rate: "首年非全日制留存率",
   graduation_rate_150_percent: "毕业率",
+  graduation_rate_200_percent: "200% 标准修业年限毕业率",
+  loan_repayment_rate_3_years: "三年贷款偿还率",
+  loan_repayment_rate_5_years: "五年贷款偿还率",
+  loan_repayment_rate_7_years: "七年贷款偿还率",
+  median_earnings_10_years_usd: "入学十年后收入中位数",
+  median_earnings_6_years_usd: "入学六年后收入中位数",
+  median_earnings_8_years_usd: "入学八年后收入中位数",
+  median_graduate_debt_usd: "毕业生累计联邦贷款中位数",
+  median_student_debt_usd: "学生累计联邦贷款中位数",
+  median_withdrawal_debt_usd: "未完成学生累计联邦贷款中位数",
+  open_admissions_policy: "开放式录取政策",
+  other_expenses_off_campus_usd: "校外其他开支估算",
+  other_expenses_on_campus_usd: "校内其他开支估算",
+  other_expenses_with_family_usd: "与家庭同住其他开支估算",
+  pell_grant_recipient_share: "Pell Grant 获得者占比",
+  room_and_board_off_campus_usd: "校外食宿估算",
+  room_and_board_on_campus_usd: "校内食宿估算",
   undergraduate_enrollment: "本科在读人数",
+  undergraduate_men_share: "本科男生占比",
+  undergraduate_women_share: "本科女生占比",
   tuition_in_state_usd: "州内学费",
   tuition_out_of_state_usd: "州外学费",
   sat_ebrw_median: "SAT 阅读写作中位数",
@@ -37,6 +70,13 @@ const metricLabels: Record<string, string> = {
   sat_math_median: "SAT 数学中位数",
   sat_math_p25: "SAT 数学 25 分位",
   sat_math_p75: "SAT 数学 75 分位",
+};
+
+const metricCategoryLabels: Record<InstitutionMetric["category"], string> = {
+  admissions: "录取与成绩",
+  cost: "学费、资助与生活成本",
+  enrollment: "在读学生与留存",
+  outcomes: "毕业、债务与收入结果",
 };
 
 const requirementLabels: Record<string, string> = {
@@ -95,6 +135,7 @@ function findMetric(metrics: InstitutionMetric[], metric: string) {
 
 function formatMetric(metric: InstitutionMetric | null) {
   if (!metric) return "—";
+  if (metric.unit === "flag") return metric.value > 0 ? "是" : "否";
   if (metric.unit === "USD") {
     return new Intl.NumberFormat("en-US", { currency: "USD", maximumFractionDigits: 0, style: "currency" }).format(metric.value);
   }
@@ -129,7 +170,7 @@ interface ProfileComparisonItem {
 }
 
 function formatScore(value: number | null) {
-  return value === null ? "未披露" : Math.round(value).toLocaleString("en-US");
+  return value === null ? "暂无可核验公开值" : Math.round(value).toLocaleString("en-US");
 }
 
 function getPersonalGpa(profile: StudentProfile | null) {
@@ -188,7 +229,7 @@ function findProgramStatistic(
     (item) => programIds.has(item.programId) && item.metric === metric && (item.statistic === "median" || item.statistic === "average"),
   );
 
-  return statistic ? formatStatisticValue(statistic) : "未披露";
+  return statistic ? formatStatisticValue(statistic) : "暂无项目级公开值";
 }
 
 function findProgramRequirement(
@@ -200,7 +241,7 @@ function findProgramRequirement(
     (item) => programIds.has(item.programId) && metricNames.includes(item.metric) && item.minimumScore !== null,
   );
 
-  return requirement ? formatRequirementValue(requirement) : "未披露";
+  return requirement ? formatRequirementValue(requirement) : "暂无项目级公开值";
 }
 
 function getProfileComparisons(detail: SchoolDetail, profile: StudentProfile | null): ProfileComparisonItem[] {
@@ -211,7 +252,7 @@ function getProfileComparisons(detail: SchoolDetail, profile: StudentProfile | n
   const academicRequirements = [
     findProgramRequirement(detail, programIds, ["ap_subject"]),
     findProgramRequirement(detail, programIds, ["ib_total"]),
-  ].filter((value) => value !== "未披露");
+  ].filter((value) => value !== "暂无项目级公开值");
 
   return [
     {
@@ -237,7 +278,7 @@ function getProfileComparisons(detail: SchoolDetail, profile: StudentProfile | n
     {
       applicantValue: getPersonalAcademicScore(profile),
       label: "AP / IB 本人 / 项目",
-      schoolValue: academicRequirements.length > 0 ? academicRequirements.join(" · ") : "未披露",
+      schoolValue: academicRequirements.length > 0 ? academicRequirements.join(" · ") : "暂无项目级公开值",
     },
   ];
 }
@@ -268,7 +309,15 @@ function SchoolDetailContent({ detail, profile }: { detail: SchoolDetail; profil
     { icon: Users, metric: "undergraduate_enrollment" },
     { icon: GraduationCap, metric: "graduation_rate_150_percent" },
   ];
-  const scoreMetrics = detail.metrics.filter((metric) => metric.category === "admissions" && metric.metric !== "admission_rate");
+  const scoreMetrics = detail.metrics.filter((metric) => metric.category === "admissions" && metric.unit === "score");
+  const metricsByCategory = (Object.keys(metricCategoryLabels) as InstitutionMetric["category"][])
+    .map((category) => ({
+      category,
+      metrics: detail.metrics
+        .filter((metric) => metric.category === category)
+        .sort((first, second) => (metricLabels[first.metric] ?? first.metric).localeCompare(metricLabels[second.metric] ?? second.metric)),
+    }))
+    .filter((group) => group.metrics.length > 0);
   const requirementsByProgram = useMemo(
     () => new Map(detail.programs.map((program) => [program.id, detail.requirements.filter((requirement) => requirement.programId === program.id)])),
     [detail.programs, detail.requirements],
@@ -362,6 +411,27 @@ function SchoolDetailContent({ detail, profile }: { detail: SchoolDetail; profil
             </dl>
           </section>
         )}
+
+        <section className="rounded-3xl border border-slate-200/80 bg-white/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:border-white/10 dark:bg-zinc-900/50">
+          <div className="flex items-center gap-2"><ChartLineUp aria-hidden="true" className="text-violet-600 dark:text-violet-300" size={19} weight="duotone" /><h2 className="text-lg font-extrabold text-zinc-950 dark:text-white">完整公开院校数据</h2></div>
+          <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">来自美国教育部 College Scorecard 的已发布字段；每项均保留来源与数据期，隐私抑制或原始数据缺失的数值不会以推测值补齐。</p>
+          <div className="mt-5 space-y-5">
+            {metricsByCategory.map(({ category, metrics }) => (
+              <div key={category}>
+                <h3 className="text-sm font-extrabold text-zinc-800 dark:text-zinc-100">{metricCategoryLabels[category]}</h3>
+                <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {metrics.map((metric) => (
+                    <div className="rounded-xl bg-slate-50/80 px-3.5 py-3 dark:bg-zinc-950/45" key={`${metric.metric}-${metric.sourcePeriod}`}>
+                      <dt className="text-xs text-zinc-500 dark:text-zinc-400">{metricLabels[metric.metric] ?? metric.metric}</dt>
+                      <dd className="mt-1 text-sm font-bold text-zinc-800 dark:text-zinc-100">{formatMetric(metric)}</dd>
+                      <a className="mt-1 block truncate text-[10px] font-semibold text-violet-700 transition-colors hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100" href={metric.sourceUrl} rel="noreferrer" target="_blank">{metric.sourcePeriod} · {metric.sourceTitle}</a>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {detail.programs.length > 0 ? (
           <section className="space-y-4">

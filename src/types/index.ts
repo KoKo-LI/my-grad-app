@@ -105,7 +105,11 @@ export interface SavedTargetSchool extends SchoolItem {
   userOverrideStatus: boolean;
 }
 
-export type InstitutionMetricUnit = "USD" | "ratio" | "score" | "students";
+/**
+ * Unit carried with each source-attributed institutional fact. `flag` is used
+ * for binary disclosures such as an institution's open-admissions policy.
+ */
+export type InstitutionMetricUnit = "USD" | "ratio" | "score" | "students" | "flag";
 
 export interface InstitutionMetric {
   category: "admissions" | "cost" | "enrollment" | "outcomes";

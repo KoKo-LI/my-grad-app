@@ -11,7 +11,7 @@ import type {
 type RawRecord = Record<string, unknown>;
 
 const metricCategories = ["admissions", "cost", "enrollment", "outcomes"] as const;
-const metricUnits = ["USD", "ratio", "score", "students"] as const;
+const metricUnits = ["USD", "ratio", "score", "students", "flag"] as const;
 const rankingKeys = ["usnews_national_universities", "qs_world_university_rankings"] as const;
 const requirementKinds = ["minimum", "recommended", "required", "optional", "not_required", "considered"] as const;
 const applicantScopes = ["all", "international", "domestic"] as const;

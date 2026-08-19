@@ -53,20 +53,31 @@ match to a currently operating College Scorecard institution. It creates
 unpublished `institutions` records and marks the corresponding private queue
 rows as `resolved`; all ambiguous rows remain pending for manual review.
 
-### Import official institution metrics
+### Import official institution metrics for every resolved school
 
-Run `migrations/20260814_create_institution_metrics.sql`, then use the same
-local College Scorecard CSV to prepare or import decision-useful metrics:
+Run `migrations/20260814_create_institution_metrics.sql` and
+`migrations/20260818_expand_institution_metrics.sql`, then use the same
+official College Scorecard CSV to import every available decision-useful
+institution-level fact for the resolved 101-school cohort:
 
 ```bash
 npm run catalog:import-scorecard-metrics -- --scorecard=/absolute/path/to/scorecard.csv --dry-run
 npm run catalog:import-scorecard-metrics -- --scorecard=/absolute/path/to/scorecard.csv
 ```
 
-The initial import includes tuition, admissions rate, SAT/ACT percentiles,
-undergraduate enrollment and the 150%-of-normal-time graduation rate. Missing
-or privacy-suppressed values are skipped, not stored as zero. All imported
-metrics remain unpublished until they are reviewed for display.
+The importer covers admissions policy and rate, SAT/ACT percentiles, tuition,
+net price, estimated living costs, Pell/loan participation, undergraduate
+enrollment and retention, graduation, debt, earnings, repayment and default
+outcomes when each field is present in the Department's release. It
+automatically publishes those source-attributed federal facts. Missing,
+privacy-suppressed or retired source fields are skipped rather than stored as
+zero or estimated.
+
+Do not use a third-party GitHub repository as the source of a value merely
+because its data is convenient. GitHub may be used to distribute an import
+manifest only when every record carries an original official/government URL,
+source year and licence/terms review. The application should display that
+original source URL, not the GitHub mirror, for every public fact.
 
 ### Publish source-attributed U.S. News and QS rankings
 
@@ -110,8 +121,11 @@ The importer accepts institution-wide undergraduate requirements and
 major-specific records. It supports GPA, TOEFL, IELTS, DET, PTE, Cambridge,
 MET, SAT/ACT, AP/IB, transcripts, coursework, portfolios, interviews and other
 admission obligations. Each input record must provide the official source URL,
-effective year and a resolved IPEDS UNITID. Imported rows remain unpublished;
-do not enter copied page prose, community reports or unverified score claims.
+effective year and a resolved IPEDS UNITID. Do not enter copied page prose,
+community reports or unverified score claims. The current private intake has
+19 institutions with official program-source records; the remaining schools
+need their own official admissions pages or official CDS publications before
+project-level fields can be added truthfully.
 When a school accepts several equivalent exams, give each alternative the same
 `satisfactionGroup` and set `satisfactionRule` to `any_of`; this prevents a
 future matcher from treating all language tests as simultaneously required.

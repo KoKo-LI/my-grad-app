@@ -24,7 +24,7 @@ function formatRate(value: number | null) {
 }
 
 function formatScore(value: number | null) {
-  return value === null ? "未披露" : Math.round(value).toLocaleString("en-US");
+  return value === null ? "暂无可核验值" : Math.round(value).toLocaleString("en-US");
 }
 
 const rankingLabels: Record<InstitutionRankingKey, string> = {
@@ -197,9 +197,9 @@ export default function SchoolDirectoryOverlay({ description, heading, onClose, 
                       <span className="grid max-h-0 grid-cols-3 gap-2 overflow-hidden opacity-0 transition-[max-height,opacity,margin,padding] duration-300 group-hover:mt-3 group-hover:max-h-72 group-hover:opacity-100 group-focus-visible:mt-3 group-focus-visible:max-h-72 group-focus-visible:opacity-100">
                         <ComparisonMetric applicantValue={getPersonalTestScore(profile, "SAT")} label="SAT 本人/中位" schoolValue={formatScore(satMedian)} />
                         <ComparisonMetric applicantValue={getPersonalTestScore(profile, "ACT")} label="ACT 本人/中位" schoolValue={formatScore(actMedian)} />
-                        <ComparisonMetric applicantValue={getPersonalGpa(profile)} label="GPA 本人/学校" schoolValue="未披露" />
-                        <ComparisonMetric applicantValue={getPersonalLanguageScore(profile)} label="语言 本人/学校" schoolValue="未披露" />
-                        <ComparisonMetric applicantValue={getPersonalAcademicScore(profile)} label="AP / IB 本人/学校" schoolValue="未披露" />
+                        <ComparisonMetric applicantValue={getPersonalGpa(profile)} label="GPA 本人/学校" schoolValue="暂无项目级公开值" />
+                        <ComparisonMetric applicantValue={getPersonalLanguageScore(profile)} label="语言 本人/学校" schoolValue="暂无项目级公开值" />
+                        <ComparisonMetric applicantValue={getPersonalAcademicScore(profile)} label="AP / IB 本人/学校" schoolValue="暂无项目级公开值" />
                       </span>
                     </button>
                   );
