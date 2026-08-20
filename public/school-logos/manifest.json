@@ -1,0 +1,1025 @@
+{
+  "generatedAt": "2026-08-20T20:34:48.509Z",
+  "logos": [
+    {
+      "asset": "/school-logos/110404.webp",
+      "id": "110404",
+      "name": "California Institute of Technology",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/110635.webp",
+      "id": "110635",
+      "name": "University of California-Berkeley",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/110644.webp",
+      "id": "110644",
+      "name": "University of California-Davis",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/110653.webp",
+      "id": "110653",
+      "name": "University of California-Irvine",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/110662.webp",
+      "id": "110662",
+      "name": "University of California-Los Angeles",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/110671.webp",
+      "id": "110671",
+      "name": "University of California-Riverside",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/110680.webp",
+      "id": "110680",
+      "name": "University of California-San Diego",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/110705.webp",
+      "id": "110705",
+      "name": "University of California-Santa Barbara",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/110714.webp",
+      "id": "110714",
+      "name": "University of California-Santa Cruz",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/121150.webp",
+      "id": "121150",
+      "name": "Pepperdine University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/122931.webp",
+      "id": "122931",
+      "name": "Santa Clara University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/123961.webp",
+      "id": "123961",
+      "name": "University of Southern California",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/126614.webp",
+      "id": "126614",
+      "name": "University of Colorado Boulder",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/126775.webp",
+      "id": "126775",
+      "name": "Colorado School of Mines",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/129020.webp",
+      "id": "129020",
+      "name": "University of Connecticut",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/130794.webp",
+      "id": "130794",
+      "name": "Yale University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/130943.webp",
+      "id": "130943",
+      "name": "University of Delaware",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/131159.webp",
+      "id": "131159",
+      "name": "American University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/131469.webp",
+      "id": "131469",
+      "name": "George Washington University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/131496.webp",
+      "id": "131496",
+      "name": "Georgetown University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/131520.webp",
+      "id": "131520",
+      "name": "Howard University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/133951.webp",
+      "id": "133951",
+      "name": "Florida International University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/134097.webp",
+      "id": "134097",
+      "name": "Florida State University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/134130.webp",
+      "id": "134130",
+      "name": "University of Florida",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/135726.webp",
+      "id": "135726",
+      "name": "University of Miami",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/137351.webp",
+      "id": "137351",
+      "name": "University of South Florida",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/139658.webp",
+      "id": "139658",
+      "name": "Emory University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/139755.webp",
+      "id": "139755",
+      "name": "Georgia Institute of Technology-Main Campus",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/139959.webp",
+      "id": "139959",
+      "name": "University of Georgia",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/144050.webp",
+      "id": "144050",
+      "name": "University of Chicago",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/145600.webp",
+      "id": "145600",
+      "name": "University of Illinois Chicago",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/145637.webp",
+      "id": "145637",
+      "name": "University of Illinois Urbana-Champaign",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/147767.webp",
+      "id": "147767",
+      "name": "Northwestern University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/151351.webp",
+      "id": "151351",
+      "name": "Indiana University-Bloomington",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/152080.webp",
+      "id": "152080",
+      "name": "University of Notre Dame",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/160755.webp",
+      "id": "160755",
+      "name": "Tulane University of Louisiana",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/162928.webp",
+      "id": "162928",
+      "name": "Johns Hopkins University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/163286.webp",
+      "id": "163286",
+      "name": "University of Maryland-College Park",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/164924.webp",
+      "id": "164924",
+      "name": "Boston College",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/164988.webp",
+      "id": "164988",
+      "name": "Boston University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/165015.webp",
+      "id": "165015",
+      "name": "Brandeis University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/166027.webp",
+      "id": "166027",
+      "name": "Harvard University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/166629.webp",
+      "id": "166629",
+      "name": "University of Massachusetts-Amherst",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/166683.webp",
+      "id": "166683",
+      "name": "Massachusetts Institute of Technology",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/167358.webp",
+      "id": "167358",
+      "name": "Northeastern University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/168148.webp",
+      "id": "168148",
+      "name": "Tufts University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/168421.webp",
+      "id": "168421",
+      "name": "Worcester Polytechnic Institute",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/170976.webp",
+      "id": "170976",
+      "name": "University of Michigan-Ann Arbor",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/171100.webp",
+      "id": "171100",
+      "name": "Michigan State University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/174066.webp",
+      "id": "174066",
+      "name": "University of Minnesota-Twin Cities",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/179867.webp",
+      "id": "179867",
+      "name": "Washington University in St Louis",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/182670.webp",
+      "id": "182670",
+      "name": "Dartmouth College",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/185828.webp",
+      "id": "185828",
+      "name": "New Jersey Institute of Technology",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/186131.webp",
+      "id": "186131",
+      "name": "Princeton University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/186371.webp",
+      "id": "186371",
+      "name": "Rutgers University-Camden",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/186380.webp",
+      "id": "186380",
+      "name": "Rutgers University-New Brunswick",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/186399.webp",
+      "id": "186399",
+      "name": "Rutgers University-Newark",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/186867.webp",
+      "id": "186867",
+      "name": "Stevens Institute of Technology",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/190150.webp",
+      "id": "190150",
+      "name": "Columbia University in the City of New York",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/190415.webp",
+      "id": "190415",
+      "name": "Cornell University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/191241.webp",
+      "id": "191241",
+      "name": "Fordham University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/193900.webp",
+      "id": "193900",
+      "name": "New York University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/194824.webp",
+      "id": "194824",
+      "name": "Rensselaer Polytechnic Institute",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/195003.webp",
+      "id": "195003",
+      "name": "Rochester Institute of Technology",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/195030.webp",
+      "id": "195030",
+      "name": "University of Rochester",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/196079.webp",
+      "id": "196079",
+      "name": "Binghamton University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/196088.webp",
+      "id": "196088",
+      "name": "University at Buffalo",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/196097.webp",
+      "id": "196097",
+      "name": "Stony Brook University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/196413.webp",
+      "id": "196413",
+      "name": "Syracuse University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/197708.webp",
+      "id": "197708",
+      "name": "Yeshiva University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/198419.webp",
+      "id": "198419",
+      "name": "Duke University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/199120.webp",
+      "id": "199120",
+      "name": "University of North Carolina at Chapel Hill",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/199193.webp",
+      "id": "199193",
+      "name": "North Carolina State University at Raleigh",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/199847.webp",
+      "id": "199847",
+      "name": "Wake Forest University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/201645.webp",
+      "id": "201645",
+      "name": "Case Western Reserve University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/204796.webp",
+      "id": "204796",
+      "name": "Ohio State University-Main Campus",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/211440.webp",
+      "id": "211440",
+      "name": "Carnegie Mellon University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/212054.webp",
+      "id": "212054",
+      "name": "Drexel University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/213543.webp",
+      "id": "213543",
+      "name": "Lehigh University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/214777.webp",
+      "id": "214777",
+      "name": "Pennsylvania State University-Main Campus",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/215062.webp",
+      "id": "215062",
+      "name": "University of Pennsylvania",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/215293.webp",
+      "id": "215293",
+      "name": "University of Pittsburgh-Pittsburgh Campus",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/216597.webp",
+      "id": "216597",
+      "name": "Villanova University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/217156.webp",
+      "id": "217156",
+      "name": "Brown University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/217882.webp",
+      "id": "217882",
+      "name": "Clemson University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/221999.webp",
+      "id": "221999",
+      "name": "Vanderbilt University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/223232.webp",
+      "id": "223232",
+      "name": "Baylor University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/227757.webp",
+      "id": "227757",
+      "name": "Rice University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/228246.webp",
+      "id": "228246",
+      "name": "Southern Methodist University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/228723.webp",
+      "id": "228723",
+      "name": "Texas A & M University-College Station",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/228778.webp",
+      "id": "228778",
+      "name": "The University of Texas at Austin",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/228875.webp",
+      "id": "228875",
+      "name": "Texas Christian University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/231624.webp",
+      "id": "231624",
+      "name": "William & Mary",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/233921.webp",
+      "id": "233921",
+      "name": "Virginia Polytechnic Institute and State University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/234076.webp",
+      "id": "234076",
+      "name": "University of Virginia-Main Campus",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/236948.webp",
+      "id": "236948",
+      "name": "University of Washington-Seattle Campus",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/239105.webp",
+      "id": "239105",
+      "name": "Marquette University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/240444.webp",
+      "id": "240444",
+      "name": "University of Wisconsin-Madison",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/243744.webp",
+      "id": "243744",
+      "name": "Stanford University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/243780.webp",
+      "id": "243780",
+      "name": "Purdue University-Main Campus",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/445188.webp",
+      "id": "445188",
+      "name": "University of California-Merced",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/BE-KULEUVEN.webp",
+      "id": "BE-KULEUVEN",
+      "name": "KU Leuven",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/CA-ALBERTA.webp",
+      "id": "CA-ALBERTA",
+      "name": "University of Alberta",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/CA-MCGILL.webp",
+      "id": "CA-MCGILL",
+      "name": "McGill University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/CA-TORONTO.webp",
+      "id": "CA-TORONTO",
+      "name": "University of Toronto",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/CA-UBC.webp",
+      "id": "CA-UBC",
+      "name": "University of British Columbia",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/CA-UMONTREAL.webp",
+      "id": "CA-UMONTREAL",
+      "name": "Université de Montréal",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/CA-WATERLOO.webp",
+      "id": "CA-WATERLOO",
+      "name": "University of Waterloo",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/CA-WESTERN.webp",
+      "id": "CA-WESTERN",
+      "name": "Western University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/CH-EPFL.webp",
+      "id": "CH-EPFL",
+      "name": "EPFL",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/CH-ETH.webp",
+      "id": "CH-ETH",
+      "name": "ETH Zurich",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/DE-HEIDELBERG.webp",
+      "id": "DE-HEIDELBERG",
+      "name": "Heidelberg University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/DE-LMU.webp",
+      "id": "DE-LMU",
+      "name": "LMU Munich",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/DE-TUM.webp",
+      "id": "DE-TUM",
+      "name": "Technical University of Munich",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/DK-COPENHAGEN.webp",
+      "id": "DK-COPENHAGEN",
+      "name": "University of Copenhagen",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/ES-BARCELONA.webp",
+      "id": "ES-BARCELONA",
+      "name": "University of Barcelona",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/FR-IPPARIS.webp",
+      "id": "FR-IPPARIS",
+      "name": "Institut Polytechnique de Paris",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/FR-PARISSACLAY.webp",
+      "id": "FR-PARISSACLAY",
+      "name": "Université Paris-Saclay",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/FR-PSL.webp",
+      "id": "FR-PSL",
+      "name": "Université PSL",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/FR-SORBONNE.webp",
+      "id": "FR-SORBONNE",
+      "name": "Sorbonne University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/GB-BRISTOL.webp",
+      "id": "GB-BRISTOL",
+      "name": "University of Bristol",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/GB-CAMBRIDGE.webp",
+      "id": "GB-CAMBRIDGE",
+      "name": "University of Cambridge",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/GB-EDINBURGH.webp",
+      "id": "GB-EDINBURGH",
+      "name": "The University of Edinburgh",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/GB-IMPERIAL.webp",
+      "id": "GB-IMPERIAL",
+      "name": "Imperial College London",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/GB-KCL.webp",
+      "id": "GB-KCL",
+      "name": "King's College London",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/GB-LSE.webp",
+      "id": "GB-LSE",
+      "name": "The London School of Economics and Political Science",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/GB-MANCHESTER.webp",
+      "id": "GB-MANCHESTER",
+      "name": "The University of Manchester",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/GB-OXFORD.webp",
+      "id": "GB-OXFORD",
+      "name": "University of Oxford",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/GB-UCL.webp",
+      "id": "GB-UCL",
+      "name": "University College London",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/GB-WARWICK.webp",
+      "id": "GB-WARWICK",
+      "name": "University of Warwick",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/HK-CITYU.webp",
+      "id": "HK-CITYU",
+      "name": "City University of Hong Kong",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/HK-CUHK.webp",
+      "id": "HK-CUHK",
+      "name": "The Chinese University of Hong Kong",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/HK-EDUHK.webp",
+      "id": "HK-EDUHK",
+      "name": "The Education University of Hong Kong",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/HK-HKBU.webp",
+      "id": "HK-HKBU",
+      "name": "Hong Kong Baptist University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/HK-HKU.webp",
+      "id": "HK-HKU",
+      "name": "The University of Hong Kong",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/HK-HKUST.webp",
+      "id": "HK-HKUST",
+      "name": "The Hong Kong University of Science and Technology",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/HK-LINGNAN.webp",
+      "id": "HK-LINGNAN",
+      "name": "Lingnan University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/HK-POLYU.webp",
+      "id": "HK-POLYU",
+      "name": "The Hong Kong Polytechnic University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/IE-TRINITY.webp",
+      "id": "IE-TRINITY",
+      "name": "Trinity College Dublin",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/IE-UCD.webp",
+      "id": "IE-UCD",
+      "name": "University College Dublin",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/IT-BOCCONI.webp",
+      "id": "IT-BOCCONI",
+      "name": "Bocconi University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/IT-BOLOGNA.webp",
+      "id": "IT-BOLOGNA",
+      "name": "University of Bologna",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/IT-POLIMI.webp",
+      "id": "IT-POLIMI",
+      "name": "Politecnico di Milano",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/JP-CHIBA.webp",
+      "id": "JP-CHIBA",
+      "name": "Chiba University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-HIROSHIMA.webp",
+      "id": "JP-HIROSHIMA",
+      "name": "Hiroshima University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-HITOTSUBASHI.webp",
+      "id": "JP-HITOTSUBASHI",
+      "name": "Hitotsubashi University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/JP-HOKKAIDO.webp",
+      "id": "JP-HOKKAIDO",
+      "name": "Hokkaido University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-IST.webp",
+      "id": "JP-IST",
+      "name": "Institute of Science Tokyo",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-KANAZAWA.webp",
+      "id": "JP-KANAZAWA",
+      "name": "Kanazawa University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/JP-KEIO.webp",
+      "id": "JP-KEIO",
+      "name": "Keio University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-KOBE.webp",
+      "id": "JP-KOBE",
+      "name": "Kobe University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/JP-KYOTO.webp",
+      "id": "JP-KYOTO",
+      "name": "Kyoto University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-KYUSHU.webp",
+      "id": "JP-KYUSHU",
+      "name": "Kyushu University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-NAGOYA.webp",
+      "id": "JP-NAGOYA",
+      "name": "Nagoya University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-OSAKA.webp",
+      "id": "JP-OSAKA",
+      "name": "The University of Osaka",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-RITSUMEIKAN.webp",
+      "id": "JP-RITSUMEIKAN",
+      "name": "Ritsumeikan University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-TMU.webp",
+      "id": "JP-TMU",
+      "name": "Tokyo Metropolitan University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/JP-TOHOKU.webp",
+      "id": "JP-TOHOKU",
+      "name": "Tohoku University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-TSUKUBA.webp",
+      "id": "JP-TSUKUBA",
+      "name": "University of Tsukuba",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/JP-TUS.webp",
+      "id": "JP-TUS",
+      "name": "Tokyo University of Science",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/JP-UTOKYO.webp",
+      "id": "JP-UTOKYO",
+      "name": "The University of Tokyo",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/JP-WASEDA.webp",
+      "id": "JP-WASEDA",
+      "name": "Waseda University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/JP-YNU.webp",
+      "id": "JP-YNU",
+      "name": "Yokohama National University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/NL-LEIDEN.webp",
+      "id": "NL-LEIDEN",
+      "name": "Leiden University",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/NL-TUDELFT.webp",
+      "id": "NL-TUDELFT",
+      "name": "Delft University of Technology",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/NL-TUE.webp",
+      "id": "NL-TUE",
+      "name": "Eindhoven University of Technology",
+      "source": "generated-fallback"
+    },
+    {
+      "asset": "/school-logos/NL-UTRECHT.webp",
+      "id": "NL-UTRECHT",
+      "name": "Utrecht University",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/NL-UVA.webp",
+      "id": "NL-UVA",
+      "name": "University of Amsterdam",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/SE-KTH.webp",
+      "id": "SE-KTH",
+      "name": "KTH Royal Institute of Technology",
+      "source": "official-favicon"
+    },
+    {
+      "asset": "/school-logos/SE-LUND.webp",
+      "id": "SE-LUND",
+      "name": "Lund University",
+      "source": "generated-fallback"
+    }
+  ]
+}

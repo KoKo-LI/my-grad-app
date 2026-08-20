@@ -11,7 +11,7 @@ interface SchoolLogoProps {
 /** Official-site favicon with a readable monogram fallback for unavailable logo assets. */
 export default function SchoolLogo({ className, school }: SchoolLogoProps) {
   const [imageFailed, setImageFailed] = useState(false);
-  const logoUrl = getSchoolLogoUrl(school.officialWebsite);
+  const logoUrl = getSchoolLogoUrl(school);
   const showImage = logoUrl !== null && !imageFailed;
 
   return (

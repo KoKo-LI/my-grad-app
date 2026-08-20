@@ -191,15 +191,34 @@ const chineseNameByEnglishName: Readonly<Record<string, string>> = {
   "University of Washington": "华盛顿大学西雅图分校",
 };
 
-export function getSchoolChineseName(school: Pick<SchoolIdentityInput, "ipedsUnitId" | "name">) {
-  return (school.ipedsUnitId ? chineseNameByInstitutionId[school.ipedsUnitId] : undefined) ?? chineseNameByEnglishName[school.name] ?? school.name;
+const institutionIdByLegacyEnglishName: Readonly<Record<string, string>> = {
+  "Carnegie Mellon University": "211440",
+  "Columbia University": "190150",
+  "Imperial College London": "GB-IMPERIAL",
+  "Northeastern University": "167358",
+  "University of Toronto": "CA-TORONTO",
+  "University of Washington": "236948",
+};
+
+function getCanonicalInstitutionId(school: Pick<SchoolIdentityInput, "ipedsUnitId" | "name">) {
+  return school.ipedsUnitId ?? institutionIdByLegacyEnglishName[school.name] ?? null;
 }
 
-export function getSchoolLogoUrl(officialWebsite?: string | null) {
-  if (!officialWebsite) return null;
+export function getSchoolChineseName(school: Pick<SchoolIdentityInput, "ipedsUnitId" | "name">) {
+  const institutionId = getCanonicalInstitutionId(school);
+  return (institutionId ? chineseNameByInstitutionId[institutionId] : undefined) ?? chineseNameByEnglishName[school.name] ?? school.name;
+}
+
+export function getSchoolLogoUrl(school: Pick<SchoolIdentityInput, "ipedsUnitId" | "name" | "officialWebsite">) {
+  const institutionId = getCanonicalInstitutionId(school);
+  if (institutionId && chineseNameByInstitutionId[institutionId]) {
+    return `/school-logos/${encodeURIComponent(institutionId)}.webp`;
+  }
+
+  if (!school.officialWebsite) return null;
 
   try {
-    return new URL("/favicon.ico", officialWebsite).toString();
+    return new URL("/favicon.ico", school.officialWebsite).toString();
   } catch {
     return null;
   }

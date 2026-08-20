@@ -12,6 +12,7 @@
     "catalog:import-scorecard-metrics": "node --env-file=.env.local --experimental-strip-types scripts/import-scorecard-institution-metrics.ts",
     "catalog:import-official-requirements": "node --env-file=.env.local --experimental-strip-types scripts/import-official-undergraduate-requirements.ts",
     "catalog:import-qs-rankings": "node --env-file=.env.local --experimental-strip-types scripts/import-qs-world-rankings.ts",
+    "catalog:import-school-logos": "node --env-file=.env.local --experimental-strip-types scripts/import-school-logos.ts",
     "import-hk-uk-catalog": "node --env-file=.env.local --experimental-strip-types scripts/import-hk-uk-undergraduate-catalog.ts",
     "import-canada-europe-japan-catalog": "node --env-file=.env.local --experimental-strip-types scripts/import-canada-europe-japan-undergraduate-catalog.ts"
   },
@@ -30,6 +31,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
