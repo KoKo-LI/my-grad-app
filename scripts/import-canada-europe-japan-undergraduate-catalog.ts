@@ -14,31 +14,49 @@ const maximumEntryBytes = 20 * 1024 * 1024;
 type RawRecord = Record<string, unknown>;
 type SourceKind = "official_institution" | "official_program" | "ranking";
 type RequirementMetric =
+  | "act_composite"
+  | "ap_subject"
+  | "duolingo_english_test"
   | "english_proficiency"
+  | "ib_total"
   | "ielts_academic_overall"
+  | "sat_total"
   | "toefl_ibt_total"
   | "transcript";
-type RequirementKind = "minimum" | "required";
+type RequirementKind = "minimum" | "recommended" | "required";
 type WorksheetRow = Map<number, string | number | null>;
 
 type ScoreRequirement = {
   maximumScore?: number;
-  metric: Exclude<RequirementMetric, "english_proficiency" | "transcript">;
-  minimumScore: number;
-  scoreScale: number;
-  testVersion: string;
+  metric: RequirementMetric;
+  minimumScore?: number;
+  requirementKind?: RequirementKind;
+  scoreScale?: number;
+  subjectArea?: string;
+  testVersion?: string;
   valueText: string;
+};
+
+type ScoreStatistic = {
+  metric: Exclude<RequirementMetric, "english_proficiency" | "transcript">;
+  scoreScale: number;
+  statistic: "average" | "median";
+  subjectArea: string;
+  testVersion: string;
+  value: number;
 };
 
 type InstitutionSeed = {
   admissionUrl: string;
   country: string;
   id: string;
+  languageRequirementText?: string;
   name: string;
   officialWebsite: string;
   qsAliases: string[];
   region: string;
   scoreRequirements?: ScoreRequirement[];
+  scoreStatistics?: ScoreStatistic[];
   shortName: string;
 };
 
@@ -57,6 +75,22 @@ type RequirementInsert = {
   subject_area: string | null;
   test_version: string | null;
   value_text: string;
+};
+
+type StatisticInsert = {
+  applicant_scope: "international";
+  application_path: "first_year";
+  cohort: "admitted";
+  is_published: true;
+  metric: Exclude<RequirementMetric, "english_proficiency" | "transcript">;
+  program_id: string;
+  score_scale: number;
+  source_id: string;
+  source_record_key: string;
+  statistic: "average" | "median";
+  statistic_value: number;
+  subject_area: string;
+  test_version: string;
 };
 
 type QsEntry = {
@@ -118,6 +152,7 @@ const canada: InstitutionSeed[] = [
   {
     id: "CA-UMONTREAL", name: "Université de Montréal", shortName: "UdeM", country: "加拿大", region: "加拿大", officialWebsite: "https://www.umontreal.ca/", qsAliases: ["Université de Montréal", "Universite de Montreal"],
     admissionUrl: "https://admission.umontreal.ca/en/undergraduate/",
+    languageRequirementText: "该校大多数本科课程以法语授课；国际申请人须按课程确认法语能力与学历等效要求。官网未发布可用于全校所有本科课程的统一 TOEFL / IELTS 数值门槛，因此不以估算值替代。",
   },
 ];
 
@@ -174,20 +209,77 @@ const europe: InstitutionSeed[] = [
 
 const japan: InstitutionSeed[] = [
   { id: "JP-UTOKYO", name: "The University of Tokyo", shortName: "UTokyo", country: "日本", region: "日本", officialWebsite: "https://www.u-tokyo.ac.jp/", qsAliases: ["The University of Tokyo"], admissionUrl: "https://www.u-tokyo.ac.jp/en/prospective-students/undergraduate.html" },
-  { id: "JP-KYOTO", name: "Kyoto University", shortName: "Kyoto", country: "日本", region: "日本", officialWebsite: "https://www.kyoto-u.ac.jp/", qsAliases: ["Kyoto University"], admissionUrl: "https://www.kyoto-u.ac.jp/en/education-campus/education-and-admissions/undergraduate" },
+  {
+    id: "JP-KYOTO", name: "Kyoto University", shortName: "Kyoto", country: "日本", region: "日本", officialWebsite: "https://www.kyoto-u.ac.jp/", qsAliases: ["Kyoto University"], admissionUrl: "https://www.iup.kyoto-u.ac.jp/faq/english-language-proficiency/",
+    scoreRequirements: [
+      { metric: "toefl_ibt_total", minimumScore: 90, requirementKind: "recommended", scoreScale: 120, subjectArea: "Kyoto iUP", testVersion: "TOEFL iBT", valueText: "京都 iUP 官方列出的成功申请者典型分数；不是硬性最低线。" },
+      { metric: "ielts_academic_overall", minimumScore: 6.5, requirementKind: "recommended", scoreScale: 9, subjectArea: "Kyoto iUP", testVersion: "IELTS Academic", valueText: "京都 iUP 官方列出的成功申请者典型分数；不是硬性最低线。" },
+    ],
+  },
   { id: "JP-OSAKA", name: "The University of Osaka", shortName: "Osaka", country: "日本", region: "日本", officialWebsite: "https://www.osaka-u.ac.jp/", qsAliases: ["The University of Osaka", "Osaka University"], admissionUrl: "https://www.osaka-u.ac.jp/en/academics/faculties" },
-  { id: "JP-IST", name: "Institute of Science Tokyo", shortName: "Science Tokyo", country: "日本", region: "日本", officialWebsite: "https://www.isct.ac.jp/", qsAliases: ["Institute of Science Tokyo"], admissionUrl: "https://www.isct.ac.jp/en/001/admissions" },
-  { id: "JP-TOHOKU", name: "Tohoku University", shortName: "Tohoku", country: "日本", region: "日本", officialWebsite: "https://www.tohoku.ac.jp/", qsAliases: ["Tohoku University"], admissionUrl: "https://www.tohoku.ac.jp/en/academics/undergraduate.html" },
-  { id: "JP-NAGOYA", name: "Nagoya University", shortName: "Nagoya", country: "日本", region: "日本", officialWebsite: "https://www.nagoya-u.ac.jp/", qsAliases: ["Nagoya University"], admissionUrl: "https://www.nagoya-u.ac.jp/en/academics/" },
-  { id: "JP-KYUSHU", name: "Kyushu University", shortName: "Kyushu", country: "日本", region: "日本", officialWebsite: "https://www.kyushu-u.ac.jp/", qsAliases: ["Kyushu University"], admissionUrl: "https://www.kyushu-u.ac.jp/en/admission/" },
+  {
+    id: "JP-IST", name: "Institute of Science Tokyo", shortName: "Science Tokyo", country: "日本", region: "日本", officialWebsite: "https://www.isct.ac.jp/", qsAliases: ["Institute of Science Tokyo"], admissionUrl: "https://admissions.isct.ac.jp/en/013/undergraduate/programs/gsep",
+    scoreRequirements: [
+      { metric: "toefl_ibt_total", requirementKind: "required", subjectArea: "GSEP 国际本科工程项目", testVersion: "TOEFL iBT", valueText: "须提交两年内有效的 TOEFL iBT 成绩；官网明确未设统一最低分。" },
+      { metric: "ielts_academic_overall", requirementKind: "required", subjectArea: "GSEP 国际本科工程项目", testVersion: "IELTS Academic", valueText: "须提交两年内有效的 IELTS Academic 成绩；官网明确未设统一最低分。" },
+    ],
+  },
+  {
+    id: "JP-TOHOKU", name: "Tohoku University", shortName: "Tohoku", country: "日本", region: "日本", officialWebsite: "https://www.tohoku.ac.jp/", qsAliases: ["Tohoku University"], admissionUrl: "https://www.tohoku.ac.jp/en/admissions/admission_undergraduate.html",
+    scoreRequirements: [
+      { metric: "toefl_ibt_total", minimumScore: 79, scoreScale: 120, subjectArea: "自费国际学生日语授课本科路径", testVersion: "TOEFL iBT", valueText: "官网列明 TOEFL iBT 79；同时须参加学院指定 EJU 科目及校内考试。" },
+    ],
+  },
+  {
+    id: "JP-NAGOYA", name: "Nagoya University", shortName: "Nagoya", country: "日本", region: "日本", officialWebsite: "https://www.nagoya-u.ac.jp/", qsAliases: ["Nagoya University"], admissionUrl: "https://admissions.g30.nagoya-u.ac.jp/admissions/undergraduate",
+    scoreRequirements: [
+      { metric: "toefl_ibt_total", minimumScore: 80, scoreScale: 120, subjectArea: "G30 英语授课本科", testVersion: "TOEFL iBT", valueText: "G30 本科英语能力最低要求；以当年 Appendix 1 为准。" },
+      { metric: "ielts_academic_overall", minimumScore: 6, scoreScale: 9, subjectArea: "G30 英语授课本科", testVersion: "IELTS Academic", valueText: "G30 本科英语能力最低要求；以当年 Appendix 1 为准。" },
+      { metric: "duolingo_english_test", minimumScore: 110, scoreScale: 160, subjectArea: "G30 英语授课本科", testVersion: "Duolingo English Test", valueText: "G30 本科英语能力最低要求；以当年 Appendix 1 为准。" },
+    ],
+  },
+  {
+    id: "JP-KYUSHU", name: "Kyushu University", shortName: "Kyushu", country: "日本", region: "日本", officialWebsite: "https://www.kyushu-u.ac.jp/", qsAliases: ["Kyushu University"], admissionUrl: "https://www.kyushu-u.ac.jp/f/42084/Second%20round%20screening0115.pdf",
+    scoreRequirements: [
+      { metric: "toefl_ibt_total", minimumScore: 80, scoreScale: 120, subjectArea: "国际本科项目", testVersion: "TOEFL iBT", valueText: "官方申请指南列明的最低分；满足四年英语授课中学教育者可按指南申请豁免。" },
+      { metric: "ielts_academic_overall", minimumScore: 6.5, scoreScale: 9, subjectArea: "国际本科项目", testVersion: "IELTS Academic", valueText: "官方申请指南列明的最低总分；满足四年英语授课中学教育者可按指南申请豁免。" },
+      { metric: "ap_subject", requirementKind: "required", subjectArea: "国际本科工程类项目", testVersion: "AP", valueText: "工程类课程须提交指定数学（Calculus）及理科 AP 成绩；项目和科目以当年申请指南为准。" },
+    ],
+  },
   { id: "JP-HOKKAIDO", name: "Hokkaido University", shortName: "Hokkaido", country: "日本", region: "日本", officialWebsite: "https://www.global.hokudai.ac.jp/", qsAliases: ["Hokkaido University"], admissionUrl: "https://www.global.hokudai.ac.jp/admissions/" },
-  { id: "JP-WASEDA", name: "Waseda University", shortName: "Waseda", country: "日本", region: "日本", officialWebsite: "https://www.waseda.jp/", qsAliases: ["Waseda University"], admissionUrl: "https://www.waseda.jp/inst/admission/en/" },
-  { id: "JP-KEIO", name: "Keio University", shortName: "Keio", country: "日本", region: "日本", officialWebsite: "https://www.keio.ac.jp/", qsAliases: ["Keio University"], admissionUrl: "https://www.keio.ac.jp/en/admissions/undergraduate/" },
+  {
+    id: "JP-WASEDA", name: "Waseda University", shortName: "Waseda", country: "日本", region: "日本", officialWebsite: "https://www.waseda.jp/", qsAliases: ["Waseda University"], admissionUrl: "https://www.waseda.jp/inst/admission/en/undergraduate/english/",
+    scoreRequirements: [
+      { metric: "sat_total", requirementKind: "required", subjectArea: "英语授课本科项目", testVersion: "SAT", valueText: "须提交至少一项标准化考试成绩；官网明确多数项目不设最低分。" },
+      { metric: "toefl_ibt_total", requirementKind: "required", subjectArea: "英语授课本科项目", testVersion: "TOEFL iBT", valueText: "须提交英语能力成绩；除 JCulP 外，官网说明多数项目不设统一最低分。" },
+    ],
+    scoreStatistics: [
+      { metric: "sat_total", statistic: "average", value: 1416, scoreScale: 1600, subjectArea: "School of International Liberal Studies（2025 成功申请者）", testVersion: "SAT" },
+      { metric: "act_composite", statistic: "average", value: 32.3, scoreScale: 36, subjectArea: "School of International Liberal Studies（2025 成功申请者）", testVersion: "ACT Composite" },
+      { metric: "ib_total", statistic: "average", value: 36.9, scoreScale: 42, subjectArea: "School of International Liberal Studies（2025 成功申请者）", testVersion: "IB Diploma（含预测分）" },
+    ],
+  },
+  {
+    id: "JP-KEIO", name: "Keio University", shortName: "Keio", country: "日本", region: "日本", officialWebsite: "https://www.keio.ac.jp/", qsAliases: ["Keio University"], admissionUrl: "https://www.keio.ac.jp/en/admissions/faculty/faq/pearl/",
+    scoreRequirements: [
+      { metric: "sat_total", requirementKind: "required", subjectArea: "PEARL 英语授课经济学本科", testVersion: "SAT", valueText: "PEARL 要求提交 IB 或 SAT 作为学术能力材料；官网明确没有 cut-off 分数。" },
+      { metric: "ib_total", requirementKind: "required", subjectArea: "PEARL 英语授课经济学本科", testVersion: "IB Diploma", valueText: "PEARL 接受 IB Diploma；官网明确没有 cut-off 分数。" },
+      { metric: "toefl_ibt_total", requirementKind: "required", subjectArea: "PEARL 英语授课经济学本科", testVersion: "TOEFL iBT", valueText: "所有申请人均须提交 TOEFL iBT 和/或 IELTS；官网明确没有 cut-off 分数。" },
+      { metric: "ielts_academic_overall", requirementKind: "required", subjectArea: "PEARL 英语授课经济学本科", testVersion: "IELTS Academic", valueText: "所有申请人均须提交 TOEFL iBT 和/或 IELTS；官网明确没有 cut-off 分数。" },
+    ],
+  },
   { id: "JP-TSUKUBA", name: "University of Tsukuba", shortName: "Tsukuba", country: "日本", region: "日本", officialWebsite: "https://www.tsukuba.ac.jp/", qsAliases: ["University of Tsukuba"], admissionUrl: "https://www.tsukuba.ac.jp/en/admission/" },
   { id: "JP-KOBE", name: "Kobe University", shortName: "Kobe", country: "日本", region: "日本", officialWebsite: "https://www.kobe-u.ac.jp/", qsAliases: ["Kobe University"], admissionUrl: "https://www.kobe-u.ac.jp/en/academics/admission/" },
   { id: "JP-HIROSHIMA", name: "Hiroshima University", shortName: "Hiroshima", country: "日本", region: "日本", officialWebsite: "https://www.hiroshima-u.ac.jp/", qsAliases: ["Hiroshima University"], admissionUrl: "https://www.hiroshima-u.ac.jp/en/admissions" },
   { id: "JP-TUS", name: "Tokyo University of Science", shortName: "TUS", country: "日本", region: "日本", officialWebsite: "https://www.tus.ac.jp/en/", qsAliases: ["Tokyo University of Science"], admissionUrl: "https://www.tus.ac.jp/en/admissions/" },
-  { id: "JP-RITSUMEIKAN", name: "Ritsumeikan University", shortName: "Ritsumeikan", country: "日本", region: "日本", officialWebsite: "https://en.ritsumei.ac.jp/", qsAliases: ["Ritsumeikan University"], admissionUrl: "https://en.ritsumei.ac.jp/admissions/" },
+  {
+    id: "JP-RITSUMEIKAN", name: "Ritsumeikan University", shortName: "Ritsumeikan", country: "日本", region: "日本", officialWebsite: "https://en.ritsumei.ac.jp/", qsAliases: ["Ritsumeikan University"], admissionUrl: "https://en.ritsumei.ac.jp/e-ug/apply/howto.html/?version=English",
+    scoreRequirements: [
+      { metric: "toefl_ibt_total", minimumScore: 72, scoreScale: 120, subjectArea: "英语授课本科（CRPS / ISSE 最低项目线）", testVersion: "TOEFL iBT 0–120", valueText: "官网列示最低项目线为 72；不同英语授课项目为 72–85，应按目标项目核验。" },
+      { metric: "ielts_academic_overall", minimumScore: 5.5, scoreScale: 9, subjectArea: "英语授课本科（CRPS / ISSE 最低项目线）", testVersion: "IELTS Academic", valueText: "官网列示最低项目线为 5.5；不同英语授课项目为 5.5–6.5，应按目标项目核验。" },
+      { metric: "duolingo_english_test", minimumScore: 105, scoreScale: 160, subjectArea: "英语授课本科（CRPS / ISSE 最低项目线）", testVersion: "Duolingo English Test", valueText: "官网列示最低项目线为 105；不同英语授课项目为 105–120，应按目标项目核验。" },
+    ],
+  },
   { id: "JP-YNU", name: "Yokohama National University", shortName: "YNU", country: "日本", region: "日本", officialWebsite: "https://www.ynu.ac.jp/english/", qsAliases: ["Yokohama National University"], admissionUrl: "https://www.ynu.ac.jp/english/academics/admissions/" },
   { id: "JP-CHIBA", name: "Chiba University", shortName: "Chiba", country: "日本", region: "日本", officialWebsite: "https://www.chiba-u.jp/", qsAliases: ["Chiba University"], admissionUrl: "https://www.chiba-u.jp/e/admissions/" },
   { id: "JP-KANAZAWA", name: "Kanazawa University", shortName: "Kanazawa", country: "日本", region: "日本", officialWebsite: "https://www.kanazawa-u.ac.jp/", qsAliases: ["Kanazawa University"], admissionUrl: "https://www.kanazawa-u.ac.jp/en/admission/" },
@@ -418,7 +510,15 @@ function validateSeeds(): void {
     new URL(institution.officialWebsite);
     new URL(institution.admissionUrl);
     institution.scoreRequirements?.forEach((requirement) => {
-      if (requirement.minimumScore <= 0 || requirement.minimumScore > requirement.scoreScale) throw new Error(`Invalid score requirement for ${institution.id}.`);
+      if (requirement.minimumScore !== undefined && (requirement.minimumScore <= 0 || requirement.scoreScale === undefined || requirement.minimumScore > requirement.scoreScale)) {
+        throw new Error(`Invalid score requirement for ${institution.id}.`);
+      }
+      if (requirement.minimumScore === undefined && requirement.scoreScale !== undefined) {
+        throw new Error(`Score scale requires a numeric score for ${institution.id}.`);
+      }
+    });
+    institution.scoreStatistics?.forEach((statistic) => {
+      if (statistic.value <= 0 || statistic.value > statistic.scoreScale) throw new Error(`Invalid score statistic for ${institution.id}.`);
     });
   });
   if (canada.length !== 7) throw new Error("Canada seed must contain exactly seven QS-ranked institutions.");
@@ -440,18 +540,41 @@ function makeRequirementRows(
     {
       applicant_scope: "international", application_path: "first_year", is_published: true, maximum_score: null, metric: "english_proficiency", minimum_score: null,
       program_id: programId, requirement_kind: "required", score_scale: null, source_id: sourceId, source_record_key: `${keyPrefix}-english`, subject_area: null, test_version: null,
-      value_text: "语言条件因授课语言、申请路径与所选课程而异；请以链接中的学校官方当年要求为准。",
+      value_text: seed.languageRequirementText ?? "语言条件因授课语言、申请路径与所选课程而异；请以链接中的学校官方当年要求为准。",
     },
   ];
 
   seed.scoreRequirements?.forEach((requirement) => {
     rows.push({
       applicant_scope: "international", application_path: "first_year", is_published: true, maximum_score: requirement.maximumScore ?? null,
-      metric: requirement.metric, minimum_score: requirement.minimumScore, program_id: programId, requirement_kind: "minimum", score_scale: requirement.scoreScale,
-      source_id: sourceId, source_record_key: `${keyPrefix}-${requirement.metric}`, subject_area: "院校级英语要求", test_version: requirement.testVersion, value_text: requirement.valueText,
+      metric: requirement.metric, minimum_score: requirement.minimumScore ?? null, program_id: programId, requirement_kind: requirement.requirementKind ?? "minimum", score_scale: requirement.scoreScale ?? null,
+      source_id: sourceId, source_record_key: `${keyPrefix}-${requirement.metric}`, subject_area: requirement.subjectArea ?? "院校级英语要求", test_version: requirement.testVersion ?? null, value_text: requirement.valueText,
     });
   });
   return rows;
+}
+
+function makeStatisticRows(
+  seed: InstitutionSeed,
+  programId: string,
+  sourceId: string,
+): StatisticInsert[] {
+  const keyPrefix = seed.id.toLocaleLowerCase("en-US");
+  return (seed.scoreStatistics ?? []).map((statistic) => ({
+    applicant_scope: "international",
+    application_path: "first_year",
+    cohort: "admitted",
+    is_published: true,
+    metric: statistic.metric,
+    program_id: programId,
+    score_scale: statistic.scoreScale,
+    source_id: sourceId,
+    source_record_key: `${keyPrefix}-${statistic.metric}-${statistic.statistic}`,
+    statistic: statistic.statistic,
+    statistic_value: statistic.value,
+    subject_area: statistic.subjectArea,
+    test_version: statistic.testVersion,
+  }));
 }
 
 function resolveRanks(entries: QsEntry[]): {
@@ -482,8 +605,9 @@ function resolveRanks(entries: QsEntry[]): {
 
 async function main(): Promise<void> {
   validateSeeds();
-  const numericScoreCount = institutions.reduce((count, seed) => count + (seed.scoreRequirements?.length ?? 0), 0);
-  console.log(`Validated ${institutions.length} institutions (${canada.length} Canada, ${europe.length} Europe, ${japan.length} Japan) with ${institutions.length * 2 + numericScoreCount} official requirement records.`);
+  const scoreRequirementCount = institutions.reduce((count, seed) => count + (seed.scoreRequirements?.length ?? 0), 0);
+  const scoreStatisticCount = institutions.reduce((count, seed) => count + (seed.scoreStatistics?.length ?? 0), 0);
+  console.log(`Validated ${institutions.length} institutions (${canada.length} Canada, ${europe.length} Europe, ${japan.length} Japan) with ${institutions.length * 2 + scoreRequirementCount} official requirement records and ${scoreStatisticCount} official score statistics.`);
 
   const listCountry = getListCountry();
   if (isValidateOnly()) return;
@@ -564,6 +688,19 @@ async function main(): Promise<void> {
     programIds.set(key, readIdentifier(row.id, "program"));
   });
 
+  for (const seed of institutions) {
+    const institutionId = readIdentifier(institutionIds.get(seed.id), `institution ${seed.id}`);
+    const programId = readIdentifier(programIds.get(`${institutionId}\u0000${baseProgramName}\u0000${baseDegreeName}`), `program ${seed.id}`);
+    const recordKeyPrefix = `${seed.id.toLocaleLowerCase("en-US")}-`;
+    const [requirementResult, statisticResult] = await Promise.all([
+      client.from("admission_requirements").delete().eq("program_id", programId).like("source_record_key", `${recordKeyPrefix}%`),
+      client.from("admission_statistics").delete().eq("program_id", programId).like("source_record_key", `${recordKeyPrefix}%`),
+    ]);
+    if (requirementResult.error || statisticResult.error) {
+      throw new Error(`Could not replace generated score records for ${seed.id}: ${requirementResult.error?.message ?? statisticResult.error?.message ?? "unknown error"}`);
+    }
+  }
+
   const requirementRows = institutions.flatMap((seed) => {
     const institutionId = readIdentifier(institutionIds.get(seed.id), `institution ${seed.id}`);
     const programId = readIdentifier(programIds.get(`${institutionId}\u0000${baseProgramName}\u0000${baseDegreeName}`), `program ${seed.id}`);
@@ -573,7 +710,18 @@ async function main(): Promise<void> {
   const { error: requirementError } = await client.from("admission_requirements").upsert(requirementRows, { onConflict: "program_id,source_id,source_record_key" });
   if (requirementError) throw new Error(`Could not publish international admission requirements: ${requirementError.message}`);
 
-  console.log(`Published ${institutions.length} verified international institutions, ${ranks.length} QS 2027 rankings, and ${requirementRows.length} official admission requirement records.`);
+  const statisticRows = institutions.flatMap((seed) => {
+    const institutionId = readIdentifier(institutionIds.get(seed.id), `institution ${seed.id}`);
+    const programId = readIdentifier(programIds.get(`${institutionId}\u0000${baseProgramName}\u0000${baseDegreeName}`), `program ${seed.id}`);
+    const sourceId = readIdentifier(sourceIds.get(sourceKey(seed.admissionUrl, "2026/27")), `source ${seed.id}`);
+    return makeStatisticRows(seed, programId, sourceId);
+  });
+  if (statisticRows.length > 0) {
+    const { error: statisticError } = await client.from("admission_statistics").upsert(statisticRows, { onConflict: "program_id,source_id,source_record_key" });
+    if (statisticError) throw new Error(`Could not publish international admission statistics: ${statisticError.message}`);
+  }
+
+  console.log(`Published ${institutions.length} verified international institutions, ${ranks.length} QS 2027 rankings, ${requirementRows.length} official admission requirement records, and ${statisticRows.length} official score statistics.`);
 }
 
 void main().catch((error: unknown) => {

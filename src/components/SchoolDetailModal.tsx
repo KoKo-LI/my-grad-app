@@ -250,6 +250,12 @@ function getProfileComparisons(detail: SchoolDetail, profile: StudentProfile | n
   const programIds = getTargetProgramIds(detail, profile);
   const satEbrwMedian = findMetric(detail.metrics, "sat_ebrw_median")?.value ?? null;
   const satMathMedian = findMetric(detail.metrics, "sat_math_median")?.value ?? null;
+  const satScore = satEbrwMedian !== null && satMathMedian !== null
+    ? formatScore(satEbrwMedian + satMathMedian)
+    : findProgramStatistic(detail, programIds, "sat_total");
+  const actScore = findMetric(detail.metrics, "act_composite_median")?.value !== undefined
+    ? formatScore(findMetric(detail.metrics, "act_composite_median")?.value ?? null)
+    : findProgramStatistic(detail, programIds, "act_composite");
   const activeLanguage = getActiveLanguage(profile);
   const academicRequirements = [
     findProgramRequirement(detail, programIds, ["ap_subject"]),
@@ -260,12 +266,12 @@ function getProfileComparisons(detail: SchoolDetail, profile: StudentProfile | n
     {
       applicantValue: getPersonalTestScore(profile, "SAT"),
       label: "SAT 本人 / 中位",
-      schoolValue: formatScore(satEbrwMedian !== null && satMathMedian !== null ? satEbrwMedian + satMathMedian : null),
+      schoolValue: satScore,
     },
     {
       applicantValue: getPersonalTestScore(profile, "ACT"),
       label: "ACT 本人 / 中位",
-      schoolValue: formatScore(findMetric(detail.metrics, "act_composite_median")?.value ?? null),
+      schoolValue: actScore,
     },
     {
       applicantValue: getPersonalGpa(profile),
