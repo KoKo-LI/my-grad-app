@@ -26,6 +26,7 @@ async function fetchAllPublishedMetrics(
       .from("institution_metrics")
       .select("id, institution_id, metric_category, metric, value_numeric, unit, source_period, data_sources(title, source_url)")
       .in("institution_id", institutionIds)
+      .eq("is_published", true)
       .order("id")
       .range(start, start + metricPageSize - 1);
 
@@ -48,6 +49,7 @@ export async function GET() {
   const { data: institutions, error: institutionError } = await supabase
     .from("institutions")
     .select("id, ipeds_unitid, name, short_name, country, region, official_website")
+    .eq("is_published", true)
     .order("name")
     .limit(256);
 
@@ -68,7 +70,8 @@ export async function GET() {
     supabase
       .from("institution_rankings")
       .select("institution_id, ranking_key, edition, rank_value, rank_display, data_sources(title, source_url)")
-      .in("institution_id", institutionIds),
+      .in("institution_id", institutionIds)
+      .eq("is_published", true),
   ]);
 
   if (metricsResponse.error) {

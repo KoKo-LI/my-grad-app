@@ -23,6 +23,7 @@ export async function GET(
     .from("institutions")
     .select("id, ipeds_unitid, name, short_name, country, region, official_website")
     .eq("ipeds_unitid", ipedsUnitId)
+    .eq("is_published", true)
     .maybeSingle();
 
   if (institutionError) {
@@ -37,15 +38,18 @@ export async function GET(
     supabase
       .from("institution_metrics")
       .select("institution_id, metric_category, metric, value_numeric, unit, source_period, data_sources(title, source_url)")
-      .eq("institution_id", institution.id),
+      .eq("institution_id", institution.id)
+      .eq("is_published", true),
     supabase
       .from("undergraduate_programs")
       .select("id, program_name, degree_name, field_of_study, major_categories, official_url")
-      .eq("institution_id", institution.id),
+      .eq("institution_id", institution.id)
+      .eq("is_published", true),
     supabase
       .from("institution_rankings")
       .select("institution_id, ranking_key, edition, rank_value, rank_display, data_sources(title, source_url)")
-      .eq("institution_id", institution.id),
+      .eq("institution_id", institution.id)
+      .eq("is_published", true),
   ]);
 
   if (metricError || programError || !metrics || !programs) {
@@ -61,11 +65,13 @@ export async function GET(
         supabase
           .from("admission_requirements")
           .select("id, program_id, metric, requirement_kind, applicant_scope, application_path, minimum_score, maximum_score, score_scale, test_version, subject_area, satisfaction_group, satisfaction_rule, value_text, data_sources(title, source_url)")
-          .in("program_id", programIds),
+          .in("program_id", programIds)
+          .eq("is_published", true),
         supabase
           .from("admission_statistics")
           .select("id, program_id, metric, cohort, statistic, statistic_value, applicant_scope, application_path, score_scale, test_version, subject_area, data_sources(title, source_url)")
-          .in("program_id", programIds),
+          .in("program_id", programIds)
+          .eq("is_published", true),
       ])
     : [
         { data: [], error: null },
