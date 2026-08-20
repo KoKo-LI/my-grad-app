@@ -14,6 +14,8 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import SchoolDetailModal from "@/components/SchoolDetailModal";
+import SchoolLogo from "@/components/SchoolLogo";
+import { getInstitutionIdFromTargetId, getSchoolChineseName } from "@/data/schoolIdentity";
 import { parseSchoolDirectoryResponse } from "@/lib/undergraduateDirectory";
 import type { SavedTargetSchool, SchoolDirectoryItem, SchoolItem, StudentProfile } from "@/types";
 import {
@@ -289,9 +291,13 @@ export default function SavedTargetSchoolsPage({ tier }: SavedTargetSchoolsPageP
               <article className="group flex min-h-[264px] flex-col rounded-3xl border border-slate-200/80 bg-white/80 p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-900/50 dark:shadow-sm dark:backdrop-blur-md dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]" key={school.id}>
                 <div className="flex items-start justify-between gap-4">
                   <button className="flex min-w-0 items-start gap-3 text-left" onClick={() => handleOpenSchool(school)} type="button">
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-xs font-black text-white shadow-lg shadow-zinc-950/15 dark:bg-white dark:text-zinc-950">{school.shortName.slice(0, 4)}</span>
+                    <SchoolLogo
+                      className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-xs font-black text-white shadow-lg shadow-zinc-950/15 dark:bg-white dark:text-zinc-950"
+                      school={{ ipedsUnitId: getInstitutionIdFromTargetId(school.id), name: school.name, officialWebsite: findDirectorySchool(schoolDirectory, school)?.officialWebsite ?? school.officialWebsite, shortName: school.shortName }}
+                    />
                     <span className="min-w-0">
                       <span className="flex items-start gap-2"><span className="truncate text-base font-extrabold text-zinc-950 transition-colors group-hover:text-violet-700 dark:text-white dark:group-hover:text-violet-200">{school.name}</span><ArrowUpRight aria-hidden="true" className="mt-1 shrink-0 text-violet-500 opacity-0 transition-opacity group-hover:opacity-100" size={15} weight="bold" /></span>
+                      <span className="mt-1 block truncate text-xs font-semibold text-violet-700 dark:text-violet-200">{getSchoolChineseName({ ipedsUnitId: getInstitutionIdFromTargetId(school.id), name: school.name })}</span>
                       <span className="mt-1 block truncate text-sm text-zinc-500 dark:text-zinc-400">{school.program}</span>
                     </span>
                   </button>

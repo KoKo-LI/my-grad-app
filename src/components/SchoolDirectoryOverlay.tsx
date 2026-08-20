@@ -3,6 +3,8 @@
 import { ArrowUpRight, Buildings, MagnifyingGlass, X } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
+import SchoolLogo from "@/components/SchoolLogo";
+import { getSchoolChineseName } from "@/data/schoolIdentity";
 import type { InstitutionMetric, InstitutionRanking, InstitutionRankingKey, SchoolDirectoryItem, StudentProfile } from "@/types";
 
 interface SchoolDirectoryOverlayProps {
@@ -84,7 +86,7 @@ export default function SchoolDirectoryOverlay({ description, heading, onClose, 
       schools
         .filter((school) => {
           if (!normalizedQuery) return true;
-          return `${school.name} ${school.shortName} ${school.region} ${school.country}`.toLocaleLowerCase().includes(normalizedQuery);
+          return `${school.name} ${getSchoolChineseName(school)} ${school.shortName} ${school.region} ${school.country}`.toLocaleLowerCase().includes(normalizedQuery);
         })
         .slice(0, 60),
     [normalizedQuery, schools],
@@ -165,13 +167,14 @@ export default function SchoolDirectoryOverlay({ description, heading, onClose, 
                       type="button"
                     >
                       <div className="flex items-start gap-3">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-xs font-extrabold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">{school.shortName.slice(0, 4)}</span>
+                        <SchoolLogo className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-xs font-extrabold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" school={school} />
                         <span className="min-w-0 flex-1">
                           <span className="flex items-start justify-between gap-2">
                             <span className="truncate text-sm font-extrabold text-zinc-950 dark:text-white">{school.name}</span>
                             <ArrowUpRight aria-hidden="true" className="shrink-0 text-violet-500 opacity-0 transition-opacity group-hover:opacity-100" size={16} weight="bold" />
                           </span>
-                          <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">{school.region}</span>
+                          <span className="mt-1 block truncate text-xs font-semibold text-violet-700 dark:text-violet-200">{getSchoolChineseName(school)}</span>
+                          <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">{school.region}</span>
                           {(usNewsRanking || qsRanking) && (
                             <span className="mt-2 flex flex-wrap gap-1.5">
                               {[usNewsRanking, qsRanking].filter((ranking): ranking is InstitutionRanking => ranking !== null).map((ranking) => (

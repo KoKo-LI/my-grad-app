@@ -101,6 +101,8 @@ export interface SchoolItem {
 export interface SavedTargetSchool extends SchoolItem {
   addedAt: string;
   lastAlgorithmStatus: SchoolItem["status"];
+  /** Public official-domain URL retained to render the institution identity in the target list. */
+  officialWebsite?: string;
   shortName: string;
   userOverrideStatus: boolean;
 }

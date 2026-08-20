@@ -2,6 +2,8 @@
 
 import { Buildings, MagnifyingGlass, SpinnerGap } from "@phosphor-icons/react";
 import { useMemo } from "react";
+import SchoolLogo from "@/components/SchoolLogo";
+import { getSchoolChineseName } from "@/data/schoolIdentity";
 import type { InstitutionMetric, SchoolDirectoryItem } from "@/types";
 
 interface SchoolSearchDropdownProps {
@@ -25,7 +27,7 @@ export default function SchoolSearchDropdown({ isLoading, onSelect, query, schoo
     if (!normalizedQuery) return [];
 
     return schools
-      .filter((school) => `${school.name} ${school.shortName} ${school.region} ${school.country}`.toLocaleLowerCase().includes(normalizedQuery))
+      .filter((school) => `${school.name} ${getSchoolChineseName(school)} ${school.shortName} ${school.region} ${school.country}`.toLocaleLowerCase().includes(normalizedQuery))
       .slice(0, 8);
   }, [normalizedQuery, schools]);
 
@@ -50,11 +52,10 @@ export default function SchoolSearchDropdown({ isLoading, onSelect, query, schoo
               onClick={() => onSelect(school)}
               type="button"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-xs font-extrabold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                {school.shortName.slice(0, 4)}
-              </span>
+              <SchoolLogo className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-xs font-extrabold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" school={school} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-bold text-zinc-900 dark:text-zinc-100">{school.name}</span>
+                <span className="mt-0.5 block truncate text-xs font-semibold text-violet-700 dark:text-violet-200">{getSchoolChineseName(school)}</span>
                 <span className="mt-0.5 block truncate text-xs text-zinc-500 dark:text-zinc-400">{school.region} · {formatRate(findMetric(school.metrics, "admission_rate"))}</span>
               </span>
               <Buildings aria-hidden="true" className="shrink-0 text-violet-500" size={18} weight="duotone" />

@@ -23,9 +23,11 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import ApplicationTimeline from "@/components/ApplicationTimeline";
 import ProfileDrawer from "@/components/ProfileDrawer";
 import SchoolDetailModal from "@/components/SchoolDetailModal";
+import SchoolLogo from "@/components/SchoolLogo";
 import SchoolSearchDropdown from "@/components/SchoolSearchDropdown";
 import Sidebar from "@/components/Sidebar";
 import { schoolCatalog } from "@/data/schoolCatalog";
+import { getInstitutionIdFromTargetId, getSchoolChineseName } from "@/data/schoolIdentity";
 import type { SavedTargetSchool, SchoolDirectoryItem, SchoolItem, SchoolMatchInput, SchoolMatchResult, StudentProfile } from "@/types";
 import { buildDirectorySchoolTiers, getDirectoryTierCount, type DirectorySchoolTiers } from "@/utils/directoryTierEngine";
 import { matchSchools } from "@/utils/matchEngine";
@@ -213,6 +215,7 @@ function createSavedTargetSchool(school: SchoolMatchResult, addedAt = new Date()
     lastAlgorithmStatus: school.status,
     name: school.name,
     notes: school.notes,
+    officialWebsite: undefined,
     program: school.program,
     region: school.region,
     shortName: school.shortName,
@@ -233,6 +236,7 @@ function createSavedTargetSchoolFromDirectory(
     lastAlgorithmStatus: status,
     name: school.name,
     notes: "来自已核验的官方 / 政府公开院校数据。",
+    officialWebsite: school.officialWebsite,
     program: "本科申请方向待确认",
     region: school.region,
     shortName: school.shortName,
@@ -320,9 +324,10 @@ function TargetSchoolCard({
       onClick={() => onOpenSchool(school)}
     >
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-xs font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-          {school.shortName}
-        </span>
+        <SchoolLogo
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-xs font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+          school={{ ipedsUnitId: getInstitutionIdFromTargetId(school.id), name: school.name, officialWebsite: school.officialWebsite, shortName: school.shortName }}
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="min-w-0 truncate text-sm font-bold text-zinc-900 dark:text-white">
@@ -350,6 +355,7 @@ function TargetSchoolCard({
               <X aria-hidden="true" size={15} weight="bold" />
             </button>
           </div>
+          <p className="mt-0.5 truncate text-[11px] font-semibold text-violet-700 dark:text-violet-200">{getSchoolChineseName({ ipedsUnitId: getInstitutionIdFromTargetId(school.id), name: school.name })}</p>
           <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">{school.program}</p>
           <div className="mt-3 flex items-center justify-between gap-2">
             <select
@@ -520,10 +526,11 @@ function MatchedRecommendationCard({
       onClick={onOpenSchool}
     >
       <div className="flex items-center gap-3">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold text-white dark:bg-zinc-800">{school.shortName}</span>
+        <SchoolLogo className="flex size-10 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold text-white dark:bg-zinc-800" school={school} />
         <div className="min-w-0">
           <h3 className="truncate text-sm font-bold text-zinc-900 dark:text-white">{school.name}</h3>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{school.region}</p>
+          <p className="mt-1 truncate text-xs font-semibold text-violet-700 dark:text-violet-200">{getSchoolChineseName(school)}</p>
+          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">{school.region}</p>
         </div>
       </div>
       <p className="mt-4 h-9 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{school.program}</p>
@@ -562,10 +569,11 @@ function DirectoryRecommendationCard({
       onClick={onOpenSchool}
     >
       <div className="flex items-center gap-3">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-xs font-bold text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">{school.shortName.slice(0, 4)}</span>
+        <SchoolLogo className="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-xs font-bold text-violet-700 dark:bg-violet-500/10 dark:text-violet-200" school={school} />
         <div className="min-w-0">
           <h3 className="truncate text-sm font-bold text-zinc-900 dark:text-white">{school.name}</h3>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{school.region}</p>
+          <p className="mt-1 truncate text-xs font-semibold text-violet-700 dark:text-violet-200">{getSchoolChineseName(school)}</p>
+          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">{school.region}</p>
         </div>
       </div>
       <p className="mt-4 h-9 text-xs leading-5 text-zinc-500 dark:text-zinc-400">已接入官方 / 政府公开数据，可查看学费、录取率与成绩区间。</p>
@@ -836,7 +844,12 @@ export default function DashboardShell() {
 
     return storedSavedTargets.map((targetSchool) => {
       const updatedSchool = algorithmSchoolsById.get(targetSchool.id);
-      if (!updatedSchool) return targetSchool;
+      const directorySchool = targetSchool.id.startsWith("directory-")
+        ? schoolDirectory.find((school) => `directory-${school.ipedsUnitId}` === targetSchool.id)
+        : findDirectorySchoolByName(schoolDirectory, targetSchool.name);
+      if (!updatedSchool) {
+        return { ...targetSchool, officialWebsite: directorySchool?.officialWebsite ?? targetSchool.officialWebsite };
+      }
 
       return {
         ...targetSchool,
@@ -844,13 +857,14 @@ export default function DashboardShell() {
         lastAlgorithmStatus: updatedSchool.status,
         name: updatedSchool.name,
         notes: updatedSchool.notes,
+        officialWebsite: directorySchool?.officialWebsite ?? targetSchool.officialWebsite,
         program: updatedSchool.program,
         region: updatedSchool.region,
         shortName: updatedSchool.shortName,
         status: targetSchool.userOverrideStatus ? targetSchool.status : updatedSchool.status,
       };
     });
-  }, [allSchools, storedSavedTargets]);
+  }, [allSchools, schoolDirectory, storedSavedTargets]);
   const savedSchoolIds = useMemo(
     () => new Set(targetSchools.map((school) => school.id)),
     [targetSchools],

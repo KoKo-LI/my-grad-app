@@ -9,6 +9,8 @@ import {
   Sparkle,
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
+import SchoolLogo from "@/components/SchoolLogo";
+import { getInstitutionIdFromTargetId, getSchoolChineseName } from "@/data/schoolIdentity";
 import type {
   ApplicationTimelineMilestone,
   ApplicationTimelineStage,
@@ -90,10 +92,14 @@ export default function ApplicationTimeline({ schools }: ApplicationTimelineProp
               return (
                 <article className="grid grid-cols-[142px_minmax(0,1fr)] items-center gap-5 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/50 hover:shadow-[0_10px_25px_-5px_rgba(124,58,237,0.12)] dark:border-white/10 dark:bg-zinc-950/35 dark:shadow-none dark:backdrop-blur-none dark:hover:border-violet-500/40 dark:hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]" key={school.id}>
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold text-white dark:bg-zinc-800">{school.shortName}</span>
+                    <SchoolLogo
+                      className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold text-white dark:bg-zinc-800"
+                      school={{ ipedsUnitId: getInstitutionIdFromTargetId(school.id), name: school.name, officialWebsite: school.officialWebsite, shortName: school.shortName }}
+                    />
                     <div className="min-w-0">
                       <h3 className="truncate text-sm font-extrabold text-zinc-900 dark:text-white">{school.name}</h3>
-                      <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">{school.status}</p>
+                      <p className="mt-1 truncate text-xs font-semibold text-violet-700 dark:text-violet-200">{getSchoolChineseName({ ipedsUnitId: getInstitutionIdFromTargetId(school.id), name: school.name })}</p>
+                      <p className="mt-0.5 truncate text-xs text-zinc-500 dark:text-zinc-400">{school.status}</p>
                     </div>
                   </div>
                   <div className="relative grid grid-cols-4 gap-2">

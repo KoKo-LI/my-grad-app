@@ -13,6 +13,8 @@ import {
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import SchoolLogo from "@/components/SchoolLogo";
+import { getSchoolChineseName } from "@/data/schoolIdentity";
 import { parseSchoolDetailResponse } from "@/lib/undergraduateDirectory";
 import type { InstitutionMetric, InstitutionRankingKey, SchoolAdmissionRequirement, SchoolAdmissionStatistic, SchoolDetail, StudentProfile } from "@/types";
 
@@ -336,10 +338,11 @@ function SchoolDetailContent({ detail, profile }: { detail: SchoolDetail; profil
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-3">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-sm font-black text-white shadow-lg shadow-zinc-950/15 dark:bg-white dark:text-zinc-950">{detail.shortName.slice(0, 4)}</span>
+              <SchoolLogo className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-sm font-black text-white shadow-lg shadow-zinc-950/15 dark:bg-white dark:text-zinc-950" school={detail} />
               <div className="min-w-0">
                 <p className="text-xs font-bold tracking-[0.16em] text-violet-600 dark:text-violet-300">VERIFIED SCHOOL PROFILE</p>
                 <h1 className="mt-1 truncate text-2xl font-black tracking-[-0.04em] text-zinc-950 dark:text-white sm:text-3xl">{detail.name}</h1>
+                <p className="mt-1 truncate text-sm font-bold text-violet-700 dark:text-violet-200">{getSchoolChineseName(detail)}</p>
               </div>
             </div>
             <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{detail.region} · {/^\d+$/.test(detail.ipedsUnitId) ? `IPEDS ${detail.ipedsUnitId}` : `院校 ID ${detail.ipedsUnitId}`}{sourcePeriods.length > 0 ? ` · 数据期：${sourcePeriods.join(" / ")}` : ""}</p>

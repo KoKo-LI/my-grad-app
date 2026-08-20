@@ -16,7 +16,9 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import ProfileDrawer from "@/components/ProfileDrawer";
 import SchoolDetailModal from "@/components/SchoolDetailModal";
+import SchoolLogo from "@/components/SchoolLogo";
 import Sidebar from "@/components/Sidebar";
+import { getSchoolChineseName } from "@/data/schoolIdentity";
 import { parseSchoolDirectoryResponse } from "@/lib/undergraduateDirectory";
 import type { InstitutionMetric, InstitutionRanking, InstitutionRankingKey, SchoolDirectoryItem, SchoolDirectoryProgramFilter, SchoolItem } from "@/types";
 import { buildDirectorySchoolTiers } from "@/utils/directoryTierEngine";
@@ -190,15 +192,14 @@ function CatalogSchoolCard({
       whileTap={{ scale: 0.98 }}
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-zinc-100 text-xs font-extrabold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-          {school.shortName.slice(0, 4)}
-        </span>
+        <SchoolLogo className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-zinc-100 text-xs font-extrabold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" school={school} />
         <span className="min-w-0 flex-1">
           <span className="flex items-start justify-between gap-2">
             <span className="truncate text-base font-extrabold tracking-tight text-zinc-950 dark:text-white">{school.name}</span>
             <ArrowSquareOut aria-hidden="true" className="mt-0.5 shrink-0 text-violet-500 opacity-0 transition-opacity group-hover:opacity-100" size={17} weight="bold" />
           </span>
-          <span className="mt-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">{school.region}</span>
+          <span className="mt-1 block truncate text-xs font-semibold text-violet-700 dark:text-violet-200">{getSchoolChineseName(school)}</span>
+          <span className="mt-0.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">{school.region}</span>
         </span>
       </div>
       {rankings.length > 0 && (
@@ -309,7 +310,7 @@ export default function SchoolCatalogPage() {
   const visibleSchools = useMemo(
     () =>
       scopedSchools.filter((school) => {
-        const matchesQuery = !normalizedQuery || `${school.name} ${school.shortName} ${school.region} ${school.country}`.toLocaleLowerCase().includes(normalizedQuery);
+        const matchesQuery = !normalizedQuery || `${school.name} ${getSchoolChineseName(school)} ${school.shortName} ${school.region} ${school.country}`.toLocaleLowerCase().includes(normalizedQuery);
         const matchesRegion = selectedRegions.length === 0 || selectedRegions.includes(school.region);
         const schoolMajors = majorCategoriesBySchool.get(school.ipedsUnitId) ?? [];
         const matchesMajor = selectedMajors.length === 0 || selectedMajors.some((major) => schoolMajors.includes(major));

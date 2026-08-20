@@ -703,6 +703,17 @@ function isIsoDateTime(value: unknown): value is string {
   return typeof value === "string" && Number.isFinite(Date.parse(value));
 }
 
+function normalizePublicWebsite(value: unknown) {
+  if (typeof value !== "string") return undefined;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function normalizeSavedTargetSchool(value: unknown): SavedTargetSchool | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
 
@@ -727,6 +738,7 @@ function normalizeSavedTargetSchool(value: unknown): SavedTargetSchool | null {
     lastAlgorithmStatus,
     name,
     notes: typeof school.notes === "string" ? sanitizePlainText(school.notes, 500) : "",
+    officialWebsite: normalizePublicWebsite(school.officialWebsite),
     program,
     region,
     shortName,
