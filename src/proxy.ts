@@ -11,7 +11,7 @@ export function proxy(request: NextRequest) {
   const contentSecurityPolicy = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ""}`,
-    `style-src 'self' 'nonce-${nonce}'`,
+    `style-src 'self' 'nonce-${nonce}'${isDevelopment ? " 'unsafe-inline'" : ""}`,
     "img-src 'self' blob: data: https:",
     "font-src 'self' data:",
     `connect-src 'self' https://*.supabase.co${isDevelopment ? " ws: wss:" : ""}`,
