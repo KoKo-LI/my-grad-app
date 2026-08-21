@@ -100,7 +100,11 @@ with source_seed (
     ('official_institution', 'University of Bristol — Undergraduate study', 'https://www.bristol.ac.uk/study/undergraduate/', '2026/27', 'Degree pages define academic entry requirements and language profile.'),
     ('official_institution', 'LSE — Undergraduate entry requirements', 'https://www.lse.ac.uk/study-at-lse/Undergraduate/Prospective-Students/How-to-Apply/entry-requirements', '2026 entry', 'Institutional undergraduate academic ranges; each programme states its exact offer.'),
     ('official_institution', 'LSE — Undergraduate English language requirements', 'https://www.lse.ac.uk/study-at-lse/Undergraduate/Prospective-Students/How-to-Apply/English-language-requirements', '2026 entry', 'Institutional undergraduate English-language requirements.'),
-    ('official_institution', 'University of Warwick — Undergraduate entry requirements', 'https://warwick.ac.uk/study/undergraduate/apply/entry-requirements/', '2026/27', 'Institutional and course-level undergraduate entry requirements.')
+    ('official_institution', 'University of Warwick — Undergraduate entry requirements', 'https://warwick.ac.uk/study/undergraduate/apply/entry-requirements/', '2026/27', 'Institutional and course-level undergraduate entry requirements.'),
+    ('official_program', 'University of Edinburgh — Computer Science and Mathematics BSc entry requirements', 'https://study.ed.ac.uk/programmes/undergraduate/2026/64-computer-science-and-mathematics/entry-requirements', '2026 entry', 'Published undergraduate programme-level academic and English-language requirements; retained as a programme example, not an institution-wide cutoff.'),
+    ('official_program', 'University of Manchester — BSc Computer Science entry requirements', 'https://www.manchester.ac.uk/study/undergraduate/courses/2026/00560/bsc-computer-science/', '2026 entry', 'Published 2026 Computer Science BSc academic offer and English-language requirements; not a universal institutional cutoff.'),
+    ('official_program', 'University of Bristol — BSc Computer Science entry requirements', 'https://www.bristol.ac.uk/study/undergraduate/2026/computer-science/bsc-computer-science/', '2026 entry', 'Published 2026 Computer Science BSc academic offer and English-language profile; not a universal institutional cutoff.'),
+    ('official_institution', 'University of Warwick — Undergraduate English language requirements', 'https://warwick.ac.uk/study/undergraduate/applying/english-language-requirements/', '2026/27', 'Official Band A, B and C English-language matrix. Course pages determine the applicable band.')
 )
 insert into public.data_sources (
   source_kind,
@@ -262,6 +266,10 @@ with requirement_seed (
     ('HK-CUHK', 'sat_ebrw', 'minimum', 'international', 590, null, 800, 'Digital SAT', '院校级英语要求', 'Evidence-Based Reading and Writing。', 'https://admission.cuhk.edu.hk/application/overseas-other-qualifications-non-local-international-team/requirements/', '2026 entry', 'hk-cuhk-sat-ebrw'),
     ('HK-CUHK', 'act_ela', 'minimum', 'international', 23, null, 36, 'ACT ELA', '院校级英语要求', 'ACT English Language Arts。', 'https://admission.cuhk.edu.hk/application/overseas-other-qualifications-non-local-international-team/requirements/', '2026 entry', 'hk-cuhk-act-ela'),
     ('HK-CUHK', 'ib_subject', 'minimum', 'international', 4, null, 7, 'IB English', '院校级英语要求', 'IB English Language 科目成绩。', 'https://admission.cuhk.edu.hk/application/overseas-other-qualifications-non-local-international-team/requirements/', '2026 entry', 'hk-cuhk-ib-english'),
+    ('HK-CUHK', 'ib_total', 'minimum', 'international', 30, null, 45, 'IB Diploma', '国际本科通用学术最低要求', 'IB Diploma 总分最低 30/45；课程科目偏好与竞争性要求另行适用。', 'https://admission.cuhk.edu.hk/application/overseas-other-qualifications-non-local-international-team/requirements/', '2026 entry', 'hk-cuhk-ib-total'),
+    ('HK-CUHK', 'sat_total', 'minimum', 'international', 1190, null, 1600, 'Digital SAT', '美式课程通用学术最低要求', 'SAT 总分最低 1190；须配合至少两门 AP 各 3 分。', 'https://admission.cuhk.edu.hk/application/overseas-other-qualifications-non-local-international-team/requirements/', '2026 entry', 'hk-cuhk-sat-total'),
+    ('HK-CUHK', 'act_composite', 'minimum', 'international', 24, null, 36, 'ACT', '美式课程通用学术最低要求', 'ACT Composite 最低 24；须配合至少两门 AP 各 3 分。', 'https://admission.cuhk.edu.hk/application/overseas-other-qualifications-non-local-international-team/requirements/', '2026 entry', 'hk-cuhk-act-composite'),
+    ('HK-CUHK', 'ap_subject', 'minimum', 'international', 3, null, 5, 'AP', '美式课程通用学术最低要求', '至少两门 AP，每门最低 3 分。', 'https://admission.cuhk.edu.hk/application/overseas-other-qualifications-non-local-international-team/requirements/', '2026 entry', 'hk-cuhk-ap-subject'),
 
     ('HK-HKUST', 'transcript', 'required', 'international', null, null, null, null, null, '提交国际课程或其他获认可学历文件；学校和课程可能另设科目要求。', 'https://join.hkust.edu.hk/admissions/international-qualifications', '2026 entry', 'hk-hkust-transcript'),
     ('HK-HKUST', 'sat_total', 'minimum', 'international', 1190, null, 1600, 'SAT', '国际学历直申路径', '该路径还要求至少两门 AP，每门达到官方所列分数；或使用其他认可学历路径。', 'https://join.hkust.edu.hk/admissions/international-qualifications', '2026 entry', 'hk-hkust-sat'),
@@ -316,6 +324,8 @@ with requirement_seed (
 
     ('GB-EDINBURGH', 'transcript', 'required', 'international', null, null, null, null, null, '学术与英语要求按学位列示；使用 Degree Finder 核对对应课程。', 'https://www.ed.ac.uk/studying/undergraduate/applying/requirements/english-language', '2026/27', 'gb-edinburgh-transcript'),
     ('GB-EDINBURGH', 'english_proficiency', 'required', 'international', null, null, null, null, '课程分档英语要求', '英语最低要求由具体学位的 entry requirements 决定；不以推测分数补齐。', 'https://www.ed.ac.uk/studying/undergraduate/applying/requirements/english-language', '2026/27', 'gb-edinburgh-english'),
+    ('GB-EDINBURGH', 'ielts_academic_overall', 'minimum', 'international', 6.5, null, 9, 'IELTS Academic', 'Computer Science and Mathematics BSc（2026）', '该课程公开线为总分 6.5、各单项最低 5.5；仅作项目级参考。', 'https://study.ed.ac.uk/programmes/undergraduate/2026/64-computer-science-and-mathematics/entry-requirements', '2026 entry', 'gb-edinburgh-cs-ielts'),
+    ('GB-EDINBURGH', 'toefl_ibt_total', 'minimum', 'international', 92, null, 120, 'TOEFL iBT（旧量表）', 'Computer Science and Mathematics BSc（2026）', '该课程公开线为总分 92、各单项最低 20；仅作项目级参考。', 'https://study.ed.ac.uk/programmes/undergraduate/2026/64-computer-science-and-mathematics/entry-requirements', '2026 entry', 'gb-edinburgh-cs-toefl'),
 
     ('GB-KCL', 'transcript', 'required', 'international', null, null, null, null, null, '提交相应国际学历和成绩；课程页列出学术与英语 Band。', 'https://www.kcl.ac.uk/study/undergraduate', '2026/27', 'gb-kcl-transcript'),
     ('GB-KCL', 'ielts_academic_overall', 'minimum', 'international', 6.5, null, 9, 'IELTS Academic Band C', '院校级英语要求', 'Band C：总分 6.5、各单项 6.0；Band A/B 课程更高。', 'https://www.kcl.ac.uk/study/undergraduate/how-to-apply/english-language-requirements', '2026/27', 'gb-kcl-ielts'),
@@ -323,9 +333,14 @@ with requirement_seed (
 
     ('GB-MANCHESTER', 'transcript', 'required', 'international', null, null, null, null, null, '不同课程和学历体系的学术、英语条件均在课程页面披露。', 'https://www.manchester.ac.uk/study/undergraduate/applications/entry-requirements/', '2026/27', 'gb-manchester-transcript'),
     ('GB-MANCHESTER', 'english_proficiency', 'required', 'international', null, null, null, null, '课程级英语要求', '请按课程页面确认英语语言等级；不同学位不应合并为一个统一分数。', 'https://www.manchester.ac.uk/study/undergraduate/applications/entry-requirements/', '2026/27', 'gb-manchester-english'),
+    ('GB-MANCHESTER', 'ielts_academic_overall', 'minimum', 'international', 7, null, 9, 'IELTS Academic', 'BSc Computer Science（2026）', '该课程公开线为总分 7.0、各单项最低 6.5；仅作项目级参考。', 'https://www.manchester.ac.uk/study/undergraduate/courses/2026/00560/bsc-computer-science/', '2026 entry', 'gb-manchester-cs-ielts'),
+    ('GB-MANCHESTER', 'toefl_ibt_total', 'minimum', 'international', 100, null, 120, 'TOEFL iBT（旧量表）', 'BSc Computer Science（2026）', '该课程公开线为总分 100、各单项最低 22；仅作项目级参考。', 'https://www.manchester.ac.uk/study/undergraduate/courses/2026/00560/bsc-computer-science/', '2026 entry', 'gb-manchester-cs-toefl'),
+    ('GB-MANCHESTER', 'ib_total', 'recommended', 'international', 38, null, 45, 'IB Diploma', 'BSc Computer Science（2026）典型 offer', '该课程典型 offer 为总分 38，三门 HL 为 7、7、6；不是所有课程统一分数。', 'https://www.manchester.ac.uk/study/undergraduate/courses/2026/00560/bsc-computer-science/', '2026 entry', 'gb-manchester-cs-ib-total'),
 
     ('GB-BRISTOL', 'transcript', 'required', 'international', null, null, null, null, null, '提交相应国际学历和成绩；学术及语言 Profile 由课程页面确定。', 'https://www.bristol.ac.uk/study/undergraduate/', '2026/27', 'gb-bristol-transcript'),
     ('GB-BRISTOL', 'english_proficiency', 'required', 'international', null, null, null, null, '课程 Profile 英语要求', '各课程对应不同英语 Profile；仅显示官网已明确的项目分数，避免错误统一化。', 'https://www.bristol.ac.uk/study/language-requirements/', '2026/27', 'gb-bristol-english'),
+    ('GB-BRISTOL', 'ielts_academic_overall', 'minimum', 'international', 6.5, null, 9, 'IELTS Academic Profile E', 'BSc Computer Science（2026）', '该课程使用 Profile E：总分 6.5、各单项最低 6.0；仅作项目级参考。', 'https://www.bristol.ac.uk/study/undergraduate/2026/computer-science/bsc-computer-science/', '2026 entry', 'gb-bristol-cs-ielts'),
+    ('GB-BRISTOL', 'ib_total', 'recommended', 'international', 38, null, 45, 'IB Diploma', 'BSc Computer Science（2026）典型 offer', '该课程典型 offer 为总分 38、三门 HL 合计 18，HL 数学为 7；不是所有课程统一分数。', 'https://www.bristol.ac.uk/study/undergraduate/2026/computer-science/bsc-computer-science/', '2026 entry', 'gb-bristol-cs-ib-total'),
 
     ('GB-LSE', 'transcript', 'required', 'international', null, null, null, null, null, '提交国际学历和课程要求的学术科目；LSE 按课程评估。', 'https://www.lse.ac.uk/study-at-lse/Undergraduate/Prospective-Students/How-to-Apply/entry-requirements', '2026 entry', 'gb-lse-transcript'),
     ('GB-LSE', 'ib_total', 'minimum', 'international', 37, null, 45, 'IB Diploma', '本科课程公开学术区间', '本科课程公开区间为 37–39，总计三门 HL 通常为 666–766；以具体学位为准。', 'https://www.lse.ac.uk/study-at-lse/Undergraduate/Prospective-Students/How-to-Apply/entry-requirements', '2026 entry', 'gb-lse-ib'),
@@ -333,7 +348,9 @@ with requirement_seed (
     ('GB-LSE', 'toefl_ibt_total', 'minimum', 'international', 100, null, 120, 'TOEFL iBT（旧量表）', '院校级英语要求', '官网列出各单项要求及 2026 年新版量表。', 'https://www.lse.ac.uk/study-at-lse/Undergraduate/Prospective-Students/How-to-Apply/English-language-requirements', '2026 entry', 'gb-lse-toefl'),
 
     ('GB-WARWICK', 'transcript', 'required', 'international', null, null, null, null, null, '课程页面披露国际学历、学术成绩和英语条件。', 'https://warwick.ac.uk/study/undergraduate/apply/entry-requirements/', '2026/27', 'gb-warwick-transcript'),
-    ('GB-WARWICK', 'english_proficiency', 'required', 'international', null, null, null, null, '课程级英语要求', '课程可采用不同语言等级；请在最终申请前查看所选课程当年页面。', 'https://warwick.ac.uk/study/undergraduate/apply/entry-requirements/', '2026/27', 'gb-warwick-english')
+    ('GB-WARWICK', 'english_proficiency', 'required', 'international', null, null, null, null, '课程级英语要求', '课程可采用不同语言等级；请在最终申请前查看所选课程当年页面。', 'https://warwick.ac.uk/study/undergraduate/apply/entry-requirements/', '2026/27', 'gb-warwick-english'),
+    ('GB-WARWICK', 'ielts_academic_overall', 'minimum', 'international', 6, null, 9, 'IELTS Academic Band A', 'Band A 英语要求', 'Band A 为总分 6.0、各单项最低 5.5；适用等级由课程页确定。', 'https://warwick.ac.uk/study/undergraduate/applying/english-language-requirements/', '2026/27', 'gb-warwick-band-a-ielts'),
+    ('GB-WARWICK', 'toefl_ibt_total', 'minimum', 'international', 87, null, 120, 'TOEFL iBT Band A（旧量表）', 'Band A 英语要求', 'Band A 旧量表总分 87；适用等级由课程页确定。', 'https://warwick.ac.uk/study/undergraduate/applying/english-language-requirements/', '2026/27', 'gb-warwick-band-a-toefl')
 )
 insert into public.admission_requirements (
   program_id,

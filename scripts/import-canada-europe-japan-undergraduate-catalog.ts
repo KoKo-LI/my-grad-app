@@ -184,27 +184,59 @@ const europe: InstitutionSeed[] = [
     ],
   },
   {
-    id: "NL-UTRECHT", name: "Utrecht University", shortName: "Utrecht", country: "荷兰", region: "欧洲", officialWebsite: "https://www.uu.nl/", qsAliases: ["Utrecht University"], admissionUrl: "https://www.uu.nl/en/bachelors/general-information/application-and-admission",
+    id: "NL-UTRECHT", name: "Utrecht University", shortName: "Utrecht", country: "荷兰", region: "欧洲", officialWebsite: "https://www.uu.nl/", qsAliases: ["Utrecht University"], admissionUrl: "https://www.uu.nl/en/bachelors/general-information/how-to-apply/english-language-requirements/emi-ready",
     scoreRequirements: [
-      { metric: "ielts_academic_overall", minimumScore: 6.5, scoreScale: 9, testVersion: "IELTS Academic", valueText: "英语授课本科的常见语言门槛；项目可能不同。" },
-      { metric: "toefl_ibt_total", minimumScore: 100, scoreScale: 120, testVersion: "TOEFL iBT", valueText: "英语授课本科的常见语言门槛；项目可能不同。" },
+      { metric: "ielts_academic_overall", minimumScore: 6, scoreScale: 9, testVersion: "IELTS Academic", subjectArea: "EMI-ready 英语授课本科", valueText: "该类别公开线为总分 6.0；所选学位如另有要求，以项目页为准。" },
+      { metric: "toefl_ibt_total", minimumScore: 83, scoreScale: 120, testVersion: "TOEFL iBT", subjectArea: "EMI-ready 英语授课本科", valueText: "该类别公开线为总分 83（旧量表）；所选学位如另有要求，以项目页为准。" },
     ],
   },
   { id: "NL-TUE", name: "Eindhoven University of Technology", shortName: "TU/e", country: "荷兰", region: "欧洲", officialWebsite: "https://www.tue.nl/", qsAliases: ["Eindhoven University of Technology"], admissionUrl: "https://www.tue.nl/en/education/become-a-student/admission-and-enrollment" },
-  { id: "BE-KULEUVEN", name: "KU Leuven", shortName: "KU Leuven", country: "比利时", region: "欧洲", officialWebsite: "https://www.kuleuven.be/", qsAliases: ["KU Leuven"], admissionUrl: "https://www.kuleuven.be/english/education/apply" },
+  {
+    id: "BE-KULEUVEN", name: "KU Leuven", shortName: "KU Leuven", country: "比利时", region: "欧洲", officialWebsite: "https://www.kuleuven.be/", qsAliases: ["KU Leuven"], admissionUrl: "https://www.kuleuven.be/english/stuvo/aanvraag-indienen/taalvoorwaarden/certificaten-engelse-taalvaardigheid",
+    scoreRequirements: [
+      { metric: "ielts_academic_overall", minimumScore: 6.5, scoreScale: 9, testVersion: "IELTS Academic", subjectArea: "英语授课项目通用下限", valueText: "官网公开的通用下限为总分 6.5；具体项目可要求更高。" },
+      { metric: "toefl_ibt_total", minimumScore: 79, scoreScale: 120, testVersion: "TOEFL iBT", subjectArea: "英语授课项目通用下限", valueText: "官网公开的通用下限为总分 79；具体项目可要求更高。" },
+    ],
+  },
   { id: "FR-PSL", name: "Université PSL", shortName: "PSL", country: "法国", region: "欧洲", officialWebsite: "https://psl.eu/", qsAliases: ["Université PSL", "Universite PSL"], admissionUrl: "https://psl.eu/en/education/admissions-and-applications" },
   { id: "FR-IPPARIS", name: "Institut Polytechnique de Paris", shortName: "IP Paris", country: "法国", region: "欧洲", officialWebsite: "https://www.ip-paris.fr/", qsAliases: ["Institut Polytechnique de Paris"], admissionUrl: "https://www.ip-paris.fr/en/education/bachelors-programs" },
   { id: "FR-SORBONNE", name: "Sorbonne University", shortName: "Sorbonne", country: "法国", region: "欧洲", officialWebsite: "https://www.sorbonne-universite.fr/", qsAliases: ["Sorbonne University"], admissionUrl: "https://sciences.sorbonne-universite.fr/en/studies/bachelors" },
   { id: "FR-PARISSACLAY", name: "Université Paris-Saclay", shortName: "Paris-Saclay", country: "法国", region: "欧洲", officialWebsite: "https://www.universite-paris-saclay.fr/", qsAliases: ["Université Paris-Saclay", "Universite Paris-Saclay"], admissionUrl: "https://www.universite-paris-saclay.fr/en/education/bachelor" },
-  { id: "IT-POLIMI", name: "Politecnico di Milano", shortName: "PoliMi", country: "意大利", region: "欧洲", officialWebsite: "https://www.polimi.it/", qsAliases: ["Politecnico di Milano"], admissionUrl: "https://www.polimi.it/en/prospective-students/how-to-apply/bachelors-programmes" },
+  {
+    id: "IT-POLIMI", name: "Politecnico di Milano", shortName: "PoliMi", country: "意大利", region: "欧洲", officialWebsite: "https://www.polimi.it/", qsAliases: ["Politecnico di Milano"], admissionUrl: "https://www.polimi.it/studenti/requisiti-linguistici/studenti-dei-corsi-di-laurea-triennale-in-inglese",
+    scoreRequirements: [
+      { metric: "ielts_academic_overall", minimumScore: 5, scoreScale: 9, testVersion: "IELTS Academic", subjectArea: "英语授课工程与设计本科（2026/27）", valueText: "官网列出的英语授课三年制本科语言下限为总分 5.0；仅适用于对应英语授课项目。" },
+      { metric: "toefl_ibt_total", minimumScore: 59, scoreScale: 120, testVersion: "TOEFL iBT", subjectArea: "英语授课工程与设计本科（2026/27）", valueText: "官网列出的英语授课三年制本科语言下限为总分 59；仅适用于对应英语授课项目。" },
+    ],
+  },
   { id: "IT-BOLOGNA", name: "University of Bologna", shortName: "Bologna", country: "意大利", region: "欧洲", officialWebsite: "https://www.unibo.it/", qsAliases: ["University of Bologna", "Alma Mater Studiorum - Università di Bologna"], admissionUrl: "https://www.unibo.it/en/study/enrolment-fees-and-other-procedures/international-students" },
-  { id: "IT-BOCCONI", name: "Bocconi University", shortName: "Bocconi", country: "意大利", region: "欧洲", officialWebsite: "https://www.unibocconi.it/", qsAliases: ["Bocconi University"], admissionUrl: "https://www.unibocconi.it/en/applying-bocconi/bachelor-programs" },
+  {
+    id: "IT-BOCCONI", name: "Bocconi University", shortName: "Bocconi", country: "意大利", region: "欧洲", officialWebsite: "https://www.unibocconi.it/", qsAliases: ["Bocconi University"], admissionUrl: "https://www.unibocconi.it/en/applying-bocconi/bachelor-and-law-programs/application-and-admissions/english-certificates-accepted-enrollment",
+    scoreRequirements: [
+      { metric: "ielts_academic_overall", minimumScore: 6.5, scoreScale: 9, testVersion: "IELTS Academic", subjectArea: "英语授课本科 B2 入学要求", valueText: "英语授课本科的 B2 证明路径：总分 6.5，且每个单项不低于 6.0。" },
+      { metric: "toefl_ibt_total", minimumScore: 88, scoreScale: 120, testVersion: "TOEFL iBT", subjectArea: "英语授课本科 B2 入学要求", valueText: "英语授课本科的 B2 证明路径：TOEFL iBT 总分最低 88。" },
+    ],
+  },
   { id: "ES-BARCELONA", name: "University of Barcelona", shortName: "UB", country: "西班牙", region: "欧洲", officialWebsite: "https://www.ub.edu/", qsAliases: ["University of Barcelona"], admissionUrl: "https://www.ub.edu/web/ub/en/estudis/estudiar_UB/estudiar_UB.html" },
   { id: "SE-KTH", name: "KTH Royal Institute of Technology", shortName: "KTH", country: "瑞典", region: "欧洲", officialWebsite: "https://www.kth.se/", qsAliases: ["KTH Royal Institute of Technology"], admissionUrl: "https://www.kth.se/en/studies/bachelor" },
   { id: "SE-LUND", name: "Lund University", shortName: "Lund", country: "瑞典", region: "欧洲", officialWebsite: "https://www.lunduniversity.lu.se/", qsAliases: ["Lund University"], admissionUrl: "https://www.lunduniversity.lu.se/admissions/bachelors-and-masters-studies" },
   { id: "DK-COPENHAGEN", name: "University of Copenhagen", shortName: "UCPH", country: "丹麦", region: "欧洲", officialWebsite: "https://www.ku.dk/", qsAliases: ["University of Copenhagen"], admissionUrl: "https://studies.ku.dk/bachelor/" },
-  { id: "IE-TRINITY", name: "Trinity College Dublin", shortName: "Trinity", country: "爱尔兰", region: "欧洲", officialWebsite: "https://www.tcd.ie/", qsAliases: ["Trinity College Dublin"], admissionUrl: "https://www.tcd.ie/study/apply/admission-requirements/undergraduate/" },
-  { id: "IE-UCD", name: "University College Dublin", shortName: "UCD", country: "爱尔兰", region: "欧洲", officialWebsite: "https://www.ucd.ie/", qsAliases: ["University College Dublin"], admissionUrl: "https://www.ucd.ie/global/study-at-ucd/how-to-apply/undergraduate/" },
+  {
+    id: "IE-TRINITY", name: "Trinity College Dublin", shortName: "Trinity", country: "爱尔兰", region: "欧洲", officialWebsite: "https://www.tcd.ie/", qsAliases: ["Trinity College Dublin"], admissionUrl: "https://www.tcd.ie/study/english-language-requirements/",
+    scoreRequirements: [
+      { metric: "ielts_academic_overall", minimumScore: 6.5, scoreScale: 9, testVersion: "IELTS Academic Band B", subjectArea: "多数本科课程适用的 Band B", valueText: "Band B 适用于多数本科课程；总分 6.5，具体课程可另有条件。" },
+      { metric: "toefl_ibt_total", minimumScore: 90, scoreScale: 120, testVersion: "TOEFL iBT Band B", subjectArea: "多数本科课程适用的 Band B", valueText: "Band B 的 TOEFL iBT 公开线为总分 90；具体课程可另有条件。" },
+      { metric: "duolingo_english_test", minimumScore: 120, scoreScale: 160, testVersion: "Duolingo English Test Band B", subjectArea: "多数本科课程适用的 Band B", valueText: "Band B 的 DET 公开线为总分 120；具体课程可另有条件。" },
+    ],
+  },
+  {
+    id: "IE-UCD", name: "University College Dublin", shortName: "UCD", country: "爱尔兰", region: "欧洲", officialWebsite: "https://www.ucd.ie/", qsAliases: ["University College Dublin"], admissionUrl: "https://www.ucd.ie/registry/t4media/ELR%20for%20higher%20requirements.pdf",
+    scoreRequirements: [
+      { metric: "ielts_academic_overall", minimumScore: 6.5, scoreScale: 9, testVersion: "IELTS Academic Standard Level 4", subjectArea: "Standard Level 4 英语要求", valueText: "Standard Level 4 总分 6.5、各单项最低 6.0；高要求课程可能适用更高等级。" },
+      { metric: "toefl_ibt_total", minimumScore: 90, scoreScale: 120, testVersion: "TOEFL iBT Standard Level 4", subjectArea: "Standard Level 4 英语要求", valueText: "Standard Level 4 的 TOEFL iBT 公开线为总分 90；高要求课程可能适用更高等级。" },
+      { metric: "duolingo_english_test", minimumScore: 120, scoreScale: 160, testVersion: "Duolingo English Test Standard Level 4", subjectArea: "Standard Level 4 英语要求", valueText: "Standard Level 4 的 DET 公开线为总分 120、各单项最低 110；高要求课程可能适用更高等级。" },
+    ],
+  },
 ];
 
 const japan: InstitutionSeed[] = [
