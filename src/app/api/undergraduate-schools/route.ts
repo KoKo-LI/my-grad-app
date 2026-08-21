@@ -9,6 +9,24 @@ type MetricQueryResult =
   | { data: unknown[]; error: null }
   | { data: []; error: string };
 
+type ProgramReference = {
+  id: string;
+  institutionId: string;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseProgramReferences(value: unknown): ProgramReference[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((program) => {
+    if (!isRecord(program) || typeof program.id !== "string" || typeof program.institution_id !== "string") return [];
+    return [{ id: program.id, institutionId: program.institution_id }];
+  });
+}
+
 /**
  * Supabase caps a single REST response at 1,000 rows in this project. The
  * complete 101-school catalog now exceeds that size, so fetch every stable
@@ -34,6 +52,39 @@ async function fetchAllPublishedMetrics(
     if (!Array.isArray(data)) return { data: [], error: "Institution metrics did not return an array." };
 
     rows.push(...(data as unknown[]));
+    if (data.length < metricPageSize) return { data: rows, error: null };
+  }
+}
+
+async function fetchAllPublishedRequirements(
+  programs: ProgramReference[],
+): Promise<MetricQueryResult> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return { data: [], error: "Catalog is not configured." };
+  if (programs.length === 0) return { data: [], error: null };
+
+  const programIds = programs.map((program) => program.id);
+  const institutionByProgramId = new Map(programs.map((program) => [program.id, program.institutionId]));
+  const rows: unknown[] = [];
+
+  for (let start = 0; ; start += metricPageSize) {
+    const { data, error } = await supabase
+      .from("admission_requirements")
+      .select("id, program_id, metric, requirement_kind, applicant_scope, application_path, minimum_score, maximum_score, score_scale, test_version, subject_area, satisfaction_group, satisfaction_rule, value_text, data_sources(title, source_url)")
+      .in("program_id", programIds)
+      .eq("is_published", true)
+      .order("id")
+      .range(start, start + metricPageSize - 1);
+
+    if (error) return { data: [], error: error.message };
+    if (!Array.isArray(data)) return { data: [], error: "Admission requirements did not return an array." };
+
+    data.forEach((requirement) => {
+      if (!isRecord(requirement) || typeof requirement.program_id !== "string") return;
+      const institutionId = institutionByProgramId.get(requirement.program_id);
+      if (institutionId) rows.push({ ...requirement, institution_id: institutionId });
+    });
+
     if (data.length < metricPageSize) return { data: rows, error: null };
   }
 }
@@ -65,8 +116,22 @@ export async function GET() {
     return Response.json({ data: [], source: "supabase" }, { headers: { "Cache-Control": "no-store" } });
   }
 
-  const [metricsResponse, { data: rankings, error: rankingError }] = await Promise.all([
+  const { data: programs, error: programError } = await supabase
+    .from("undergraduate_programs")
+    .select("id, institution_id")
+    .in("institution_id", institutionIds)
+    .eq("is_published", true)
+    .limit(1000);
+
+  if (programError || !programs) {
+    return Response.json({ data: [], source: "unavailable" }, { headers: { "Cache-Control": "no-store" }, status: 503 });
+  }
+
+  const programReferences = parseProgramReferences(programs);
+
+  const [metricsResponse, requirementsResponse, { data: rankings, error: rankingError }] = await Promise.all([
     fetchAllPublishedMetrics(institutionIds),
+    fetchAllPublishedRequirements(programReferences),
     supabase
       .from("institution_rankings")
       .select("institution_id, ranking_key, edition, rank_value, rank_display, data_sources(title, source_url)")
@@ -74,13 +139,13 @@ export async function GET() {
       .eq("is_published", true),
   ]);
 
-  if (metricsResponse.error) {
+  if (metricsResponse.error || requirementsResponse.error) {
     return Response.json({ data: [], source: "unavailable" }, { headers: { "Cache-Control": "no-store" }, status: 503 });
   }
 
   return Response.json(
     {
-      data: buildSchoolDirectory(institutions as unknown, metricsResponse.data, rankingError ? [] : rankings ?? []),
+      data: buildSchoolDirectory(institutions as unknown, metricsResponse.data, rankingError ? [] : rankings ?? [], requirementsResponse.data),
       source: "supabase",
     },
     { headers: { "Cache-Control": "no-store" } },

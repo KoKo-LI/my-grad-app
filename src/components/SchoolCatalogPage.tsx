@@ -20,7 +20,7 @@ import SchoolLogo from "@/components/SchoolLogo";
 import Sidebar from "@/components/Sidebar";
 import { getSchoolChineseName } from "@/data/schoolIdentity";
 import { parseSchoolDirectoryResponse } from "@/lib/undergraduateDirectory";
-import type { InstitutionMetric, InstitutionRanking, InstitutionRankingKey, SchoolDirectoryItem, SchoolDirectoryProgramFilter, SchoolItem } from "@/types";
+import type { InstitutionMetric, InstitutionRanking, InstitutionRankingKey, SchoolAdmissionRequirement, SchoolDirectoryItem, SchoolDirectoryProgramFilter, SchoolItem } from "@/types";
 import { buildDirectorySchoolTiers } from "@/utils/directoryTierEngine";
 import {
   parseStoredProfile,
@@ -103,6 +103,38 @@ function formatScore(value: number | null) {
   return value === null ? "待补充" : Math.round(value).toLocaleString("en-US");
 }
 
+const requirementLabels: Record<string, string> = {
+  act_composite: "ACT",
+  ap_subject: "AP",
+  duolingo_english_test: "DET",
+  ib_total: "IB",
+  ielts_academic_overall: "IELTS",
+  sat_total: "SAT",
+  toefl_ibt_total: "TOEFL",
+};
+
+const languageMetrics = ["ielts_academic_overall", "toefl_ibt_total", "duolingo_english_test"];
+const academicMetrics = ["ib_total", "sat_total", "act_composite", "ap_subject"];
+
+function findPreviewRequirement(requirements: SchoolAdmissionRequirement[], metrics: string[]) {
+  const candidates = requirements.filter((requirement) => requirement.minimumScore !== null && metrics.includes(requirement.metric));
+  return candidates.sort((first, second) => {
+    const firstScope = first.applicantScope === "international" ? 0 : first.applicantScope === "all" ? 1 : 2;
+    const secondScope = second.applicantScope === "international" ? 0 : second.applicantScope === "all" ? 1 : 2;
+    if (firstScope !== secondScope) return firstScope - secondScope;
+    const firstKind = first.requirementKind === "minimum" ? 0 : 1;
+    const secondKind = second.requirementKind === "minimum" ? 0 : 1;
+    return firstKind - secondKind;
+  })[0] ?? null;
+}
+
+function formatRequirementScore(requirement: SchoolAdmissionRequirement) {
+  const value = requirement.minimumScore;
+  if (value === null) return "待补充";
+  const formattedValue = Number.isInteger(value) ? value.toLocaleString("en-US") : value.toFixed(1);
+  return `${requirementLabels[requirement.metric] ?? requirement.metric} ≥${formattedValue}${requirement.scoreScale === null ? "" : `/${requirement.scoreScale}`}`;
+}
+
 function parseTier(value: string | null): SchoolItem["status"] | null {
   return value === "Reach" || value === "Target" || value === "Safety" ? value : null;
 }
@@ -183,6 +215,9 @@ function CatalogSchoolCard({
   const usNewsRanking = findRanking(school.rankings, "usnews_national_universities");
   const qsRanking = findRanking(school.rankings, "qs_world_university_rankings");
   const rankings = [usNewsRanking, qsRanking].filter((ranking): ranking is InstitutionRanking => ranking !== null);
+  const languageRequirement = findPreviewRequirement(school.requirements, languageMetrics);
+  const academicRequirement = findPreviewRequirement(school.requirements, academicMetrics);
+  const hasRequirementPreview = languageRequirement !== null || academicRequirement !== null;
 
   return (
     <motion.button
@@ -216,14 +251,29 @@ function CatalogSchoolCard({
           <span className="block text-[10px] font-bold tracking-wide text-zinc-400">录取率</span>
           <span className="mt-1 block text-sm font-extrabold text-emerald-700 dark:text-emerald-200">{formatRate(admissionRate)}</span>
         </span>
-        <span>
-          <span className="block text-[10px] font-bold tracking-wide text-zinc-400">SAT 中位</span>
-          <span className="mt-1 block text-sm font-extrabold text-zinc-800 dark:text-zinc-100">{formatScore(satMedian)}</span>
-        </span>
-        <span>
-          <span className="block text-[10px] font-bold tracking-wide text-zinc-400">ACT 中位</span>
-          <span className="mt-1 block text-sm font-extrabold text-zinc-800 dark:text-zinc-100">{formatScore(actMedian)}</span>
-        </span>
+        {hasRequirementPreview ? (
+          <>
+            <span title={languageRequirement?.subjectArea ?? undefined}>
+              <span className="block text-[10px] font-bold tracking-wide text-zinc-400">语言门槛</span>
+              <span className="mt-1 block truncate text-sm font-extrabold text-violet-700 dark:text-violet-200">{languageRequirement ? formatRequirementScore(languageRequirement) : "待补充"}</span>
+            </span>
+            <span title={academicRequirement?.subjectArea ?? undefined}>
+              <span className="block text-[10px] font-bold tracking-wide text-zinc-400">学术条件</span>
+              <span className="mt-1 block truncate text-sm font-extrabold text-zinc-800 dark:text-zinc-100">{academicRequirement ? formatRequirementScore(academicRequirement) : "按项目"}</span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span>
+              <span className="block text-[10px] font-bold tracking-wide text-zinc-400">SAT 中位</span>
+              <span className="mt-1 block text-sm font-extrabold text-zinc-800 dark:text-zinc-100">{formatScore(satMedian)}</span>
+            </span>
+            <span>
+              <span className="block text-[10px] font-bold tracking-wide text-zinc-400">ACT 中位</span>
+              <span className="mt-1 block text-sm font-extrabold text-zinc-800 dark:text-zinc-100">{formatScore(actMedian)}</span>
+            </span>
+          </>
+        )}
       </span>
       <span className="mt-4 flex min-h-5 flex-wrap gap-1.5">
         {majorCategories.slice(0, 2).map((category) => (

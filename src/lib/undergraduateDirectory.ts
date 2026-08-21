@@ -90,7 +90,7 @@ function parseInstitution(value: unknown): ParsedInstitution | null {
     return null;
   }
 
-  return { country, internalId, ipedsUnitId, metrics: [], name, officialWebsite, rankings: [], region, shortName };
+  return { country, internalId, ipedsUnitId, metrics: [], name, officialWebsite, rankings: [], region, requirements: [], shortName };
 }
 
 type ParsedMetric = InstitutionMetric & { institutionId: string };
@@ -130,6 +130,16 @@ function parseMetric(value: unknown): ParsedMetric | null {
   };
 }
 
+type ParsedDirectoryRequirement = SchoolAdmissionRequirement & { institutionId: string };
+
+function parseDirectoryRequirement(value: unknown): ParsedDirectoryRequirement | null {
+  if (!isRecord(value)) return null;
+
+  const institutionId = readText(value.institution_id);
+  const requirement = parseRequirement(value);
+  return institutionId && requirement ? { ...requirement, institutionId } : null;
+}
+
 type ParsedRanking = InstitutionRanking & { institutionId: string };
 
 function parseRanking(value: unknown): ParsedRanking | null {
@@ -167,8 +177,8 @@ function parseRanking(value: unknown): ParsedRanking | null {
 }
 
 /** Converts RLS-filtered Supabase rows into safe public directory records. */
-export function buildSchoolDirectory(institutionsValue: unknown, metricsValue: unknown, rankingsValue: unknown = []): SchoolDirectoryItem[] {
-  if (!Array.isArray(institutionsValue) || !Array.isArray(metricsValue) || !Array.isArray(rankingsValue)) return [];
+export function buildSchoolDirectory(institutionsValue: unknown, metricsValue: unknown, rankingsValue: unknown = [], requirementsValue: unknown = []): SchoolDirectoryItem[] {
+  if (!Array.isArray(institutionsValue) || !Array.isArray(metricsValue) || !Array.isArray(rankingsValue) || !Array.isArray(requirementsValue)) return [];
 
   const metricsByInstitutionId = new Map<string, InstitutionMetric[]>();
   metricsValue.map(parseMetric).filter((metric): metric is ParsedMetric => metric !== null).forEach((metric) => {
@@ -186,6 +196,14 @@ export function buildSchoolDirectory(institutionsValue: unknown, metricsValue: u
     rankingsByInstitutionId.set(institutionId, current);
   });
 
+  const requirementsByInstitutionId = new Map<string, SchoolAdmissionRequirement[]>();
+  requirementsValue.map(parseDirectoryRequirement).filter((requirement): requirement is ParsedDirectoryRequirement => requirement !== null).forEach((requirement) => {
+    const { institutionId, ...publicRequirement } = requirement;
+    const current = requirementsByInstitutionId.get(institutionId) ?? [];
+    current.push(publicRequirement);
+    requirementsByInstitutionId.set(institutionId, current);
+  });
+
   return institutionsValue
     .map(parseInstitution)
     .filter((institution): institution is ParsedInstitution => institution !== null)
@@ -193,6 +211,7 @@ export function buildSchoolDirectory(institutionsValue: unknown, metricsValue: u
       ...institution,
       metrics: (metricsByInstitutionId.get(internalId) ?? []).sort((first, second) => first.metric.localeCompare(second.metric)),
       rankings: (rankingsByInstitutionId.get(internalId) ?? []).sort((first, second) => first.key.localeCompare(second.key)),
+      requirements: (requirementsByInstitutionId.get(internalId) ?? []).sort((first, second) => first.metric.localeCompare(second.metric)),
     }))
     .sort((first, second) => first.name.localeCompare(second.name));
 }
@@ -401,7 +420,7 @@ function parsePublicDirectoryItem(value: unknown): SchoolDirectoryItem | null {
   const region = readText(value.region);
   const shortName = readText(value.shortName);
 
-  if (!country || !ipedsUnitId || !name || !officialWebsite || !region || !shortName || !Array.isArray(value.metrics) || !Array.isArray(value.rankings)) {
+  if (!country || !ipedsUnitId || !name || !officialWebsite || !region || !shortName || !Array.isArray(value.metrics) || !Array.isArray(value.rankings) || !Array.isArray(value.requirements)) {
     return null;
   }
 
@@ -413,6 +432,7 @@ function parsePublicDirectoryItem(value: unknown): SchoolDirectoryItem | null {
     officialWebsite,
     rankings: value.rankings.map(parsePublicRanking).filter((ranking): ranking is InstitutionRanking => ranking !== null),
     region,
+    requirements: value.requirements.map(parsePublicRequirement).filter((requirement): requirement is SchoolAdmissionRequirement => requirement !== null),
     shortName,
   };
 }

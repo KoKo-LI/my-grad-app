@@ -144,6 +144,7 @@ export interface SchoolDirectoryItem {
   officialWebsite: string;
   rankings: InstitutionRanking[];
   region: string;
+  requirements: SchoolAdmissionRequirement[];
   shortName: string;
 }
 
