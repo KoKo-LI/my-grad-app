@@ -341,21 +341,19 @@ function SchoolDetailContent({ detail, profile }: { detail: SchoolDetail; profil
   return (
     <>
       <header className="border-b border-slate-200/80 px-5 py-6 dark:border-white/10 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <SchoolLogo className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-sm font-black text-white shadow-lg shadow-zinc-950/15 dark:bg-white dark:text-zinc-950" school={detail} />
-              <div className="min-w-0">
-                <p className="text-xs font-bold tracking-[0.16em] text-violet-600 dark:text-violet-300">VERIFIED SCHOOL PROFILE</p>
-                <h1 className="mt-1 truncate text-2xl font-black tracking-[-0.04em] text-zinc-950 dark:text-white sm:text-3xl">{detail.name}</h1>
-                <p className="mt-1 truncate text-sm font-bold text-violet-700 dark:text-violet-200">{getSchoolChineseName(detail)}</p>
-              </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <SchoolLogo className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-sm font-black text-white shadow-lg shadow-zinc-950/15 dark:bg-white dark:text-zinc-950" school={detail} />
+            <div className="min-w-0">
+              <p className="text-xs font-bold tracking-[0.16em] text-violet-600 dark:text-violet-300">VERIFIED SCHOOL PROFILE</p>
+              <h1 className="mt-1 truncate text-2xl font-black tracking-[-0.04em] text-zinc-950 dark:text-white sm:text-3xl">{detail.name}</h1>
+              <p className="mt-1 truncate text-sm font-bold text-violet-700 dark:text-violet-200">{getSchoolChineseName(detail)}</p>
             </div>
-            <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{detail.region} · {/^\d+$/.test(detail.ipedsUnitId) ? `IPEDS ${detail.ipedsUnitId}` : `院校 ID ${detail.ipedsUnitId}`}{sourcePeriods.length > 0 ? ` · 数据期：${sourcePeriods.join(" / ")}` : ""}</p>
-            <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">所有数据均来源于网络公开数据；排名以对应发布机构、版本与披露范围为准。</p>
           </div>
-          <a className="inline-flex w-fit items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-bold text-violet-700 hover:border-violet-400 hover:bg-violet-100 dark:border-violet-400/25 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:border-violet-400/50" href={detail.officialWebsite} rel="noreferrer" target="_blank">
-            学校官网 <ArrowSquareOut aria-hidden="true" size={15} weight="bold" />
+          <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{detail.region} · {/^\d+$/.test(detail.ipedsUnitId) ? `IPEDS ${detail.ipedsUnitId}` : `院校 ID ${detail.ipedsUnitId}`}{sourcePeriods.length > 0 ? ` · 数据期：${sourcePeriods.join(" / ")}` : ""}</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">所有数据均来源于网络公开数据；排名以对应发布机构、版本与披露范围为准。</p>
+          <a className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-violet-700 transition-colors hover:text-violet-950 active:scale-95 dark:text-violet-300 dark:hover:text-violet-100" href={detail.officialWebsite} rel="noreferrer" target="_blank">
+            查看学校官网与申请信息 <ArrowSquareOut aria-hidden="true" size={13} weight="bold" />
           </a>
         </div>
       </header>
