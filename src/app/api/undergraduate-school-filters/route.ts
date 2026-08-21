@@ -3,6 +3,12 @@ import type { SchoolDirectoryProgramFilter } from "@/types";
 
 export const dynamic = "force-dynamic";
 
+const filterPageSize = 1000;
+
+type FilterQueryResult =
+  | { data: unknown[]; error: null }
+  | { data: []; error: string };
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -17,6 +23,48 @@ function readMajorCategories(value: unknown) {
     : [];
 }
 
+async function fetchAllPublishedFilterInstitutions(): Promise<FilterQueryResult> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return { data: [], error: "Catalog is not configured." };
+
+  const rows: unknown[] = [];
+  for (let start = 0; ; start += filterPageSize) {
+    const { data, error } = await supabase
+      .from("institutions")
+      .select("id, ipeds_unitid")
+      .eq("is_published", true)
+      .order("id")
+      .range(start, start + filterPageSize - 1);
+
+    if (error) return { data: [], error: error.message };
+    if (!Array.isArray(data)) return { data: [], error: "Institutions did not return an array." };
+
+    rows.push(...(data as unknown[]));
+    if (data.length < filterPageSize) return { data: rows, error: null };
+  }
+}
+
+async function fetchAllPublishedProgramFilters(): Promise<FilterQueryResult> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return { data: [], error: "Catalog is not configured." };
+
+  const rows: unknown[] = [];
+  for (let start = 0; ; start += filterPageSize) {
+    const { data, error } = await supabase
+      .from("undergraduate_programs")
+      .select("institution_id, major_categories")
+      .eq("is_published", true)
+      .order("id")
+      .range(start, start + filterPageSize - 1);
+
+    if (error) return { data: [], error: error.message };
+    if (!Array.isArray(data)) return { data: [], error: "Programs did not return an array." };
+
+    rows.push(...(data as unknown[]));
+    if (data.length < filterPageSize) return { data: rows, error: null };
+  }
+}
+
 /**
  * Exposes only published program categories needed by the client-side catalog
  * filter. Institution names, requirements and source records remain behind the
@@ -29,22 +77,16 @@ export async function GET() {
     return Response.json({ data: [], source: "unconfigured" }, { headers: { "Cache-Control": "no-store" } });
   }
 
-  const [{ data: institutions, error: institutionError }, { data: programs, error: programError }] = await Promise.all([
-    supabase
-      .from("institutions")
-      .select("id, ipeds_unitid")
-      .eq("is_published", true)
-      .limit(160),
-    supabase
-      .from("undergraduate_programs")
-      .select("institution_id, major_categories")
-      .eq("is_published", true)
-      .limit(240),
+  const [institutionsResponse, programsResponse] = await Promise.all([
+    fetchAllPublishedFilterInstitutions(),
+    fetchAllPublishedProgramFilters(),
   ]);
 
-  if (institutionError || programError || !Array.isArray(institutions) || !Array.isArray(programs)) {
+  if (institutionsResponse.error || programsResponse.error) {
     return Response.json({ data: [], source: "unavailable" }, { headers: { "Cache-Control": "no-store" }, status: 503 });
   }
+  const institutions = institutionsResponse.data;
+  const programs = programsResponse.data;
 
   const ipedsUnitIdByInstitutionId = new Map(
     institutions.flatMap((institution) => {

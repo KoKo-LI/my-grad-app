@@ -121,7 +121,9 @@ The importer accepts institution-wide undergraduate requirements and
 major-specific records. It supports GPA, TOEFL, IELTS, DET, PTE, Cambridge,
 MET, SAT/ACT, AP/IB, transcripts, coursework, portfolios, interviews and other
 admission obligations. Each input record must provide the official source URL,
-effective year and a resolved IPEDS UNITID. Do not enter copied page prose,
+effective year and a resolved institution identifier. U.S. schools use an IPEDS
+UNITID; international schools use the stable catalog ID already stored in the
+`institutions.ipeds_unitid` field (for example, `GB-IMPERIAL`). Do not enter copied page prose,
 community reports or unverified score claims. The current private intake has
 19 institutions with official program-source records; the remaining schools
 need their own official admissions pages or official CDS publications before
@@ -135,3 +137,12 @@ official admitted-student score ranges. An input record may include a
 `statistics` array alongside `requirements`; use it for P25, median, P75 or
 average figures published by the school. Do not enter those distributions as
 minimums or recommendations.
+
+### Scale the official program directory with a private review queue
+
+Run `migrations/20260821_create_program_import_review_queue.sql` to add a
+private batch-import and review queue for new undergraduate programs. The queue
+has RLS enabled and no browser policy; only a local process with
+`SUPABASE_SECRET_KEY` may import or publish it. Follow the complete validation,
+human-review and publication procedure in
+[`../docs/program-import-workflow.md`](../docs/program-import-workflow.md).

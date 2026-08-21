@@ -3,7 +3,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const metricPageSize = 1000;
+const catalogPageSize = 1000;
+const filterChunkSize = 250;
 
 type MetricQueryResult =
   | { data: unknown[]; error: null }
@@ -13,6 +14,14 @@ type ProgramReference = {
   id: string;
   institutionId: string;
 };
+
+function chunkValues(values: string[], size: number): string[][] {
+  const chunks: string[][] = [];
+  for (let index = 0; index < values.length; index += size) {
+    chunks.push(values.slice(index, index + size));
+  }
+  return chunks;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -28,10 +37,57 @@ function parseProgramReferences(value: unknown): ProgramReference[] {
 }
 
 /**
- * Supabase caps a single REST response at 1,000 rows in this project. The
- * complete 101-school catalog now exceeds that size, so fetch every stable
- * page rather than silently presenting a partial directory.
+ * Supabase caps a single REST response at 1,000 rows in this project. Fetch
+ * all stable pages so new schools and program records never disappear once the
+ * directory grows beyond a single response.
  */
+async function fetchAllPublishedInstitutions(): Promise<MetricQueryResult> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return { data: [], error: "Catalog is not configured." };
+
+  const rows: unknown[] = [];
+  for (let start = 0; ; start += catalogPageSize) {
+    const { data, error } = await supabase
+      .from("institutions")
+      .select("id, ipeds_unitid, name, short_name, country, region, official_website")
+      .eq("is_published", true)
+      .order("name")
+      .range(start, start + catalogPageSize - 1);
+
+    if (error) return { data: [], error: error.message };
+    if (!Array.isArray(data)) return { data: [], error: "Institutions did not return an array." };
+
+    rows.push(...(data as unknown[]));
+    if (data.length < catalogPageSize) return { data: rows, error: null };
+  }
+}
+
+async function fetchAllPublishedProgramReferences(institutionIds: string[]): Promise<MetricQueryResult> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return { data: [], error: "Catalog is not configured." };
+  if (institutionIds.length === 0) return { data: [], error: null };
+
+  const rows: unknown[] = [];
+  for (const institutionIdChunk of chunkValues(institutionIds, filterChunkSize)) {
+    for (let start = 0; ; start += catalogPageSize) {
+      const { data, error } = await supabase
+        .from("undergraduate_programs")
+        .select("id, institution_id")
+        .in("institution_id", institutionIdChunk)
+        .eq("is_published", true)
+        .order("id")
+        .range(start, start + catalogPageSize - 1);
+
+      if (error) return { data: [], error: error.message };
+      if (!Array.isArray(data)) return { data: [], error: "Programs did not return an array." };
+
+      rows.push(...(data as unknown[]));
+      if (data.length < catalogPageSize) break;
+    }
+  }
+  return { data: rows, error: null };
+}
+
 async function fetchAllPublishedMetrics(
   institutionIds: string[],
 ): Promise<MetricQueryResult> {
@@ -39,21 +95,24 @@ async function fetchAllPublishedMetrics(
   if (!supabase) return { data: [], error: "Catalog is not configured." };
 
   const rows: unknown[] = [];
-  for (let start = 0; ; start += metricPageSize) {
-    const { data, error } = await supabase
-      .from("institution_metrics")
-      .select("id, institution_id, metric_category, metric, value_numeric, unit, source_period, data_sources(title, source_url)")
-      .in("institution_id", institutionIds)
-      .eq("is_published", true)
-      .order("id")
-      .range(start, start + metricPageSize - 1);
+  for (const institutionIdChunk of chunkValues(institutionIds, filterChunkSize)) {
+    for (let start = 0; ; start += catalogPageSize) {
+      const { data, error } = await supabase
+        .from("institution_metrics")
+        .select("id, institution_id, metric_category, metric, value_numeric, unit, source_period, data_sources(title, source_url)")
+        .in("institution_id", institutionIdChunk)
+        .eq("is_published", true)
+        .order("id")
+        .range(start, start + catalogPageSize - 1);
 
-    if (error) return { data: [], error: error.message };
-    if (!Array.isArray(data)) return { data: [], error: "Institution metrics did not return an array." };
+      if (error) return { data: [], error: error.message };
+      if (!Array.isArray(data)) return { data: [], error: "Institution metrics did not return an array." };
 
-    rows.push(...(data as unknown[]));
-    if (data.length < metricPageSize) return { data: rows, error: null };
+      rows.push(...(data as unknown[]));
+      if (data.length < catalogPageSize) break;
+    }
   }
+  return { data: rows, error: null };
 }
 
 async function fetchAllPublishedRequirements(
@@ -67,26 +126,55 @@ async function fetchAllPublishedRequirements(
   const institutionByProgramId = new Map(programs.map((program) => [program.id, program.institutionId]));
   const rows: unknown[] = [];
 
-  for (let start = 0; ; start += metricPageSize) {
-    const { data, error } = await supabase
-      .from("admission_requirements")
-      .select("id, program_id, metric, requirement_kind, applicant_scope, application_path, minimum_score, maximum_score, score_scale, test_version, subject_area, satisfaction_group, satisfaction_rule, value_text, data_sources(title, source_url)")
-      .in("program_id", programIds)
-      .eq("is_published", true)
-      .order("id")
-      .range(start, start + metricPageSize - 1);
+  for (const programIdChunk of chunkValues(programIds, filterChunkSize)) {
+    for (let start = 0; ; start += catalogPageSize) {
+      const { data, error } = await supabase
+        .from("admission_requirements")
+        .select("id, program_id, metric, requirement_kind, applicant_scope, application_path, minimum_score, maximum_score, score_scale, test_version, subject_area, satisfaction_group, satisfaction_rule, value_text, data_sources(title, source_url)")
+        .in("program_id", programIdChunk)
+        .eq("is_published", true)
+        .order("id")
+        .range(start, start + catalogPageSize - 1);
 
-    if (error) return { data: [], error: error.message };
-    if (!Array.isArray(data)) return { data: [], error: "Admission requirements did not return an array." };
+      if (error) return { data: [], error: error.message };
+      if (!Array.isArray(data)) return { data: [], error: "Admission requirements did not return an array." };
 
-    data.forEach((requirement) => {
-      if (!isRecord(requirement) || typeof requirement.program_id !== "string") return;
-      const institutionId = institutionByProgramId.get(requirement.program_id);
-      if (institutionId) rows.push({ ...requirement, institution_id: institutionId });
-    });
+      data.forEach((requirement) => {
+        if (!isRecord(requirement) || typeof requirement.program_id !== "string") return;
+        const institutionId = institutionByProgramId.get(requirement.program_id);
+        if (institutionId) rows.push({ ...requirement, institution_id: institutionId });
+      });
 
-    if (data.length < metricPageSize) return { data: rows, error: null };
+      if (data.length < catalogPageSize) break;
+    }
   }
+  return { data: rows, error: null };
+}
+
+async function fetchAllPublishedRankings(institutionIds: string[]): Promise<MetricQueryResult> {
+  const supabase = createSupabaseServerClient();
+  if (!supabase) return { data: [], error: "Catalog is not configured." };
+  if (institutionIds.length === 0) return { data: [], error: null };
+
+  const rows: unknown[] = [];
+  for (const institutionIdChunk of chunkValues(institutionIds, filterChunkSize)) {
+    for (let start = 0; ; start += catalogPageSize) {
+      const { data, error } = await supabase
+        .from("institution_rankings")
+        .select("institution_id, ranking_key, edition, rank_value, rank_display, data_sources(title, source_url)")
+        .in("institution_id", institutionIdChunk)
+        .eq("is_published", true)
+        .order("institution_id")
+        .range(start, start + catalogPageSize - 1);
+
+      if (error) return { data: [], error: error.message };
+      if (!Array.isArray(data)) return { data: [], error: "Institution rankings did not return an array." };
+
+      rows.push(...(data as unknown[]));
+      if (data.length < catalogPageSize) break;
+    }
+  }
+  return { data: rows, error: null };
 }
 
 /** Returns only RLS-approved, source-backed institutions for client-side search. */
@@ -97,55 +185,43 @@ export async function GET() {
     return Response.json({ data: [], source: "unconfigured" }, { headers: { "Cache-Control": "no-store" } });
   }
 
-  const { data: institutions, error: institutionError } = await supabase
-    .from("institutions")
-    .select("id, ipeds_unitid, name, short_name, country, region, official_website")
-    .eq("is_published", true)
-    .order("name")
-    .limit(256);
+  const institutionsResponse = await fetchAllPublishedInstitutions();
 
-  if (institutionError || !institutions) {
+  if (institutionsResponse.error) {
     return Response.json({ data: [], source: "unavailable" }, { headers: { "Cache-Control": "no-store" }, status: 503 });
   }
+  const institutions = institutionsResponse.data;
 
-  const institutionIds = institutions
-    .map((institution) => (typeof institution.id === "string" ? institution.id : null))
-    .filter((id): id is string => id !== null);
+  const institutionIds = institutions.flatMap((institution) => {
+    if (!isRecord(institution) || typeof institution.id !== "string") return [];
+    return [institution.id];
+  });
 
   if (institutionIds.length === 0) {
     return Response.json({ data: [], source: "supabase" }, { headers: { "Cache-Control": "no-store" } });
   }
 
-  const { data: programs, error: programError } = await supabase
-    .from("undergraduate_programs")
-    .select("id, institution_id")
-    .in("institution_id", institutionIds)
-    .eq("is_published", true)
-    .limit(1000);
+  const programsResponse = await fetchAllPublishedProgramReferences(institutionIds);
 
-  if (programError || !programs) {
+  if (programsResponse.error) {
     return Response.json({ data: [], source: "unavailable" }, { headers: { "Cache-Control": "no-store" }, status: 503 });
   }
 
-  const programReferences = parseProgramReferences(programs);
+  const programReferences = parseProgramReferences(programsResponse.data);
 
-  const [metricsResponse, requirementsResponse, { data: rankings, error: rankingError }] = await Promise.all([
+  const [metricsResponse, requirementsResponse, rankingsResponse] = await Promise.all([
     fetchAllPublishedMetrics(institutionIds),
     fetchAllPublishedRequirements(programReferences),
-    supabase
-      .from("institution_rankings")
-      .select("institution_id, ranking_key, edition, rank_value, rank_display, data_sources(title, source_url)")
-      .in("institution_id", institutionIds)
-      .eq("is_published", true),
+    fetchAllPublishedRankings(institutionIds),
   ]);
 
-  if (metricsResponse.error || requirementsResponse.error) {
+  if (metricsResponse.error || requirementsResponse.error || rankingsResponse.error) {
     return Response.json({ data: [], source: "unavailable" }, { headers: { "Cache-Control": "no-store" }, status: 503 });
   }
 
   return Response.json(
     {
-      data: buildSchoolDirectory(institutions as unknown, metricsResponse.data, rankingError ? [] : rankings ?? [], requirementsResponse.data),
+      data: buildSchoolDirectory(institutions, metricsResponse.data, rankingsResponse.data, requirementsResponse.data),
       source: "supabase",
     },
     { headers: { "Cache-Control": "no-store" } },

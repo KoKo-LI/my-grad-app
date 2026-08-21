@@ -19,6 +19,7 @@ import SchoolDetailModal from "@/components/SchoolDetailModal";
 import SchoolLogo from "@/components/SchoolLogo";
 import Sidebar from "@/components/Sidebar";
 import { getSchoolChineseName } from "@/data/schoolIdentity";
+import { formatUndergraduateMajorCategory } from "@/data/undergraduateMajorTaxonomy";
 import { parseSchoolDirectoryResponse } from "@/lib/undergraduateDirectory";
 import type { InstitutionMetric, InstitutionRanking, InstitutionRankingKey, SchoolAdmissionRequirement, SchoolDirectoryItem, SchoolDirectoryProgramFilter, SchoolItem } from "@/types";
 import { buildDirectorySchoolTiers } from "@/utils/directoryTierEngine";
@@ -41,12 +42,6 @@ const tierCopy: Record<SchoolItem["status"], { description: string; title: strin
   Reach: { title: "Reach 梦校", description: "高挑战 · 放大上限" },
   Target: { title: "Target 匹配", description: "稳健匹配 · 重点投入" },
   Safety: { title: "Safety 保底", description: "成功把握 · 风险对冲" },
-};
-
-const majorLabels: Record<string, string> = {
-  all: "综合学科",
-  "computer-science": "计算机科学",
-  engineering: "工程学",
 };
 
 function getServerSnapshot() {
@@ -140,7 +135,7 @@ function parseTier(value: string | null): SchoolItem["status"] | null {
 }
 
 function formatMajorLabel(major: string) {
-  return majorLabels[major] ?? major.replace(/-/g, " ");
+  return formatUndergraduateMajorCategory(major);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -446,9 +446,9 @@ function parseInputDocument(value: unknown): InputDocument {
       if (!Array.isArray(requirements) || !Array.isArray(statistics) || (requirements.length === 0 && statistics.length === 0)) {
         throw new Error(`${label} must include one or more requirements or statistics.`);
       }
-      const institutionIpedsUnitId = parseText(item.institutionIpedsUnitId, `${label}.institutionIpedsUnitId`, 6, 6);
-      if (!/^\d{6}$/.test(institutionIpedsUnitId)) {
-        throw new Error(`${label}.institutionIpedsUnitId must be a 6-digit IPEDS UNITID.`);
+      const institutionIpedsUnitId = parseText(item.institutionIpedsUnitId, `${label}.institutionIpedsUnitId`, 3, 80).toUpperCase();
+      if (!/^(?:\d{1,10}|[A-Z]{2}-[A-Z0-9-]{2,62})$/.test(institutionIpedsUnitId)) {
+        throw new Error(`${label}.institutionIpedsUnitId must be an IPEDS UNITID or a stable international catalog ID.`);
       }
       return {
         institutionIpedsUnitId,
@@ -540,7 +540,7 @@ async function main(): Promise<void> {
   const institutionIdByUnitId = new Map(institutions.map((institution) => [institution.ipeds_unitid, institution.id]));
   const unresolvedUnitIds = unitIds.filter((unitId) => !institutionIdByUnitId.has(unitId));
   if (unresolvedUnitIds.length > 0) {
-    throw new Error(`No resolved institution exists for IPEDS UNITID(s): ${unresolvedUnitIds.join(", ")}.`);
+    throw new Error(`No resolved institution exists for identifier(s): ${unresolvedUnitIds.join(", ")}.`);
   }
 
   let importedRequirements = 0;

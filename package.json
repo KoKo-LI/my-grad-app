@@ -11,6 +11,8 @@
     "catalog:resolve-ipeds": "node --env-file=.env.local --experimental-strip-types scripts/resolve-undergraduate-ipeds.ts",
     "catalog:import-scorecard-metrics": "node --env-file=.env.local --experimental-strip-types scripts/import-scorecard-institution-metrics.ts",
     "catalog:import-official-requirements": "node --env-file=.env.local --experimental-strip-types scripts/import-official-undergraduate-requirements.ts",
+    "catalog:queue-programs": "node --env-file=.env.local --experimental-strip-types scripts/import-undergraduate-program-intake.ts",
+    "catalog:publish-reviewed-programs": "node --env-file=.env.local --experimental-strip-types scripts/publish-reviewed-undergraduate-programs.ts",
     "catalog:import-qs-rankings": "node --env-file=.env.local --experimental-strip-types scripts/import-qs-world-rankings.ts",
     "catalog:import-school-logos": "node --env-file=.env.local --experimental-strip-types scripts/import-school-logos.ts",
     "import-hk-uk-catalog": "node --env-file=.env.local --experimental-strip-types scripts/import-hk-uk-undergraduate-catalog.ts",

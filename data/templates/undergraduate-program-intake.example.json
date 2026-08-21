@@ -1,0 +1,27 @@
+{
+  "batch": {
+    "batchKey": "2026-uk-computing-programs",
+    "label": "2026 UK computing official program catalog"
+  },
+  "records": [
+    {
+      "recordKey": "gb-example-bsc-computing-2026",
+      "institutionIpedsUnitId": "GB-EXAMPLE",
+      "program": {
+        "programName": "BSc Computing",
+        "degreeName": "BSc",
+        "fieldOfStudy": "Computer Science",
+        "majorCategories": ["计算机科学", "数据科学 / 人工智能"],
+        "officialUrl": "https://www.example.edu/study/undergraduate/computing"
+      },
+      "source": {
+        "sourceKind": "official_program",
+        "sourceTitle": "Example University BSc Computing course page",
+        "sourceUrl": "https://www.example.edu/study/undergraduate/computing",
+        "sourceYear": "2026/27",
+        "sourceExcerpt": "Program title, award and study area verified on the official course page.",
+        "rightsNote": "Store structured facts and the source link only; do not copy course prose."
+      }
+    }
+  ]
+}
